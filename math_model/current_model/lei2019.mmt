@@ -1,0 +1,63 @@
+[[model]]
+author: Myokit CellML 1 API
+name: Lei_2019_37C_IKr
+# Initial values
+ikr.y1 = 0
+ikr.y2 = 0
+ikr.y3 = 0
+
+[ikr]
+IKr = p9 * y3 * (membrane.V - nernst.EK)
+    in [nA]
+    oxmeta: membrane_rapid_delayed_rectifier_potassium_current
+k12 = p1 * exp(p2 * membrane.V)
+    in [mS/uF]
+k14 = p7 * exp(-p8 * membrane.V)
+    in [mS/uF]
+k21 = p3 * exp(-p4 * membrane.V)
+    in [mS/uF]
+k41 = p5 * exp(p6 * membrane.V)
+    in [mS/uF]
+p1 =  2.06469371000000002e-3 [mS/uF]
+    in [mS/uF]
+p2 =  7.17061645999999969e-2 [1/mV]
+    in [1/mV]
+p3 =  3.44186256999999990e-5 [mS/uF]
+    in [mS/uF]
+p4 =  6.17661788000000017e-2 [1/mV]
+    in [1/mV]
+p5 =  4.17809103000000015e-1 [mS/uF]
+    in [mS/uF]
+p6 =  2.57733544000000002e-2 [1/mV]
+    in [1/mV]
+p7 =  4.75152440999999995e-2 [mS/uF]
+    in [mS/uF]
+p8 =  2.50856877999999991e-2 [1/mV]
+    in [1/mV]
+p9 = 0.1524 [uS]
+    in [uS]
+    oxmeta: membrane_rapid_delayed_rectifier_potassium_current_conductance
+dot(y1) = -k12 * y1 + k21 * y2 + k41 * y4 - k14 * y1
+    in [1]
+dot(y2) = -k14 * y2 + k41 * y3 + k12 * y1 - k21 * y2
+    in [1]
+dot(y3) = -k21 * y3 + k12 * y4 + k14 * y2 - k41 * y3
+    in [1]
+y4 = 1 - y1 - y2 - y3
+    in [1]
+
+[engine]
+time = 0 bind time
+    in [ms]
+pace = 0 bind pace
+
+
+[membrane]
+V = engine.pace
+    desc: membrane potential
+    in [mV]
+
+[nernst]
+EK = -85 [mV]
+    in [mV]
+    oxmeta: potassium_reversal_potential
