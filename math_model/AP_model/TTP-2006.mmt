@@ -218,6 +218,7 @@ ikr_rescale = 1
 [environment]
 time = 0 [ms] bind time
     in [ms]
+pace = 0 bind pace
 
 [fast_sodium_current]
 g_Na = 14.838 [mS/uF]
@@ -286,16 +287,20 @@ dot(V) = -1 / 1 * (inward_rectifier_potassium_current.i_K1 + transient_outward_c
     in [mV]
 V_c = 0.016404 [um^3]
     in [um^3]
-i_Stim = piecewise(environment.time - floor(environment.time / stim_period) * stim_period >= stim_start and environment.time - floor(environment.time / stim_period) * stim_period <= stim_start + stim_duration, -stim_amplitude, 0 [A/F])
+# i_Stim = piecewise(environment.time - floor(environment.time / stim_period) * stim_period >= stim_start and environment.time - floor(environment.time / stim_period) * stim_period <= stim_start + stim_duration, -stim_amplitude, 0 [A/F])
+#     in [A/F]
+# stim_amplitude = 52 [A/F]
+#     in [A/F]
+# stim_duration = 1 [ms]
+#     in [ms]
+# stim_period = 1000 [ms]
+#     in [ms]
+# stim_start = 10 [ms]
+#    in [ms]
+i_Stim = environment.pace * stim_amplitude
     in [A/F]
-stim_amplitude = 52 [A/F]
+stim_amplitude = -52 [A/F]
     in [A/F]
-stim_duration = 1 [ms]
-    in [ms]
-stim_period = 1000 [ms]
-    in [ms]
-stim_start = 10 [ms]
-    in [ms]
 
 [potassium_dynamics]
 dot(K_i) = -1 [1 (1e+09)] * (inward_rectifier_potassium_current.i_K1 + transient_outward_current.i_to + rapid_time_dependent_potassium_current.i_Kr + slow_time_dependent_potassium_current.i_Ks + potassium_pump_current.i_p_K + membrane.i_Stim - 2 * sodium_potassium_pump_current.i_NaK) / (1 [1 (1e+15)] * membrane.V_c * membrane.F) * membrane.Cm
