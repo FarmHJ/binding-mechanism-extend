@@ -79,7 +79,8 @@ timestep = 0.1
 protocol_offset = 100
 protocol = myokit.pacing.blocktrain(pulse_time, 0.5, offset=protocol_offset)
 # Set up AP model
-APmodel = '../math_model/AP_model/TTP-2006.mmt'
+# APmodel = '../math_model/AP_model/TTP-2006.mmt'
+APmodel = '../math_model/AP_model/TTP-ref.mmt'
 APmodel, _, x = myokit.load(APmodel)
 AP_model = modelling.Simulation(APmodel)
 AP_model.protocol = protocol
@@ -109,7 +110,7 @@ fig.sharex(['Time (ms)'], [(0, pulse_time)])
 fig.sharey(['Current\n(A/F)', 'Voltage\n(mV)'])
 
 fig_dir = '../figures/basic_sim/'
-fig.savefig(fig_dir + "ttp_sim.pdf")
+fig.savefig(fig_dir + "ttp_sim_ref.pdf")
 
 # Calcium dynamics measures
 Ca_SS = log['calcium_dynamics.Ca_ss']
@@ -125,21 +126,21 @@ print('CaSS time to peak: ', CaSS_time2peak)
 Cai_time2peak = np.sum(log['dot(calcium_dynamics.Ca_i)'] > 1e-6 * 1) * timestep
 print('Cai time to peak: ', Cai_time2peak)
 CaSS_duration = np.sum((Ca_SS - min(Ca_SS)) > 0.1 * 1) * timestep
-print('CaSS time to peak: ', CaSS_duration)
-# Cai_time2peak = np.sum(log['calcium_dynamics.Ca_i'] > 1e-6 * 1) * timestep
-# print('Cai time to peak: ', Cai_time2peak)
+print('CaSS duration: ', CaSS_duration)
+Cai_duration = np.sum((Ca_i - min(Ca_i)) > 1e-5 * 1) * timestep
+print('Cai duration: ', Cai_duration)
 
 # Check the computation of time to peak
 plt.figure()
-plt.plot(log['calcium_dynamics.Ca_ss'])
+plt.plot(log.time(), log['calcium_dynamics.Ca_i'])
 # plt.plot((log['dot(calcium_dynamics.Ca_i)'] > 1e-5) * max(Ca_i), '--')
-plt.plot((Ca_SS - min(Ca_SS)) > 0.1 * 1 * max(Ca_SS), '--')
+plt.plot(log.time(), ((Ca_i - min(Ca_i)) > 1e-5 * 1) * max(Ca_i), '--')
 # plt.xlim(80 * 10, 220 * 10)
 fig_dir = '../figures/basic_sim/'
 plt.savefig(fig_dir + 'test.pdf')
 
 # Plot output
-fig = modelling.figures.FigureStructure(figsize=(5, 2), gridspec=(1, 3),
+fig = modelling.figures.FigureStructure(figsize=(8, 2), gridspec=(1, 3),
                                         wspace=0.5)
 
 current_list = ['membrane.V', 'calcium_dynamics.Ca_i',
@@ -147,11 +148,14 @@ current_list = ['membrane.V', 'calcium_dynamics.Ca_i',
 current_name = ['Vm', 'Cai', 'CaSS']
 
 for i in range(len(current_list)):
-    plot.add_single(fig.axs[0][i], log, current_list[i])
+    fig.axs[0][i].plot(log.time(), log[current_list[i]], '--')
     fig.axs[0][i].spines[['right', 'top']].set_visible(False)
     fig.axs[0][i].set_ylabel(current_name[i])
 
 fig.sharex(['Time (ms)'] * 3, [(0, 600), (0, 800), (0, 600)])
+fig.axs[0][0].set_ylim(-90, 35)
+fig.axs[0][1].set_ylim(0, 0.001)
+fig.axs[0][2].set_ylim(0, 2)
 
 fig_dir = '../figures/basic_sim/'
-fig.savefig(fig_dir + "ttp_sim_currents.pdf")
+fig.savefig(fig_dir + "ttp_sim_currents_ref.svg", format='svg')
