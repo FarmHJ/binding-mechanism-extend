@@ -57,9 +57,10 @@ class Simulation(object):
     def APD90(self, signal, offset, timestep):
         APA = max(signal) - min(signal)
         APD90_v = min(signal) + 0.1 * APA
-        index = np.abs(np.array(signal) - APD90_v).argmin()
+        index = np.abs(np.array(signal[offset + 5000:]) - APD90_v).argmin()
+        print(index)
         APD90 = index * timestep - offset
         if APD90 < 1:
             APD90 = len(signal) * timestep
 
-        return APD90
+        return APD90, APD90_v

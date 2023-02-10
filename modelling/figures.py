@@ -118,7 +118,7 @@ class FigureStructure(object):
     def savefig(self, filename, format=None):
 
         plt.subplots_adjust(hspace=0.05)
-        self.fig.savefig(filename, bbox_inches='tight', format=format, transparent=True)
+        self.fig.savefig(filename, bbox_inches='tight', format=format)
         plt.close()
 
 
