@@ -253,4 +253,3 @@ for i in range(3):
 
 fig_dir = '../figures/basic_sim/'
 fig.savefig(fig_dir + "ttp_sim_APmeasure.svg", format='svg')
-
