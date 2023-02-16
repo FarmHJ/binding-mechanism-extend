@@ -1,4 +1,5 @@
 # Introduces the idea of trapping and justifies the use of the Milnes protocol
+import matplotlib.pyplot as plt
 import myokit
 import os
 
@@ -19,15 +20,15 @@ repeats = 1000
 abs_tol = 1e-7
 rel_tol = 1e-8
 
+fig_dir = '../figures/basic_sim/'
+
 # Simulate AP for AP clamp protocol
 log = AP_model.model_simulation(repeats, abs_tol=abs_tol, rel_tol=rel_tol)
 print('Reversal potential of K for AP-SD model: ', log['rev.EK'][0])
-import matplotlib.pyplot as plt
+
 plt.figure()
-plt.plot(log.time(), log['potassium.K_i'])
-fig_dir = '../figures/basic_sim/'
-plt.savefig(fig_dir + 'potassium_current.pdf')
-print(log['potassium.K_i'])
+# plt.plot(log.time(), log['potassium.K_i'])
+plt.plot(log.time(), log['rev.EK'])
 
 # Plot output
 # fig_hERG = modelling.figures.FigureStructure(figsize=(5, 3), gridspec=(2, 3))
@@ -51,6 +52,11 @@ AP_model.protocol = protocol
 
 log_Grd = AP_model.model_simulation(1000, abs_tol=abs_tol, rel_tol=rel_tol)
 print('Reversal potential of K for Grandi: ', log_Grd['parameters.ek'][0])
+
+# plt.plot(log_Grd.time(), log_Grd['K_Concentration.K_i'])
+plt.plot(log_Grd.time(), log_Grd['parameters.ek'])
+# plt.savefig(fig_dir + 'potassium_current.pdf')
+plt.savefig(fig_dir + 'reversal_potential.pdf')
 
 # # Plot output
 # fig = modelling.figures.FigureStructure(figsize=(5, 3), gridspec=(2, 1))
@@ -81,8 +87,8 @@ fig = modelling.figures.FigureStructure(figsize=(9, 6), gridspec=(8, 3),
                                         wspace=0.08)
 
 current_list_Grd = ['membrane_potential.V_m', 'I_Kr.I_kr', 'I_Na.I_Na',
-                'I_Ca.I_Catot', 'I_Ks.I_ks', 'I_to.I_to', 'I_Ki.I_ki',
-                'I_NaK.I_nak']
+                    'I_Ca.I_Catot', 'I_Ks.I_ks', 'I_to.I_to', 'I_Ki.I_ki',
+                    'I_NaK.I_nak']
 current_name = ['Vm', 'I_Kr', 'I_Na', 'I_CaL', 'I_Ks',
                 'I_to', 'I_K1', 'I_NaK']
 current_list_SD = ['membrane.V', 'ikr.IKr', 'ina.INa', 'ical.ICaL',
@@ -117,3 +123,9 @@ fig.sharey(current_name)
 
 fig_dir = '../figures/basic_sim/'
 fig.savefig(fig_dir + "grd_SD_sim_currents.pdf")
+
+# Plot current contributions
+current_list_Grd = ['I_Kr.I_kr', 'I_Ks.I_ks', 'I_to.I_to', 'I_Ki.I_ki', 
+                    'I_NaK.I_nak', 'I_Na.I_Na',
+                    'I_Ca.I_Catot', 
+                    ]
