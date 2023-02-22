@@ -17,7 +17,8 @@ class Simulation(object):
         self.sim = myokit.Simulation(self.model, self.protocol)
         self.initial_state = self.sim.state()
 
-    def model_simulation(self, repeats, t_max=None,
+    def model_simulation(self, repeats, conductance_name=None,
+                         conductance_value=None, t_max=None,
                          timestep=0.1, save_signal=1, log_var=None,
                          abs_tol=1e-6, rel_tol=1e-4):
 
@@ -27,6 +28,9 @@ class Simulation(object):
         self.sim = myokit.Simulation(self.model, self.protocol)
         self.sim.reset()
         self.sim.set_tolerance(abs_tol=abs_tol, rel_tol=rel_tol)
+
+        if conductance_name is not None:
+            self.sim.set_constant(conductance_name, conductance_value)
 
         self.sim.pre(t_max * (repeats - save_signal))
         log = self.sim.run(t_max * save_signal, log=log_var,
@@ -59,8 +63,9 @@ class Simulation(object):
         APD90_v = min(signal) + 0.1 * APA
         min_APD = int(50 / timestep)
         offset_index = int(offset / timestep)
-        index = np.abs(np.array(signal[offset_index + min_APD:]) - APD90_v).argmin()
-        APD90 = index * timestep + min_APD * timestep # - offset
+        index = np.abs(np.array(signal[offset_index + min_APD:]) -
+                       APD90_v).argmin()
+        APD90 = index * timestep + min_APD * timestep  # - offset
         # index = np.abs(np.array(signal[offset:]) - APD90_v).argmin()
         # APD90 = index * timestep - offset
         if APD90 < 1:

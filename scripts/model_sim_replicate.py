@@ -74,9 +74,9 @@ rel_tol = 1e-8
 # ten Tusscher (2006) model
 #
 # Define protocol
-timestep = 0.02
+timestep = 0.01
 protocol_offset = 100
-protocol = myokit.pacing.blocktrain(pulse_time, 1, offset=protocol_offset)
+protocol = myokit.pacing.blocktrain(pulse_time, 0.5, offset=protocol_offset)
 # Set up AP model
 APmodel = '../math_model/AP_model/TTP-2006.mmt'
 # APmodel = '../math_model/AP_model/TTP-ref.mmt'

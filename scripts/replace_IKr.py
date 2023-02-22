@@ -1,131 +1,316 @@
 # Introduces the idea of trapping and justifies the use of the Milnes protocol
-import matplotlib.pyplot as plt
+import matplotlib
 import myokit
-import os
+import myokit.lib.plots as mp
 
 import modelling
 
 # Define protocol
 pulse_time = 1000
-protocol_offset = 10
-protocol = myokit.pacing.blocktrain(pulse_time, 1, offset=protocol_offset)
+protocol_offset = 50
+protocol = myokit.pacing.blocktrain(pulse_time, 0.5, offset=protocol_offset)
 
-# Load AP-SD model
-APmodel = '../math_model/AP_model/ohara-cipa-2017.mmt'
-APmodel, _, x = myokit.load(APmodel)
-AP_model = modelling.Simulation(APmodel)
-AP_model.protocol = protocol
-
+# Define constants
 repeats = 1000
 abs_tol = 1e-7
 rel_tol = 1e-8
 
 fig_dir = '../figures/basic_sim/'
 
-# Simulate AP for AP clamp protocol
+# Set up figure for reversal potential, AP and current contribution
+plot = modelling.figures.FigurePlot()
+fig_EK = modelling.figures.FigureStructure(figsize=(3, 3), gridspec=(1, 1))
+fig_current = modelling.figures.FigureStructure(figsize=(9, 5),
+                                                gridspec=(2, 3),
+                                                height_ratios=[1] * 2,
+                                                hspace=0.35, wspace=0.1)
+fig_AP = modelling.figures.FigureStructure(figsize=(9, 5), gridspec=(2, 3),
+                                           height_ratios=[1] * 2, hspace=0.35,
+                                           wspace=0.2, plot_in_subgrid=True)
+
+subgridspecs = [(2, 1)] * 5
+subgs = []
+for i in range(5):
+    subgs.append(fig_AP.gs[i].subgridspec(*subgridspecs[i], wspace=0.1,
+                                          hspace=0.1))
+axs_AP = [[[fig_AP.fig.add_subplot(subgs[k][i, j]) for j in range(
+    subgridspecs[k][1])] for i in range(subgridspecs[k][0])] for
+    k in range(len(subgs))]
+
+# Figure parameters
+cmap = matplotlib.cm.get_cmap('tab20')
+current_list = modelling.ModelDetails().current_list
+plotting_pulse_time = 800
+current_colours = dict({
+    'IKr': 0,
+    'IKs': 1,
+    'Ito': 2,
+    'IKb': 3,
+    'IK1': 4,
+    'INaK': 5,
+    'INa': 16,
+    'INaL': 17,
+    'ICaL': 10,
+    'INaCa': 12,
+    'INaB': 14,
+    'ICaB': 15,
+    'IClCa': 6,
+    'IClB': 7,
+    'ICaP': 13,
+    'IKACh': 18,
+    'IKATP': 19,
+})
+
+#######################
+#
+# AP-SD model
+#
+#######################
+# Load AP-SD model
+APmodel = '../math_model/AP_model/ohara-cipa-2017.mmt'
+APmodel, _, x = myokit.load(APmodel)
+AP_model = modelling.Simulation(APmodel)
+AP_model.protocol = protocol
+
+# Simulate AP
 log = AP_model.model_simulation(repeats, abs_tol=abs_tol, rel_tol=rel_tol)
 print('Reversal potential of K for AP-SD model: ', log['rev.EK'][0])
 
-plt.figure()
-# plt.plot(log.time(), log['potassium.K_i'])
-plt.plot(log.time(), log['rev.EK'])
+# Plot reversal potential of potassium
+fig_EK.axs[0][0].plot(log.time(), log['rev.EK'], label='AP-SD')
 
-# Plot output
-# fig_hERG = modelling.figures.FigureStructure(figsize=(5, 3), gridspec=(2, 3))
-plot = modelling.figures.FigurePlot()
+# Plot AP and hERG
+SD_panel = axs_AP[2]
+plot.add_single(SD_panel[0][0], log, 'membrane.V')
+plot.add_single(SD_panel[1][0], log, 'ikr.IKr')
+SD_panel[0][0].set_title("O'Hara-CiPA (2017) epi")
+AP_y_bottom1, AP_y_top1 = SD_panel[0][0].get_ylim()
+IKr_y_bottom1, IKr_y_top1 = SD_panel[1][0].get_ylim()
+fig_AP.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
+              axs=SD_panel, subgridspec=subgridspecs[2])
 
-# plot.add_single(fig_hERG.axs[0][0], log, 'stimulus.i_stim')
-# plot.add_single(fig_hERG.axs[1][0], log, 'membrane.V')
-# plot.state_occupancy_plot(fig.axs[2][0], log, AP_model)
+# Plot current contribution
+APSD_current_keys = modelling.ModelDetails().current_keys['AP-SD']
+none_key_list = [i for i in APSD_current_keys.keys() if
+                 APSD_current_keys[i] is None]
+for i in none_key_list:
+    del(APSD_current_keys[i])
 
-# fig.sharex(['Time (ms)'], [(0, pulse_time)])
-# fig.sharey(['Current\n(A/F)', 'Voltage\n(mV)'])
+colours = [cmap(current_colours[x]) for x in APSD_current_keys.keys()]
+currents = list(APSD_current_keys.values())
 
-# fig_dir = '../figures/basic_sim/'
-# fig.savefig(fig_dir + "grd_sim.pdf")
+SD_current_panel = fig_current.axs[0][2]
+SD_current_panel.set_title("O'Hara-CiPA (2017) epi")
+mp.cumulative_current(log, currents, SD_current_panel, colors=colours,
+                      normalise=True)
 
+#######################
+#
+# Grandi model
+#
+#######################
 # Load Grandi (2010) model
 APmodel = '../math_model/AP_model/Grd-2010.mmt'
 APmodel, _, x = myokit.load(APmodel)
 AP_model = modelling.Simulation(APmodel)
 AP_model.protocol = protocol
 
-log_Grd = AP_model.model_simulation(1000, abs_tol=abs_tol, rel_tol=rel_tol)
-print('Reversal potential of K for Grandi: ', log_Grd['parameters.ek'][0])
+log = AP_model.model_simulation(1000, abs_tol=abs_tol, rel_tol=rel_tol)
+print('Reversal potential of K for Grandi: ', log['parameters.ek'][0])
 
-# plt.plot(log_Grd.time(), log_Grd['K_Concentration.K_i'])
-plt.plot(log_Grd.time(), log_Grd['parameters.ek'])
-# plt.savefig(fig_dir + 'potassium_current.pdf')
-plt.savefig(fig_dir + 'reversal_potential.pdf')
+# Plot reversal potential of potassium
+fig_EK.axs[0][0].plot(log.time(), log['parameters.ek'], label='Grandi')
 
-# # Plot output
-# fig = modelling.figures.FigureStructure(figsize=(5, 3), gridspec=(2, 1))
-# plot = modelling.figures.FigurePlot()
+# Plot AP and hERG
+Grd_panel = axs_AP[0]
+plot.add_single(Grd_panel[0][0], log, 'membrane_potential.V_m')
+plot.add_single(Grd_panel[1][0], log, 'I_Kr.I_kr')
+Grd_panel[0][0].set_title("Grandi (2010)")
+AP_y_bottom2, AP_y_top2 = Grd_panel[0][0].get_ylim()
+IKr_y_bottom2, IKr_y_top2 = Grd_panel[1][0].get_ylim()
+fig_AP.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
+              axs=Grd_panel, subgridspec=subgridspecs[0])
 
-# plot.add_single(fig.axs[0][0], log, 'interface.I_app')
-# plot.add_single(fig.axs[1][0], log, 'membrane_potential.V_m')
-# # plot.state_occupancy_plot(fig.axs[2][0], log, AP_model)
+# Plot current contribution
+Grd_current_keys = modelling.ModelDetails().current_keys['Grandi']
+none_key_list = [i for i in Grd_current_keys.keys() if
+                 Grd_current_keys[i] is None]
+for i in none_key_list:
+    del(Grd_current_keys[i])
 
-# fig.sharex(['Time (ms)'], [(0, pulse_time)])
-# fig.sharey(['Current\n(A/F)', 'Voltage\n(mV)'])
+colours = [cmap(current_colours[x]) for x in Grd_current_keys.keys()]
+currents = list(Grd_current_keys.values())
 
-# fig_dir = '../figures/basic_sim/'
-# fig.savefig(fig_dir + "grd_sim.pdf")
+Grd_current_panel = fig_current.axs[0][0]
+Grd_current_panel.set_title("Grandi (2010)")
+mp.cumulative_current(log, currents, Grd_current_panel, colors=colours,
+                      normalise=True)
 
+#######################
+#
+# ten Tusscher (2006) model
+#
+#######################
+# Load TTP (2006) model
+APmodel = '../math_model/AP_model/TTP-2006.mmt'
+APmodel, _, x = myokit.load(APmodel)
+AP_model = modelling.Simulation(APmodel)
+AP_model.protocol = protocol
+
+log = AP_model.model_simulation(1000, abs_tol=abs_tol, rel_tol=rel_tol)
+print('Reversal potential of K for TTP: ', log['reversal_potentials.E_K'][0])
+
+# Plot reversal potential of potassium
+fig_EK.axs[0][0].plot(log.time(), log['reversal_potentials.E_K'], label='TTP')
+
+# Plot AP and hERG
+TTP_panel = axs_AP[1]
+plot.add_single(TTP_panel[0][0], log, 'membrane.V')
+plot.add_single(TTP_panel[1][0], log,
+                'rapid_time_dependent_potassium_current.i_Kr')
+TTP_panel[0][0].set_title("ten Tusscher (2006)")
+AP_y_bottom3, AP_y_top3 = TTP_panel[0][0].get_ylim()
+IKr_y_bottom3, IKr_y_top3 = TTP_panel[1][0].get_ylim()
+fig_AP.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
+              axs=TTP_panel, subgridspec=subgridspecs[1])
+
+# Plot current contribution
+TTP_current_keys = modelling.ModelDetails().current_keys['TTP']
+none_key_list = [i for i in TTP_current_keys.keys() if
+                 TTP_current_keys[i] is None]
+for i in none_key_list:
+    del(TTP_current_keys[i])
+
+colours = [cmap(current_colours[x]) for x in TTP_current_keys.keys()]
+currents = list(TTP_current_keys.values())
+
+TTP_current_panel = fig_current.axs[0][1]
+TTP_current_panel.set_title("ten Tusscher (2006)")
+mp.cumulative_current(log, currents, TTP_current_panel, colors=colours,
+                      normalise=True)
+
+#######################
+#
+# Grandi-SD model
+#
+#######################
 # Load Grandi-SD model
 APmodel = '../math_model/AP_model/Grd-2010-IKr-SD.mmt'
 APmodel, _, x = myokit.load(APmodel)
 AP_model = modelling.Simulation(APmodel)
 AP_model.protocol = protocol
 
-log_Grd_SD = AP_model.model_simulation(1000, abs_tol=abs_tol, rel_tol=rel_tol)
-print('Reversal potential of K for Grandi-SD: ', log_Grd_SD['parameters.ek'][0])
+log = AP_model.model_simulation(1000, abs_tol=abs_tol, rel_tol=rel_tol)
+print('Reversal potential of K for Grandi-SD: ', log['parameters.ek'][0])
 
-# Plot output
-fig = modelling.figures.FigureStructure(figsize=(9, 6), gridspec=(8, 3),
-                                        height_ratios=[1] * 8, hspace=0.2,
-                                        wspace=0.08)
+# Plot reversal potential of potassium
+fig_EK.axs[0][0].plot(log.time(), log['parameters.ek'], label='Grandi-SD')
 
-current_list_Grd = ['membrane_potential.V_m', 'I_Kr.I_kr', 'I_Na.I_Na',
-                    'I_Ca.I_Catot', 'I_Ks.I_ks', 'I_to.I_to', 'I_Ki.I_ki',
-                    'I_NaK.I_nak']
-current_name = ['Vm', 'I_Kr', 'I_Na', 'I_CaL', 'I_Ks',
-                'I_to', 'I_K1', 'I_NaK']
-current_list_SD = ['membrane.V', 'ikr.IKr', 'ina.INa', 'ical.ICaL',
-                   'iks.IKs', 'ito.Ito', 'ik1.IK1', 'inak.INaK']
+# Plot AP and hERG
+Grd_SD_panel = axs_AP[3]
+plot.add_single(Grd_SD_panel[0][0], log, 'membrane_potential.V_m')
+plot.add_single(Grd_SD_panel[1][0], log, 'I_Kr.I_kr')
+Grd_SD_panel[0][0].set_title("Grandi-SD")
+AP_y_bottom4, AP_y_top4 = Grd_SD_panel[0][0].get_ylim()
+IKr_y_bottom4, IKr_y_top4 = Grd_SD_panel[1][0].get_ylim()
+fig_AP.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
+              axs=Grd_SD_panel, subgridspec=subgridspecs[3])
 
-for i in range(len(current_list_Grd)):
-    plot.add_single(fig.axs[i][0], log, current_list_SD[i])
-    b_lim1, t_lim1 = fig.axs[i][0].get_ylim()
-    fig.axs[i][0].spines[['right', 'top']].set_visible(False)
-    # fig.axs[i][0].set_ylabel(current_name[i])
+# Plot current contribution
+Grd_current_keys = modelling.ModelDetails().current_keys['Grandi']
+none_key_list = [i for i in Grd_current_keys.keys() if
+                 Grd_current_keys[i] is None]
+for i in none_key_list:
+    del(Grd_current_keys[i])
 
-    plot.add_single(fig.axs[i][1], log_Grd, current_list_Grd[i])
-    b_lim2, t_lim2 = fig.axs[i][1].get_ylim()
-    fig.axs[i][1].spines[['right', 'top']].set_visible(False)
+colours = [cmap(current_colours[x]) for x in Grd_current_keys.keys()]
+currents = list(Grd_current_keys.values())
 
-    plot.add_single(fig.axs[i][2], log_Grd_SD, current_list_Grd[i])
-    b_lim3, t_lim3 = fig.axs[i][2].get_ylim()
-    fig.axs[i][2].spines[['right', 'top']].set_visible(False)
+Grd_SD_current_panel = fig_current.axs[1][0]
+Grd_SD_current_panel.set_title("Grandi-SD")
+mp.cumulative_current(log, currents, Grd_SD_current_panel,
+                      colors=colours, normalise=True)
 
-    fig.axs[i][0].set_ylim(bottom=min(b_lim1, b_lim2, b_lim3),
-                           top=max(t_lim1, t_lim2, t_lim3))
-    fig.axs[i][1].set_ylim(bottom=min(b_lim1, b_lim2, b_lim3),
-                           top=max(t_lim1, t_lim2, t_lim3))
-    fig.axs[i][2].set_ylim(bottom=min(b_lim1, b_lim2, b_lim3),
-                           top=max(t_lim1, t_lim2, t_lim3))
+#######################
+#
+# ten Tusscher-SD model
+#
+#######################
+# Load TTP-SD model
+APmodel = '../math_model/AP_model/TTP-2006-IKr-SD.mmt'
+APmodel, _, x = myokit.load(APmodel)
+AP_model = modelling.Simulation(APmodel)
+AP_model.protocol = protocol
 
-fig.axs[0][0].set_title('AP-SD model')
-fig.axs[0][1].set_title('Grandi model')
-fig.axs[0][2].set_title('Grandi-SD model')
-fig.sharex(['Time (ms)'] * 3, [(0, 500)] * 3)
-fig.sharey(current_name)
+log = AP_model.model_simulation(1000, abs_tol=abs_tol, rel_tol=rel_tol)
+print('Reversal potential of K for TTP: ', log['reversal_potentials.E_K'][0])
 
-fig_dir = '../figures/basic_sim/'
-fig.savefig(fig_dir + "grd_SD_sim_currents.pdf")
+# Plot reversal potential of potassium
+fig_EK.axs[0][0].plot(log.time(), log['reversal_potentials.E_K'],
+                      label='TTP-SD')
 
-# Plot current contributions
-current_list_Grd = ['I_Kr.I_kr', 'I_Ks.I_ks', 'I_to.I_to', 'I_Ki.I_ki', 
-                    'I_NaK.I_nak', 'I_Na.I_Na',
-                    'I_Ca.I_Catot', 
-                    ]
+# Plot AP and hERG
+TTP_panel = axs_AP[4]
+plot.add_single(TTP_panel[0][0], log, 'membrane.V')
+plot.add_single(TTP_panel[1][0], log,
+                'rapid_time_dependent_potassium_current.i_Kr')
+TTP_panel[0][0].set_title("ten Tusscher-SD")
+AP_y_bottom5, AP_y_top5 = TTP_panel[0][0].get_ylim()
+IKr_y_bottom5, IKr_y_top5 = TTP_panel[1][0].get_ylim()
+fig_AP.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
+              axs=TTP_panel, subgridspec=subgridspecs[4])
+
+# Plot current contribution
+TTP_current_keys = modelling.ModelDetails().current_keys['TTP']
+none_key_list = [i for i in TTP_current_keys.keys() if
+                 TTP_current_keys[i] is None]
+for i in none_key_list:
+    del(TTP_current_keys[i])
+
+colours = [cmap(current_colours[x]) for x in TTP_current_keys.keys()]
+currents = list(TTP_current_keys.values())
+
+TTP_SD_current_panel = fig_current.axs[1][1]
+TTP_SD_current_panel.set_title("ten Tusscher-SD")
+mp.cumulative_current(log, currents, TTP_SD_current_panel,
+                      colors=colours, normalise=True)
+
+# Adjust figures
+fig_EK.axs[0][0].legend()
+
+AP_y_min = min(AP_y_bottom1, AP_y_bottom2, AP_y_bottom3, AP_y_bottom4,
+               AP_y_bottom5)
+AP_y_max = max(AP_y_top1, AP_y_top2, AP_y_top3, AP_y_top4, AP_y_top5)
+IKr_y_min = min(IKr_y_bottom1, IKr_y_bottom2, IKr_y_bottom3, IKr_y_bottom4,
+                IKr_y_bottom5)
+IKr_y_max = max(IKr_y_top1, IKr_y_top2, IKr_y_top3, IKr_y_top4, IKr_y_top5)
+for i in range(5):
+    axs_AP[i][1][0].set_ylim(IKr_y_min, IKr_y_max)
+    axs_AP[i][0][0].set_ylim(AP_y_min, AP_y_max)
+    if i == 0 or 3:
+        print(i)
+        axs_AP[i][0][0].set_ylabel('AP')
+        axs_AP[i][1][0].set_ylabel(r"$I_\mathrm{Kr}$")
+    else:
+        axs_AP[i][0][0].set_yticklabels([])
+        axs_AP[i][1][0].set_yticklabels([])
+
+legend_panel = fig_current.axs[1][2]
+legend_panel.xaxis.set_visible(False)
+legend_panel.yaxis.set_visible(False)
+legend_panel.set_frame_on(False)
+lines = []
+for current, i in current_colours.items():
+    lines.append(matplotlib.lines.Line2D([0], [0], color=cmap(i), lw=5))
+del(current_colours['IKACh'])
+del(current_colours['IKATP'])
+labels = [modelling.ModelDetails().current_names[x] for x in current_colours]
+legend_panel.legend(lines, labels, loc=(0, 0.05), ncol=2)
+
+fig_current.sharex(["Time (ms)"] * 3, [(0, plotting_pulse_time)] * 3)
+fig_current.sharey(["Relative contribution"] * 2, [(-1.02, 1.02)] * 2)
+
+# Save figures
+fig_EK.savefig(fig_dir + 'reversal_potential.pdf')
+fig_AP.savefig(fig_dir + 'AP_hERG.pdf')
+fig_current.savefig(fig_dir + 'current_contribution.pdf')
