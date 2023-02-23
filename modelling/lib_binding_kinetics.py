@@ -406,40 +406,6 @@ class BindingParameters(object):
                     'IC50': 0}, }, }
 
 
-class ProtocolParameters(object):
-    """
-    To create a library of all the parameters for different protocols,
-    especially default pulse time and function name.
-    """
-
-    def __init__(self):
-        super(ProtocolParameters, self).__init__()
-
-        self.protocols = ['Milnes', 'Pneg80', 'P0', 'P40']
-        self.protocol_parameters = {
-            'Milnes': {
-                'pulse_time': 25e3,
-                'function': modelling.ProtocolLibrary().Milnes(25e3),
-                'voltage_points': [-80, 0],
-            },
-            'Pneg80': {
-                'pulse_time': 5400,
-                'function': modelling.ProtocolLibrary().Pneg80(5400),
-                'voltage_points': [-80, -50, 20],
-            },
-            'P0': {
-                'pulse_time': 5400,
-                'function': modelling.ProtocolLibrary().P0(5400),
-                'voltage_points': [-80, -60, 0],
-            },
-            'P40': {
-                'pulse_time': 5400,
-                'function': modelling.ProtocolLibrary().P40(5400),
-                'voltage_points': [-80, -60, 40],
-            },
-        }
-
-
 class DrugConcentrations(object):
     """
     Create a library for default list of drug concentrations

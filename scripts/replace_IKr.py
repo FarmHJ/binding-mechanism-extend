@@ -19,14 +19,14 @@ fig_dir = '../figures/basic_sim/'
 
 # Set up figure for reversal potential, AP and current contribution
 plot = modelling.figures.FigurePlot()
-fig_EK = modelling.figures.FigureStructure(figsize=(3, 3), gridspec=(1, 1))
+fig_EK = modelling.figures.FigureStructure(figsize=(3, 2), gridspec=(1, 1))
 fig_current = modelling.figures.FigureStructure(figsize=(9, 5),
                                                 gridspec=(2, 3),
                                                 height_ratios=[1] * 2,
                                                 hspace=0.35, wspace=0.1)
 fig_AP = modelling.figures.FigureStructure(figsize=(9, 5), gridspec=(2, 3),
                                            height_ratios=[1] * 2, hspace=0.35,
-                                           wspace=0.2, plot_in_subgrid=True)
+                                           wspace=0.1, plot_in_subgrid=True)
 
 subgridspecs = [(2, 1)] * 5
 subgs = []
@@ -287,7 +287,7 @@ IKr_y_max = max(IKr_y_top1, IKr_y_top2, IKr_y_top3, IKr_y_top4, IKr_y_top5)
 for i in range(5):
     axs_AP[i][1][0].set_ylim(IKr_y_min, IKr_y_max)
     axs_AP[i][0][0].set_ylim(AP_y_min, AP_y_max)
-    if i == 0 or 3:
+    if i == 0 or i == 3:
         print(i)
         axs_AP[i][0][0].set_ylabel('AP')
         axs_AP[i][1][0].set_ylabel(r"$I_\mathrm{Kr}$")
