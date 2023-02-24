@@ -22,6 +22,7 @@ import modelling
 
 # Define drug and protocol
 drug = sys.argv[1]
+tuning_method = sys.argv[2]
 
 # Define the range of drug concentration for a given drug
 drug_conc_lib = modelling.DrugConcentrations()
@@ -29,16 +30,14 @@ drug_conc = drug_conc_lib.drug_concentrations[drug]['coarse']
 repeats = 1000
 
 # Define directories to save simulated data
-data_dir = '../simulation_data/kinetics_comparison/Grandi/' + \
-    drug + '/'
+data_dir = \
+    '../simulation_data/kinetics_comparison/Grandi/' + tuning_method + \
+    '_match/' + drug + '/'
 if not os.path.isdir(data_dir):
     os.makedirs(data_dir)
 
 abs_tol = 1e-7
 rel_tol = 1e-8
-
-# Hill_model = modelling.HillsModel()
-# optimiser = modelling.HillsModelOpt(Hill_model)
 
 
 def Hill_simulate(params, drug_conc):
@@ -51,7 +50,9 @@ def Hill_simulate(params, drug_conc):
     return response
 
 
-Hill_coef_df = pd.read_csv(data_dir + 'Hill_curves.csv')
+Hill_coef_dir = '../simulation_data/kinetics_comparison/Grandi/Hill_curves/' \
+    + drug + '/'
+Hill_coef_df = pd.read_csv(Hill_coef_dir + 'Hill_curves.csv')
 Hill_coef = Hill_coef_df.loc[Hill_coef_df['protocol'] == 'Milnes']
 Hill_coef = Hill_coef.values.tolist()[0][1:-1]
 
@@ -65,7 +66,7 @@ AP_model = modelling.Simulation(APmodel, current_head_key='I_Kr')
 # Same hERG peak as Grandi model
 scale_df = pd.read_csv('../simulation_data/Grandi_conductance_scale.csv',
                        index_col=[0], skipinitialspace=True)
-conductance_scale = scale_df.loc['hERG peak'].values[0]
+conductance_scale = scale_df.loc[tuning_method].values[0]
 AP_model.model.set_value('drug.ikr_rescale', conductance_scale)
 
 # Define current protocol
@@ -104,7 +105,7 @@ for i in range(len(drug_conc)):
     APD_trapping_pulse = []
     for pulse in range(save_signal):
         apd90, _ = AP_model.APD90(log['membrane_potential.V_m', pulse],
-                               offset, 0.1)
+                                  offset, 0.1)
         APD_trapping_pulse.append(apd90)
 
     AP_trapping.append(log)
@@ -120,7 +121,7 @@ for i in range(len(drug_conc)):
     APD_conductance_pulse = []
     for pulse in range(save_signal):
         apd90, _ = AP_model.APD90(d2['membrane_potential.V_m', pulse],
-                               offset, 0.1)
+                                  offset, 0.1)
         APD_conductance_pulse.append(apd90)
 
     AP_conductance.append(d2)
@@ -159,7 +160,8 @@ for i in range(len(drug_conc)):
     # Compute APD90 of simulated AP
     APD_trapping_pulse = []
     for pulse in range(save_signal):
-        apd90, _ = AP_model.APD90(log['membrane_potential.V_m', pulse], offset, 0.1)
+        apd90, _ = AP_model.APD90(log['membrane_potential.V_m', pulse],
+                                  offset, 0.1)
         APD_trapping_pulse.append(apd90)
 
     APD_trapping.append(APD_trapping_pulse)
@@ -174,24 +176,69 @@ for i in range(len(drug_conc)):
     # Compute APD90 of simulated AP
     APD_conductance_pulse = []
     for pulse in range(save_signal):
-        apd90, _ = AP_model.APD90(d2['membrane_potential.V_m', pulse], offset, 0.1)
+        apd90, _ = AP_model.APD90(d2['membrane_potential.V_m', pulse],
+                                  offset, 0.1)
         APD_conductance_pulse.append(apd90)
 
     APD_conductance.append(APD_conductance_pulse)
 
     print('done concentration: ' + str(drug_conc[i]))
 
+# Compute qNet
+pulse_time = 2000
+AP_model.protocol = myokit.pacing.blocktrain(pulse_time, 0.5)
+save_signal = 1
+current_list = ['I_Ca.I_Catot', 'I_Kr.I_kr', 'I_Ks.I_ks', 'I_Ki.I_ki',
+                'I_to.I_to']
+control_log = AP_model.conductance_simulation(
+    base_conductance, repeats, timestep=0.01, abs_tol=abs_tol,
+    rel_tol=rel_tol)
+
+qNet_SD_arr = []
+qNet_CS_arr = []
+print('Computing qNet...')
+for i in range(len(drug_conc)):
+    print('simulating concentration: ' + str(drug_conc[i]))
+
+    # Run simulation for the ORd-SD model till steady state
+    log = AP_model.drug_simulation(
+        drug, drug_conc[i], repeats + save_signal, timestep=0.01,
+        log_var=log_var[:2] + current_list, abs_tol=abs_tol, rel_tol=rel_tol,
+        set_state=control_log)
+
+    inet = 0
+    for c in current_list:
+        inet += log[c]  # pA/pF
+
+    qNet = np.trapz(inet, x=log.time()) * 1e-3  # pA/pF*s
+    qNet_SD_arr.append(qNet)
+
+    # Run simulation for the ORd-CS model till steady state
+    reduction_scale = Hill_simulate(Hill_coef, drug_conc[i])
+    d2 = AP_model.conductance_simulation(
+        base_conductance * reduction_scale, repeats + save_signal,
+        timestep=0.01, log_var=log_var[:2] + current_list,
+        abs_tol=abs_tol, rel_tol=rel_tol, set_state=control_log)
+
+    inet = 0
+    for c in current_list:
+        inet += d2[c]  # pA/pF
+
+    qNet = np.trapz(inet, x=d2.time()) * 1e-3  # pA/pF*s
+    qNet_CS_arr.append(qNet)
+
+    print('done concentration: ' + str(drug_conc[i]))
+
 # Compute APD90 with AP behaviour in alternating cycles
-print(APD_trapping)
 APD_trapping = [max(i) for i in APD_trapping]
 APD_conductance = [max(i) for i in APD_conductance]
 
 # Save APD90 data
 APD_trapping_df = pd.DataFrame(np.array(APD_trapping), columns=['APD'])
-print(APD_trapping_df)
-print(drug_conc)
 APD_trapping_df['drug concentration'] = drug_conc
+APD_trapping_df['qNet'] = qNet_SD_arr
 APD_trapping_df.to_csv(data_dir + 'SD_APD_fine.csv')
 APD_conductance_df = pd.DataFrame(np.array(APD_conductance), columns=['APD'])
 APD_conductance_df['drug concentration'] = drug_conc
+APD_conductance_df['qNet'] = qNet_CS_arr
 APD_conductance_df.to_csv(data_dir + 'CS_APD_fine.csv')
