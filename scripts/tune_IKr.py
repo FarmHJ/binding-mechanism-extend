@@ -3,10 +3,15 @@ import matplotlib
 import myokit
 import myokit.lib.plots as mp
 import numpy as np
+import os
 import pandas as pd
 from scipy.optimize import minimize
+import sys
 
 import modelling
+
+# Define AP model
+APmodel_name = sys.argv[1]
 
 # Define protocol
 pulse_time = 1000
@@ -18,7 +23,9 @@ repeats = 1000
 abs_tol = 1e-7
 rel_tol = 1e-8
 
-fig_dir = '../figures/basic_sim/'
+fig_dir = '../figures/kinetics_comparison/' + APmodel_name + '/'
+if not os.path.isdir(fig_dir):
+    os.makedirs(fig_dir)
 data_dir = '../simulation_data/'
 
 # Set up figure for reversal potential, AP and current contribution
@@ -38,10 +45,13 @@ axs = [[[fig.fig.add_subplot(subgs[k][i, j]) for j in range(
 # Figure parameters
 cmap = matplotlib.cm.get_cmap('tab20')
 current_list = modelling.ModelDetails().current_list
-current_keys = modelling.ModelDetails().current_keys
-Grandi_current_keys = current_keys['Grandi']
+model_keys = modelling.ModelDetails().current_keys[APmodel_name]
 plotting_pulse_time = 800
 current_colours = modelling.ModelDetails().current_colours
+
+time_key = model_keys['time']
+Vm_key = model_keys['Vm']
+IKr_key = model_keys['IKr']
 
 #######################
 #
@@ -49,21 +59,26 @@ current_colours = modelling.ModelDetails().current_colours
 #
 #######################
 # Load Grandi (2010) model
-APmodel = '../math_model/AP_model/Grd-2010.mmt'
+if APmodel_name == 'Grandi':
+    APmodel = '../math_model/AP_model/Grd-2010.mmt'
+    model_title = 'Grandi (2010)'
+elif APmodel_name == 'TTP':
+    APmodel = '../math_model/AP_model/TTP-2006.mmt'
+    model_title = 'ten Tusscher (2006)'
 APmodel, _, x = myokit.load(APmodel)
 AP_model = modelling.Simulation(APmodel)
 AP_model.protocol = protocol
 
 log = AP_model.model_simulation(1000, abs_tol=abs_tol, rel_tol=rel_tol)
-Grandi_APD, _ = AP_model.APD90(log['membrane_potential.V_m'], protocol_offset,
+Grandi_APD, _ = AP_model.APD90(log[Vm_key], protocol_offset,
                                0.1)
-Grandi_flux = np.trapz(log['I_Kr.I_kr'], x=log.time())
+Grandi_flux = np.trapz(log[IKr_key], x=log.time())
 
 # Plot AP and hERG
 Grd_AP_panel = axs[0]
-plot.add_single(Grd_AP_panel[0][0], log, 'membrane_potential.V_m')
-plot.add_single(Grd_AP_panel[1][0], log, 'I_Kr.I_kr')
-Grd_AP_panel[0][0].set_title("Grandi (2010)")
+plot.add_single(Grd_AP_panel[0][0], log, Vm_key)
+plot.add_single(Grd_AP_panel[1][0], log, IKr_key)
+Grd_AP_panel[0][0].set_title(model_title)
 Grd_AP_panel[0][0].set_ylabel("AP")
 Grd_AP_panel[1][0].set_ylabel(r"$I_\mathrm{Kr}$")
 Grd_AP_panel[0][0].text(370, 0, 'APD90: ' + '{:.1f}'.format(Grandi_APD),
@@ -76,13 +91,14 @@ fig.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
            axs=Grd_AP_panel, subgridspec=subgridspecs[0])
 
 # Plot current contribution
-none_key_list = [i for i in Grandi_current_keys.keys() if
-                 Grandi_current_keys[i] is None]
+none_key_list = [i for i in model_keys.keys() if model_keys[i] is None]
 for i in none_key_list:
-    del(Grandi_current_keys[i])
+    del(model_keys[i])
+del(model_keys['time'])
+del(model_keys['Vm'])
 
-colours = [cmap(current_colours[x]) for x in Grandi_current_keys.keys()]
-currents = list(Grandi_current_keys.values())
+colours = [cmap(current_colours[x]) for x in model_keys.keys()]
+currents = list(model_keys.values())
 
 Grd_current_panel = axs[4]
 Grd_current_panel[0][0].set_xlabel("Time (ms)")
@@ -99,25 +115,28 @@ mp.cumulative_current(log, currents, Grd_current_panel[0][0], colors=colours,
 #######################
 # Tuning method 1: scale conductance to have same peak of hERG current
 # Load Grandi-SD model
-APmodel = '../math_model/AP_model/Grd-2010-IKr-SD.mmt'
+if APmodel_name == 'Grandi':
+    APmodel = '../math_model/AP_model/Grd-2010-IKr-SD.mmt'
+elif APmodel_name == 'TTP':
+    APmodel = '../math_model/AP_model/TTP-2006-IKr-SD.mmt'
 APmodel, _, x = myokit.load(APmodel)
 AP_model = modelling.Simulation(APmodel)
 AP_model.protocol = protocol
 
 log1 = AP_model.model_simulation(1000, abs_tol=abs_tol, rel_tol=rel_tol)
-SD_IKr_peak = max(log1[Grandi_current_keys['IKr']])
-peak_IKr_scale = max(log[Grandi_current_keys['IKr']]) / SD_IKr_peak
+SD_IKr_peak = max(log1[model_keys['IKr']])
+peak_IKr_scale = max(log[model_keys['IKr']]) / SD_IKr_peak
 log_tune1 = AP_model.model_simulation(1000,
-                                      conductance_name='drug.ikr_rescale',
+                                      conductance_name='tune.ikr_rescale',
                                       conductance_value=peak_IKr_scale,
                                       abs_tol=abs_tol, rel_tol=rel_tol)
-Grd_SD_APD, _ = AP_model.APD90(log_tune1['membrane_potential.V_m'],
+Grd_SD_APD, _ = AP_model.APD90(log_tune1[Vm_key],
                                protocol_offset, 0.1)
 
 # Plot AP and hERG
 Grd_SD_AP_panel = axs[1]
-plot.add_single(Grd_SD_AP_panel[0][0], log_tune1, 'membrane_potential.V_m')
-plot.add_single(Grd_SD_AP_panel[1][0], log_tune1, 'I_Kr.I_kr')
+plot.add_single(Grd_SD_AP_panel[0][0], log_tune1, Vm_key)
+plot.add_single(Grd_SD_AP_panel[1][0], log_tune1, IKr_key)
 Grd_SD_AP_panel[0][0].text(370, 0, 'APD90: ' + '{:.1f}'.format(Grd_SD_APD),
                            fontsize=8, ha='left')
 AP_y_bottom2, AP_y_top2 = Grd_SD_AP_panel[0][0].get_ylim()
@@ -125,7 +144,7 @@ IKr_y_bottom2, IKr_y_top2 = Grd_SD_AP_panel[1][0].get_ylim()
 Grd_SD_AP_panel[1][0].text(450, (IKr_y_top2 - IKr_y_bottom2) / 2,
                            'scale: ' + '{:.2f}'.format(peak_IKr_scale),
                            fontsize=8, ha='left')
-Grd_SD_AP_panel[0][0].set_title("Grandi-SD (1)")
+Grd_SD_AP_panel[0][0].set_title(APmodel_name + "-SD (1)")
 fig.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
            axs=Grd_SD_AP_panel, subgridspec=subgridspecs[1])
 
@@ -144,11 +163,10 @@ mp.cumulative_current(log_tune1, currents, Grd_SD_current_panel[0][0],
 
 
 def APD_problem(conductance_scale):
-    log = AP_model.model_simulation(1000, conductance_name='drug.ikr_rescale',
+    log = AP_model.model_simulation(1000, conductance_name='tune.ikr_rescale',
                                     conductance_value=conductance_scale,
                                     abs_tol=1e-7, rel_tol=1e-8)
-    APD, _ = AP_model.APD90(log['membrane_potential.V_m'],
-                            protocol_offset, 0.1)
+    APD, _ = AP_model.APD90(log[Vm_key], protocol_offset, 0.1)
 
     error = np.sqrt(np.power(APD - Grandi_APD, 2))
 
@@ -160,16 +178,15 @@ res = minimize(APD_problem, initial_guess, method='nelder-mead',
                options={'disp': True})
 APD_IKr_scale = res.x[0]
 log_tune2 = AP_model.model_simulation(1000,
-                                      conductance_name='drug.ikr_rescale',
+                                      conductance_name='tune.ikr_rescale',
                                       conductance_value=APD_IKr_scale,
                                       abs_tol=abs_tol, rel_tol=rel_tol)
-Grd_SD_APD, _ = AP_model.APD90(log_tune2['membrane_potential.V_m'],
-                               protocol_offset, 0.1)
+Grd_SD_APD, _ = AP_model.APD90(log_tune2[Vm_key], protocol_offset, 0.1)
 
 # Plot AP and hERG
 Grd_SD_AP_panel = axs[2]
-plot.add_single(Grd_SD_AP_panel[0][0], log_tune2, 'membrane_potential.V_m')
-plot.add_single(Grd_SD_AP_panel[1][0], log_tune2, 'I_Kr.I_kr')
+plot.add_single(Grd_SD_AP_panel[0][0], log_tune2, Vm_key)
+plot.add_single(Grd_SD_AP_panel[1][0], log_tune2, IKr_key)
 Grd_SD_AP_panel[0][0].text(370, 0, 'APD90: ' + '{:.1f}'.format(Grd_SD_APD),
                            fontsize=8, ha='left')
 AP_y_bottom3, AP_y_top3 = Grd_SD_AP_panel[0][0].get_ylim()
@@ -177,7 +194,7 @@ IKr_y_bottom3, IKr_y_top3 = Grd_SD_AP_panel[1][0].get_ylim()
 Grd_SD_AP_panel[1][0].text(450, (IKr_y_top3 - IKr_y_bottom3) / 2,
                            'scale: ' + '{:.2f}'.format(APD_IKr_scale),
                            fontsize=8, ha='left')
-Grd_SD_AP_panel[0][0].set_title("Grandi-SD (2)")
+Grd_SD_AP_panel[0][0].set_title(APmodel_name + "-SD (2)")
 fig.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
            axs=Grd_SD_AP_panel, subgridspec=subgridspecs[2])
 
@@ -196,10 +213,10 @@ mp.cumulative_current(log_tune2, currents, Grd_SD_current_panel[0][0],
 
 
 def flux_problem(conductance_scale):
-    log = AP_model.model_simulation(1000, conductance_name='drug.ikr_rescale',
+    log = AP_model.model_simulation(1000, conductance_name='tune.ikr_rescale',
                                     conductance_value=conductance_scale,
                                     abs_tol=1e-7, rel_tol=1e-8)
-    flux = np.trapz(log['I_Kr.I_kr'], x=log.time())
+    flux = np.trapz(log[IKr_key], x=log.time())
 
     error = np.sqrt(np.power(flux - Grandi_flux, 2))
 
@@ -211,16 +228,16 @@ res = minimize(flux_problem, initial_guess, method='nelder-mead',
                options={'disp': True})
 flux_IKr_scale = res.x[0]
 log_tune3 = AP_model.model_simulation(1000,
-                                      conductance_name='drug.ikr_rescale',
+                                      conductance_name='tune.ikr_rescale',
                                       conductance_value=flux_IKr_scale,
                                       abs_tol=abs_tol, rel_tol=rel_tol)
-Grd_SD_APD, _ = AP_model.APD90(log_tune3['membrane_potential.V_m'],
+Grd_SD_APD, _ = AP_model.APD90(log_tune3[Vm_key],
                                protocol_offset, 0.1)
 
 # Plot AP and hERG
 Grd_SD_AP_panel = axs[3]
-plot.add_single(Grd_SD_AP_panel[0][0], log_tune3, 'membrane_potential.V_m')
-plot.add_single(Grd_SD_AP_panel[1][0], log_tune3, 'I_Kr.I_kr')
+plot.add_single(Grd_SD_AP_panel[0][0], log_tune3, Vm_key)
+plot.add_single(Grd_SD_AP_panel[1][0], log_tune3, IKr_key)
 Grd_SD_AP_panel[0][0].text(370, 0, 'APD90: ' + '{:.1f}'.format(Grd_SD_APD),
                            fontsize=8, ha='left')
 AP_y_bottom4, AP_y_top4 = Grd_SD_AP_panel[0][0].get_ylim()
@@ -228,7 +245,7 @@ IKr_y_bottom4, IKr_y_top4 = Grd_SD_AP_panel[1][0].get_ylim()
 Grd_SD_AP_panel[1][0].text(450, (IKr_y_top4 - IKr_y_bottom4) / 2,
                            'scale: ' + '{:.2f}'.format(flux_IKr_scale),
                            fontsize=8, ha='left')
-Grd_SD_AP_panel[0][0].set_title("Grandi-SD (3)")
+Grd_SD_AP_panel[0][0].set_title(APmodel_name + "-SD (3)")
 fig.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
            axs=Grd_SD_AP_panel, subgridspec=subgridspecs[3])
 
@@ -261,5 +278,5 @@ fig.savefig(fig_dir + 'IKr_tuning.pdf')
 
 conductance_scale_df = pd.DataFrame(
     {'conductance scale': [peak_IKr_scale, APD_IKr_scale, flux_IKr_scale]},
-    index=['hERG peak', 'AP duration', 'hERG flux'])
-conductance_scale_df.to_csv(data_dir + 'Grandi_conductance_scale.csv')
+    index=['hERG_peak', 'AP_duration', 'hERG_flux'])
+conductance_scale_df.to_csv(data_dir + APmodel_name + '_conductance_scale.csv')

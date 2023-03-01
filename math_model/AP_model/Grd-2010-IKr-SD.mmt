@@ -314,7 +314,7 @@ dot(Obound) = Kmax * Ku * exp(n * log(D)) / (exp(n * log(D)) + halfmax) * O - Ku
 fKr = piecewise(parameters.epi == 1, 1.3, parameters.epi == 0, 1, 0.8)
 gKr =  4.65854545454545618e-2 [mS/uF]
     in [mS/uF]
-I_kr = drug.ikr_rescale * fKr * gKr * sqrt(parameters.Ko / 5.4 [mM]) * O * (V_m - parameters.ek)
+I_kr = tune.ikr_rescale * fKr * gKr * sqrt(parameters.Ko / 5.4 [mM]) * O * (V_m - parameters.ek)
     in [A/F]
 
 [I_Ks]
@@ -533,7 +533,7 @@ kiSRCa = parameters.kiCa * kCaSR
 koSRCa = parameters.koCa / kCaSR
     in [1/mM^2/ms]
 
-[drug]
+[tune]
 ical_rescale = 1
     in [1]
 ikr_rescale = 1
@@ -791,11 +791,11 @@ ksat = 0.32
     in [1]
 nu = 0.27
     in [1]
-pCa = 0.5 [cm/s] * 0.00054 * drug.ical_rescale
+pCa = 0.5 [cm/s] * 0.00054 * tune.ical_rescale
     in [cm/s]
-pK = 0.5 [cm/s] * 2.7e-7 * drug.ical_rescale
+pK = 0.5 [cm/s] * 2.7e-7 * tune.ical_rescale
     in [cm/s]
-pNa = 0.5 [cm/s] * 1.5e-8 * drug.ical_rescale
+pNa = 0.5 [cm/s] * 1.5e-8 * tune.ical_rescale
     in [cm/s]
 pNaK = 0.01833
     in [1]

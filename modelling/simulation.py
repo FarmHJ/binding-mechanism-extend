@@ -89,7 +89,7 @@ class Simulation(object):
         self.sim.set_constant(self.current_head.var('gKr'),
                               self.original_constants["gKr"])
         print('conductance rescale: ',
-              self.model.get('drug.ikr_rescale').eval())
+              self.model.get('tune.ikr_rescale').eval())
 
         self.sim.pre(t_max * (repeats - save_signal))
         log = self.sim.run(t_max * save_signal, log=log_var,

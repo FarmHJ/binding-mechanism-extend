@@ -47,7 +47,9 @@ class ModelDetails(object):
                 'INa': 'I_Na.I_Na',
                 'INaL': None,
                 'IKACh': None,
-                'IKATP': None
+                'IKATP': None,
+                'time': 'environment.time',
+                'Vm': 'membrane_potential.V_m',
             },
             'AP-SD': {
                 'Ito': 'ito.Ito',
@@ -85,7 +87,9 @@ class ModelDetails(object):
                 'IClCa': None,
                 'IClB': None,
                 'IKACh': None,
-                'IKATP': None
+                'IKATP': None,
+                'time': 'environment.time',
+                'Vm': 'membrane.V'
             },
         }
 
