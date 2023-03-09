@@ -69,7 +69,7 @@ current_colours = dict({
 # Load AP-SD model
 APmodel = '../math_model/AP_model/ohara-cipa-2017.mmt'
 APmodel, _, x = myokit.load(APmodel)
-AP_model = modelling.Simulation(APmodel)
+AP_model = modelling.Simulation(APmodel, current_head_key='ikr')
 AP_model.protocol = protocol
 
 # Simulate AP
@@ -112,7 +112,7 @@ mp.cumulative_current(log, currents, SD_current_panel, colors=colours,
 # Load Grandi (2010) model
 APmodel = '../math_model/AP_model/Grd-2010.mmt'
 APmodel, _, x = myokit.load(APmodel)
-AP_model = modelling.Simulation(APmodel)
+AP_model = modelling.Simulation(APmodel, base_constant=None)
 AP_model.protocol = protocol
 
 log = AP_model.model_simulation(1000, abs_tol=abs_tol, rel_tol=rel_tol)
@@ -135,6 +135,7 @@ fig_AP.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
 Grd_current_keys = modelling.ModelDetails().current_keys['Grandi']
 none_key_list = [i for i in Grd_current_keys.keys() if
                  Grd_current_keys[i] is None]
+none_key_list.extend(['time', 'Vm'])
 for i in none_key_list:
     del(Grd_current_keys[i])
 
@@ -154,7 +155,7 @@ mp.cumulative_current(log, currents, Grd_current_panel, colors=colours,
 # Load TTP (2006) model
 APmodel = '../math_model/AP_model/TTP-2006.mmt'
 APmodel, _, x = myokit.load(APmodel)
-AP_model = modelling.Simulation(APmodel)
+AP_model = modelling.Simulation(APmodel, base_constant=None)
 AP_model.protocol = protocol
 
 log = AP_model.model_simulation(1000, abs_tol=abs_tol, rel_tol=rel_tol)
@@ -178,6 +179,7 @@ fig_AP.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
 TTP_current_keys = modelling.ModelDetails().current_keys['TTP']
 none_key_list = [i for i in TTP_current_keys.keys() if
                  TTP_current_keys[i] is None]
+none_key_list.extend(['time', 'Vm'])
 for i in none_key_list:
     del(TTP_current_keys[i])
 
@@ -197,7 +199,7 @@ mp.cumulative_current(log, currents, TTP_current_panel, colors=colours,
 # Load Grandi-SD model
 APmodel = '../math_model/AP_model/Grd-2010-IKr-SD.mmt'
 APmodel, _, x = myokit.load(APmodel)
-AP_model = modelling.Simulation(APmodel)
+AP_model = modelling.Simulation(APmodel, current_head_key='I_Kr')
 AP_model.protocol = protocol
 
 log = AP_model.model_simulation(1000, abs_tol=abs_tol, rel_tol=rel_tol)
@@ -220,6 +222,7 @@ fig_AP.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
 Grd_current_keys = modelling.ModelDetails().current_keys['Grandi']
 none_key_list = [i for i in Grd_current_keys.keys() if
                  Grd_current_keys[i] is None]
+none_key_list.extend(['time', 'Vm'])
 for i in none_key_list:
     del(Grd_current_keys[i])
 
@@ -239,7 +242,8 @@ mp.cumulative_current(log, currents, Grd_SD_current_panel,
 # Load TTP-SD model
 APmodel = '../math_model/AP_model/TTP-2006-IKr-SD.mmt'
 APmodel, _, x = myokit.load(APmodel)
-AP_model = modelling.Simulation(APmodel)
+AP_model = modelling.Simulation(
+    APmodel, current_head_key='rapid_time_dependent_potassium_current')
 AP_model.protocol = protocol
 
 log = AP_model.model_simulation(1000, abs_tol=abs_tol, rel_tol=rel_tol)
@@ -264,6 +268,7 @@ fig_AP.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
 TTP_current_keys = modelling.ModelDetails().current_keys['TTP']
 none_key_list = [i for i in TTP_current_keys.keys() if
                  TTP_current_keys[i] is None]
+none_key_list.extend(['time', 'Vm'])
 for i in none_key_list:
     del(TTP_current_keys[i])
 
@@ -274,6 +279,7 @@ TTP_SD_current_panel = fig_current.axs[1][1]
 TTP_SD_current_panel.set_title("ten Tusscher-SD")
 mp.cumulative_current(log, currents, TTP_SD_current_panel,
                       colors=colours, normalise=True)
+TTP_SD_current_panel.set_rasterization_zorder(8)
 
 # Adjust figures
 fig_EK.axs[0][0].legend()
@@ -313,4 +319,4 @@ fig_current.sharey(["Relative contribution"] * 2, [(-1.02, 1.02)] * 2)
 # Save figures
 fig_EK.savefig(fig_dir + 'reversal_potential.pdf')
 fig_AP.savefig(fig_dir + 'AP_hERG.pdf')
-fig_current.savefig(fig_dir + 'current_contribution.pdf')
+fig_current.savefig(fig_dir + 'current_contribution.png')

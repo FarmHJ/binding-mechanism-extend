@@ -52,6 +52,7 @@ current_colours = modelling.ModelDetails().current_colours
 time_key = model_keys['time']
 Vm_key = model_keys['Vm']
 IKr_key = model_keys['IKr']
+IKr_head_key = IKr_key
 
 #######################
 #
@@ -66,7 +67,7 @@ elif APmodel_name == 'TTP':
     APmodel = '../math_model/AP_model/TTP-2006.mmt'
     model_title = 'ten Tusscher (2006)'
 APmodel, _, x = myokit.load(APmodel)
-AP_model = modelling.Simulation(APmodel)
+AP_model = modelling.Simulation(APmodel, base_constant=None)
 AP_model.protocol = protocol
 
 log = AP_model.model_simulation(1000, abs_tol=abs_tol, rel_tol=rel_tol)
@@ -117,10 +118,12 @@ mp.cumulative_current(log, currents, Grd_current_panel[0][0], colors=colours,
 # Load Grandi-SD model
 if APmodel_name == 'Grandi':
     APmodel = '../math_model/AP_model/Grd-2010-IKr-SD.mmt'
+    current_head_key = 'I_Kr'
 elif APmodel_name == 'TTP':
     APmodel = '../math_model/AP_model/TTP-2006-IKr-SD.mmt'
+    current_head_key = 'rapid_time_dependent_potassium_current'
 APmodel, _, x = myokit.load(APmodel)
-AP_model = modelling.Simulation(APmodel)
+AP_model = modelling.Simulation(APmodel, current_head_key=current_head_key)
 AP_model.protocol = protocol
 
 log1 = AP_model.model_simulation(1000, abs_tol=abs_tol, rel_tol=rel_tol)
@@ -144,7 +147,7 @@ IKr_y_bottom2, IKr_y_top2 = Grd_SD_AP_panel[1][0].get_ylim()
 Grd_SD_AP_panel[1][0].text(450, (IKr_y_top2 - IKr_y_bottom2) / 2,
                            'scale: ' + '{:.2f}'.format(peak_IKr_scale),
                            fontsize=8, ha='left')
-Grd_SD_AP_panel[0][0].set_title(APmodel_name + "-SD (1)")
+Grd_SD_AP_panel[0][0].set_title(APmodel_name + r"-SD\n$I_\mathrm{Kr}$ peak")
 fig.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
            axs=Grd_SD_AP_panel, subgridspec=subgridspecs[1])
 
@@ -194,7 +197,7 @@ IKr_y_bottom3, IKr_y_top3 = Grd_SD_AP_panel[1][0].get_ylim()
 Grd_SD_AP_panel[1][0].text(450, (IKr_y_top3 - IKr_y_bottom3) / 2,
                            'scale: ' + '{:.2f}'.format(APD_IKr_scale),
                            fontsize=8, ha='left')
-Grd_SD_AP_panel[0][0].set_title(APmodel_name + "-SD (2)")
+Grd_SD_AP_panel[0][0].set_title(APmodel_name + "-SD\nAPD")
 fig.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
            axs=Grd_SD_AP_panel, subgridspec=subgridspecs[2])
 
@@ -245,7 +248,7 @@ IKr_y_bottom4, IKr_y_top4 = Grd_SD_AP_panel[1][0].get_ylim()
 Grd_SD_AP_panel[1][0].text(450, (IKr_y_top4 - IKr_y_bottom4) / 2,
                            'scale: ' + '{:.2f}'.format(flux_IKr_scale),
                            fontsize=8, ha='left')
-Grd_SD_AP_panel[0][0].set_title(APmodel_name + "-SD (3)")
+Grd_SD_AP_panel[0][0].set_title(APmodel_name + r"-SD\n$I_\mathrm{Kr}$ flux")
 fig.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
            axs=Grd_SD_AP_panel, subgridspec=subgridspecs[3])
 

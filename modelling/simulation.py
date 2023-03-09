@@ -9,7 +9,8 @@ class Simulation(object):
     To create a class to control the simulations of models.
     """
 
-    def __init__(self, model, protocol=None, current_head_key=None):
+    def __init__(self, model, protocol=None, current_head_key=None,
+                 base_constant=True):
         super(Simulation, self).__init__()
 
         self.model = model
@@ -22,15 +23,18 @@ class Simulation(object):
             self.current_head = next(iter(self.model.states())).parent()
         else:
             self.current_head = self.model.get(current_head_key)
-        # Save model's original constants
-        self.original_constants = {
-            "Vhalf": self.model.get(self.current_head.var('Vhalf')).eval(),
-            "Kmax": self.model.get(self.current_head.var('Kmax')).eval(),
-            "Ku": self.model.get(self.current_head.var('Ku')).eval(),
-            "n": self.model.get(self.current_head.var('n')).eval(),
-            "EC50": self.model.get(self.current_head.var('halfmax')).eval(),
-            "Kt": self.model.get(self.current_head.var('Kt')).eval(),
-            "gKr": self.model.get(self.current_head.var('gKr')).eval(), }
+
+        if base_constant:
+            # Save model's original constants
+            self.original_constants = {
+                "Vhalf": self.model.get(self.current_head.var('Vhalf')).eval(),
+                "Kmax": self.model.get(self.current_head.var('Kmax')).eval(),
+                "Ku": self.model.get(self.current_head.var('Ku')).eval(),
+                "n": self.model.get(self.current_head.var('n')).eval(),
+                "EC50": self.model.get(
+                    self.current_head.var('halfmax')).eval(),
+                "Kt": self.model.get(self.current_head.var('Kt')).eval(),
+                "gKr": self.model.get(self.current_head.var('gKr')).eval(), }
 
     def model_simulation(self, repeats, conductance_name=None,
                          conductance_value=None, t_max=None,

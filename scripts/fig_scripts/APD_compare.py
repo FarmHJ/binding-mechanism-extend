@@ -8,21 +8,21 @@ import sys
 
 import modelling
 
-# Define drug and protocol
-drug = sys.argv[1]
+# Define AP model, drug and tuning
+APmodel_name = sys.argv[1]
+drug = sys.argv[2]
 protocol_name = 'Milnes'
-tuning_method = sys.argv[2]
+tuning_method = sys.argv[3]
 
 # Define directories to read data and save plotted figures
 data_dir = \
-    '../../simulation_data/kinetics_comparison/Grandi/' + tuning_method + \
-    '_match/' + drug + '/'
+    '../../simulation_data/kinetics_comparison/' + APmodel_name + '/' + \
+    tuning_method + '_match/' + drug + '/'
 fig_dir = \
-    '../../figures/kinetics_comparison/Grandi/' + tuning_method + '_match/' \
-    + drug + '/'
+    '../../figures/kinetics_comparison/' + APmodel_name + '/' + \
+    tuning_method + '_match/' + drug + '/'
 if not os.path.isdir(fig_dir):
     os.makedirs(fig_dir)
-
 
 # Set up structure of the figure
 fig = modelling.figures.FigureStructure(figsize=(10, 5), gridspec=(2, 2),
@@ -111,19 +111,26 @@ AP_trapping_plot = [e for i, e in enumerate(trapping_AP_log)
 AP_conductance_plot = [e for i, e in enumerate(conductance_AP_log)
                        if i not in chosen_conc_ind]
 
+model_keys = modelling.ModelDetails().current_keys[APmodel_name]
+current_key = model_keys['IKr']
+Vm_key = model_keys['Vm']
+
+SD_labelname = APmodel_name + '-SD model'
+CS_labelname = APmodel_name + '-SD model'
+
 # Plot AP and IKr at various drug concentrations
 plot.add_multiple_continuous(panel2[0][0], AP_trapping_plot,
-                             'membrane_potential.V_m', cmap=cmap,
+                             Vm_key, cmap=cmap,
                              labels=labels)
 plot.add_multiple_continuous(panel2[1][0], AP_trapping_plot,
-                             'I_Kr.I_kr', cmap=cmap, labels=labels)
+                             current_key, cmap=cmap, labels=labels)
 plot.add_multiple_continuous(panel2[0][1], AP_conductance_plot,
-                             'membrane_potential.V_m', cmap=cmap,
+                             Vm_key, cmap=cmap,
                              labels=labels)
 plot.add_multiple_continuous(panel2[1][1], AP_conductance_plot,
-                             'I_Kr.I_kr', cmap=cmap, labels=labels)
-panel2[0][0].set_title('Grandi-SD model')
-panel2[0][1].set_title('Grandi-CS model')
+                             current_key, cmap=cmap, labels=labels)
+panel2[0][0].set_title(SD_labelname)
+panel2[0][1].set_title(CS_labelname)
 
 # Adjust axes
 fig.sharex(['Time (ms)'] * 2, [(0, plotting_pulse_time)] * 2,
@@ -149,9 +156,9 @@ EAD_marker = [1050 if (i >= 1000 or j >= 1000) else None for (i, j)
 
 # Plot APD90 of both models
 panel3[0][0].plot(drug_conc, APD_trapping, 'o', color='orange',
-                  label='Grandi-SD model')
+                  label=SD_labelname)
 panel3[0][0].plot(drug_conc, APD_conductance, '^', color='blue',
-                  label='Grandi-CS model', alpha=0.8)
+                  label=CS_labelname, alpha=0.8)
 panel3[0][0].scatter(drug_conc, EAD_marker, marker=(5, 2),
                      color='k', label='EAD-like AP')
 panel3[0][0].set_xscale("log", nonpositive='clip')
@@ -180,9 +187,9 @@ CS_qNet = [None if APD_conductance[i] >= 1000 else CS_qNet[i] for i in
 
 # Plot APD90 of both models
 panel4[0][0].plot(drug_conc, SD_qNet, 'o', color='orange',
-                  label='Grandi-SD model')
+                  label=SD_labelname)
 panel4[0][0].plot(drug_conc, CS_qNet, '^', color='blue',
-                  label='Grandi-CS model', alpha=0.8)
+                  label=CS_labelname, alpha=0.8)
 panel4[0][0].set_xlabel("Drug concentration (nM)")
 panel4[0][0].set_xscale("log", nonpositive='clip')
 panel4[0][0].set_xlim(left=l_lim, right=r_lim)
@@ -196,4 +203,4 @@ fig.fig.text(0.1, 0.905, '(A)', fontsize=11)
 fig.fig.text(0.64, 0.905, '(B)', fontsize=11)
 fig.fig.text(0.64, 0.455, '(C)', fontsize=11)
 
-fig.savefig(fig_dir + "model_compare.svg", format='svg')
+fig.savefig(fig_dir + "model_compare.pdf")
