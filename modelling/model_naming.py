@@ -132,3 +132,14 @@ class ModelDetails(object):
             'IKACh': 'IK,ACh',
             'IKATP': 'IK,ATP',
         }
+
+
+class SDModelDetails(object):
+    """
+    To create a library on constant and variable namings of the SD model
+    """
+
+    def __init__(self):
+        super(SDModelDetails, self).__init__()
+
+        self.param_names = ['Vhalf', 'Kmax', 'Ku', 'N', 'EC50']
