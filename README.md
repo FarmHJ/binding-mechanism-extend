@@ -1,6 +1,6 @@
 # binding-mechanism-extend
 
-This is an extension to the previous work on studying the impact of including state-dependent drug block model of a hERG channel to the action potential (https://github.com/FarmHJ/binding-mechanism.git).
+This is an extension to the previous work on studying the impact of including state-dependent drug block model of a hERG channel to the action potential (https://github.com/FarmHJ/importance-of-binding-mechanism.git).
 
 Here, we repeat the same comparison with a different hERG base model and action potential model.
 For the hERG base model, we will try Chon's hERG model [1, 2].
