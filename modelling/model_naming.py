@@ -11,25 +11,6 @@ class ModelDetails(object):
                              'INaL', 'ICaL', 'INaCa', 'INaB', 'ICaB', 'IClCa',
                              'IClB', 'ICaP', 'IKACh', 'IKATP']
         self.current_keys = {
-            # 'Grandi': {
-            #     'IKr': 'I_Kr.I_kr',
-            #     'IKs': 'I_Ks.I_ks',
-            #     'Ito': 'I_to.I_to',
-            #     'IKb': 'I_Kp.I_kp',  # same as plateau potassium current?
-            #     'IK1': 'I_Ki.I_ki',
-            #     'INaK': 'I_NaK.I_nak',
-            #     'INa': 'I_Na.I_Na',
-            #     'INaL': None,
-            #     'ICaL': 'I_Ca.I_Catot',
-            #     'INaCa': 'I_NCX.I_ncx',
-            #     'INaB': 'I_NaBK.I_nabk',
-            #     'ICaB': 'I_CaBK.I_cabk',
-            #     'IClCa': 'I_ClCa.I_ClCa',
-            #     'IClB': 'I_ClCa.I_Clbk',
-            #     'ICaP': 'I_PCa.I_pca',
-            #     'IKACh': None,
-            #     'IKATP': None
-            # },
             'Grandi': {
                 'IClB': 'I_ClCa.I_Clbk',
                 'IClCa': 'I_ClCa.I_ClCa',
@@ -143,3 +124,10 @@ class SDModelDetails(object):
         super(SDModelDetails, self).__init__()
 
         self.param_names = ['Vhalf', 'Kmax', 'Ku', 'N', 'EC50']
+
+        self.current_keys = {
+            'Lei': {
+                'IKr': 'ikr.IKr',
+                'time': 'engine.time',
+                'Vm': 'membrane.V',
+            }}

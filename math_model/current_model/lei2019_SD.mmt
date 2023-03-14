@@ -12,7 +12,7 @@ ikr.Cbound = 0
 ikr.D = 0
 
 [ikr]
-IKr = p9 * O * (membrane.V - nernst.EK)
+IKr = gKr * O * (membrane.V - nernst.EK)
     in [nA]
     oxmeta: membrane_rapid_delayed_rectifier_potassium_current
 k12 = p1 * exp(p2 * membrane.V)
@@ -39,21 +39,21 @@ p7 =  4.75152440999999995e-2 [mS/uF]
     in [mS/uF]
 p8 =  2.50856877999999991e-2 [1/mV]
     in [1/mV]
-p9 = 0.1524 [uS]
+gKr = 0.1524 [uS]
     in [uS]
     oxmeta: membrane_rapid_delayed_rectifier_potassium_current_conductance
 Ku = 0
 Kt = 0
-Emax = Kmax * D^Hill / (D^Hill + EChalf)
-trapping_fn = 1 / (1 + exp(- (membrane.V - Vhalftrap) / 6.789 [mV]))
+Emax = Kmax * exp(n * log(D)) / (exp(n * log(D)) + halfmax)
+trapping_fn = 1 / (1 + exp(- (membrane.V - Vhalf) / 6.789 [mV]))
 dot(D) = 0
     in [1]
-Hill = 1
+n = 1
     in [1]
-Vhalftrap = 1
+Vhalf = 1
     in [mV]
 Kmax = 0
-EChalf = 1
+halfmax = 1
     in [1]
 switch = 1
 dot(CI) = -k12 * CI + k21 * I + k41 * C - k14 * CI

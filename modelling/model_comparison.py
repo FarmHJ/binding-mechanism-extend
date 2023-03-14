@@ -1,21 +1,29 @@
 import numpy as np
 
+import modelling
+
 
 class ModelComparison(object):
     """
     To create a class to run the model comparison.
     """
 
-    def __init__(self, drug_param_values):
+    def __init__(self, drug_param_values, var_key):
         super(ModelComparison, self).__init__()
 
         self.drug_param_values = drug_param_values
         param_names = ['Vhalf', 'Kmax', 'Ku', 'N', 'EC50']
 
+        self.time_key = var_key[0]
+        self.Vm_key = var_key[1]
+
         # Check if the parameters are correct
         if sorted(list(self.drug_param_values.columns)) != sorted(param_names):
             ValueError("Parameters are incorrect. The parameters are " +
                        "Vhalf, Kmax, Ku, N and EC50")
+
+        self.Hill_model = modelling.HillModel()
+        self.optimiser = modelling.HillModelOpt(self.Hill_model)
 
     def APD_sim(self, AP_model, Hill_curve_coefs, drug_conc=None,
                 steady_state_pulse=1000, save_signal=2, offset=50,
@@ -34,12 +42,12 @@ class ModelComparison(object):
             log = AP_model.custom_simulation(
                 self.drug_param_values, drug_conc[i], steady_state_pulse,
                 timestep=0.1, save_signal=save_signal, abs_tol=abs_tol,
-                rel_tol=rel_tol, log_var=['engine.time', 'membrane.V'])
+                rel_tol=rel_tol, log_var=[self.time_key, self.Vm_key])
 
             # Compute APD90
             APD_trapping_pulse = []
             for pulse in range(save_signal):
-                apd90 = AP_model.APD90(log['membrane.V', pulse], offset, 0.1)
+                apd90 = AP_model.APD90(log[self.Vm_key, pulse], offset, 0.1)
                 APD_trapping_pulse.append(apd90)
             APD_trapping.append(APD_trapping_pulse)
 
@@ -49,12 +57,12 @@ class ModelComparison(object):
             d2 = AP_model.conductance_simulation(
                 base_conductance * reduction_scale, steady_state_pulse,
                 timestep=0.1, save_signal=save_signal, abs_tol=abs_tol,
-                rel_tol=rel_tol, log_var=['engine.time', 'membrane.V'])
+                rel_tol=rel_tol, log_var=[self.time_key, self.Vm_key])
 
             # Compute APD90
             APD_conductance_pulse = []
             for pulse in range(save_signal):
-                apd90 = AP_model.APD90(d2['membrane.V', pulse], offset, 0.1)
+                apd90 = AP_model.APD90(d2[self.Vm_key, pulse], offset, 0.1)
                 APD_conductance_pulse.append(apd90)
             APD_conductance.append(APD_conductance_pulse)
 
@@ -73,12 +81,12 @@ class ModelComparison(object):
                 log = AP_model.custom_simulation(
                     self.drug_param_values, drug_conc[-1], steady_state_pulse,
                     timestep=0.1, save_signal=save_signal, abs_tol=abs_tol,
-                    rel_tol=rel_tol, log_var=['engine.time', 'membrane.V'])
+                    rel_tol=rel_tol, log_var=[self.time_key, self.Vm_key])
 
                 # Compute APD90
                 APD_trapping_pulse = []
                 for pulse in range(save_signal):
-                    apd90 = AP_model.APD90(log['membrane.V', pulse],
+                    apd90 = AP_model.APD90(log[self.Vm_key, pulse],
                                            offset, 0.1)
                     APD_trapping_pulse.append(apd90)
                 APD_trapping.append(max(APD_trapping_pulse))
@@ -89,12 +97,12 @@ class ModelComparison(object):
                 d2 = AP_model.conductance_simulation(
                     base_conductance * reduction_scale, steady_state_pulse,
                     timestep=0.1, save_signal=save_signal, abs_tol=abs_tol,
-                    rel_tol=rel_tol, log_var=['engine.time', 'membrane.V'])
+                    rel_tol=rel_tol, log_var=[self.time_key, self.Vm_key])
 
                 # Compute APD90
                 APD_conductance_pulse = []
                 for pulse in range(save_signal):
-                    apd90 = AP_model.APD90(d2['membrane.V', pulse],
+                    apd90 = AP_model.APD90(d2[self.Vm_key, pulse],
                                            offset, 0.1)
                     APD_conductance_pulse.append(apd90)
                 APD_conductance.append(max(APD_conductance_pulse))

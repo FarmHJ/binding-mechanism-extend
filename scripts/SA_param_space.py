@@ -22,20 +22,17 @@ if not os.path.exists(data_filepath):
 
 APmodel_name = sys.argv[1]
 # Model directory
-AP_model_filepath = '../math_model/AP_model/Grd-2010-IKr-SD.mmt'
-
-# Load current model and set Milnes' protocol
-# model, _, x = myokit.load(current_model_filepath)
-# current_model = modelling.BindingKinetics(model)
-
-# protocol_params = modelling.ProtocolParameters()
-# protocol = protocol_params.protocol_parameters['Milnes']['function']
-# current_model.protocol = protocol
+if APmodel_name == 'Grandi':
+    AP_model_filepath = '../math_model/AP_model/Grd-2010-IKr-SD.mmt'
+elif APmodel_name == 'TTP':
+    AP_model_filepath = '../math_model/AP_model/TTP-2006-IKr-SD.mmt'
 
 # Load AP model and set current protocol
 APmodel, _, x = myokit.load(AP_model_filepath)
 model_keys = modelling.ModelDetails().current_keys[APmodel_name]
 current_key = model_keys['IKr']
+time_key = model_keys['time']
+Vm_key = model_keys['Vm']
 current_head_key = current_key[:current_key.index('.')]
 AP_model = modelling.Simulation(APmodel, current_head_key=current_head_key)
 
@@ -53,34 +50,22 @@ APD_points = 20
 # Get name of parameters
 param_names = modelling.SDModelDetails().param_names
 
-# # Define parameter space
-# Vhalf_fullrange = SA_model.param_explore_uniform('Vhalf')
-# Kmax_fullrange = SA_model.param_explore_uniform('Kmax')
-# Ku_fullrange = SA_model.param_explore_uniform('Ku')
-
 starting_param_df = pd.DataFrame([1] * 5, index=param_names).T
-ComparisonController = modelling.ModelComparison(starting_param_df)
+ComparisonController = modelling.ModelComparison(starting_param_df,
+                                                 [time_key, Vm_key])
 
 
 def param_evaluation(inputs):
 
-    # print(inputs)
     # Define parameter values of virtual drug
     param_id = inputs[('param_id', 'param_id')][0]
     param_values = inputs['param_values']
-    # print(param_values)
     drug_conc_Hill = inputs['drug_conc_Hill'].values[0]
     drug_conc_Hill = drug_conc_Hill[~np.isnan(drug_conc_Hill)]
-    print(drug_conc_Hill)
 
     ComparisonController.drug_param_values = param_values
 
-    # # Compute Hill curve of the virtual drug with the SD model
-    # Hill_curve_coefs, drug_conc_Hill, peaks_norm = \
-    #     ComparisonController.compute_Hill(current_model,
-    #                                       parallel=False)
-    # parameters of Hill curve are based on normalised drug concentration
-    Hill_curve_coefs = inputs['Hill_curve']
+    Hill_curve_coefs = inputs['Hill_curve'].values[0]
 
     # Define drug concentration range similar to the drug concentration used
     # to infer Hill curve
@@ -88,25 +73,20 @@ def param_evaluation(inputs):
                                    np.log10(max(drug_conc_Hill)),
                                    APD_points)
 
-    # if isinstance(Hill_curve_coefs, str):
-    #     Hill_curve_coefs = [float("nan")] * 2
-    #     APD_trapping = [float("Nan")] * APD_points
-    #     APD_conductance = [float("Nan")] * APD_points
-    #     RMSError = float("Nan")
-    #     MAError = float("Nan")
-    # else:
     try:
         # Simulate APs and APD90s of the AP-SD model and the AP-CS model
+        print('running simulation')
         APD_trapping, APD_conductance, drug_conc_AP = \
             ComparisonController.APD_sim(
                 AP_model, Hill_curve_coefs, drug_conc=drug_conc_AP,
                 EAD=True)
+        print('simulation done')
 
         # Calculate RMSD and MD of simulated APD90 of the two models
         RMSError = ComparisonController.compute_RMSE(APD_trapping,
-                                                        APD_conductance)
+                                                     APD_conductance)
         MAError = ComparisonController.compute_ME(APD_trapping,
-                                                    APD_conductance)
+                                                  APD_conductance)
     except myokit.SimulationError:
         APD_trapping = [float("Nan")] * APD_points
         APD_conductance = [float("Nan")] * APD_points
@@ -114,13 +94,12 @@ def param_evaluation(inputs):
         MAError = float("Nan")
         print('simulation error')
 
-    # Create dataframe to save results
+    # # Create dataframe to save results
     conc_Hill_ind = ['conc_' + str(i) for i, _ in
                      enumerate(drug_conc_Hill)]
     conc_AP_ind = ['conc_' + str(i) for i, _ in enumerate(drug_conc_AP)]
     index_dict = {'param_id': ['param_id'],
                   'drug_conc_Hill': conc_Hill_ind,
-                  'peak_current': conc_Hill_ind,
                   'Hill_curve': ['Hill_coef', 'IC50'],
                   'param_values': param_names, 'drug_conc_AP': conc_AP_ind,
                   'APD_trapping': conc_AP_ind,
@@ -130,10 +109,10 @@ def param_evaluation(inputs):
     index = pd.MultiIndex.from_tuples(all_index)
 
     big_df = pd.DataFrame(
-        [param_id] + drug_conc_Hill + list(peaks_norm) +
-        list(Hill_curve_coefs) + list(param_values.values[0]) +
-        list(drug_conc_AP) + APD_trapping + APD_conductance +
-        [RMSError] + [MAError], index=index)
+        [param_id] + list(drug_conc_Hill) + list(Hill_curve_coefs) +
+        list(param_values.values[0]) + list(drug_conc_AP) +
+        APD_trapping + APD_conductance + [RMSError] + [MAError],
+        index=index)
 
     return big_df
 
@@ -154,19 +133,6 @@ param_values_df = pd.read_csv(sample_filepath,
                               skipinitialspace=True)
 for i in range(len(param_values_df.index)):
     param_space.append(param_values_df.iloc[[i]])
-# else:
-#     counter = 0
-#     param_values_df = pd.DataFrame(columns=param_names)
-#     for Vhalf, Kmax, Ku in itertools.product(
-#             Vhalf_fullrange, Kmax_fullrange, Ku_fullrange):
-
-#         param_values = pd.DataFrame([counter, Vhalf, Kmax, Ku, 1, 1],
-#                                     index=['param_id'] + param_names)
-#         param_values = param_values.T
-#         param_space.append(param_values)
-#         param_values_df = pd.concat([param_values_df, param_values])
-#         counter += 1
-#     param_values_df.to_csv(sample_filepath)
 
 # Set up variables for data saving
 total_samples = len(param_space)
@@ -176,7 +142,7 @@ total_saving_file_num = np.arange(samples_split_n)
 
 # Determine completed simulations so that it is not repeated
 file_prefix = 'SA_allparam_'
-data_dir = data_filepath + 'SA_space/'
+data_dir = data_filepath + 'SA_space/' + APmodel_name + '/'
 if not os.path.isdir(data_dir):
     os.makedirs(data_dir)
 evaluation_result_files = [f for f in os.listdir(data_dir) if
@@ -234,12 +200,12 @@ for file_num in saving_file_dict['file_num']:
         print('Running samples ', int(subset_samples_to_run[0]), ' to ',
               int(subset_samples_to_run[-1]))
         subset_param_space = param_values_df.loc[
-            param_values_df[('param_id', 'param_id')].isin(subset_samples_to_run)]
+            param_values_df[('param_id', 'param_id')].isin(
+                subset_samples_to_run)]
         param_space = []
         for i in range(len(subset_param_space.index)):
             param_space.append(subset_param_space.iloc[[i]])
 
-        param_evaluation(param_space[0])
         big_df = evaluator.evaluate(param_space)
 
         if os.path.exists(data_dir + filename):

@@ -15,3 +15,13 @@ from .lib_binding_kinetics import (
 from .kinetics_comparison import KineticsComparison
 
 from .model_comparison import ModelComparison
+
+from .Hill_model import (
+    HillModel,
+    HillModelOpt
+)
+
+from .dataset_library import (
+    DatasetLibrary,
+    ProtocolLibrary
+)

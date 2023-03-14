@@ -92,8 +92,6 @@ class Simulation(object):
         self.sim.set_constant(self.current_head.var('Kt'), 3.5e-5)
         self.sim.set_constant(self.current_head.var('gKr'),
                               self.original_constants["gKr"])
-        print('conductance rescale: ',
-              self.model.get('tune.ikr_rescale').eval())
 
         self.sim.pre(t_max * (repeats - save_signal))
         log = self.sim.run(t_max * save_signal, log=log_var,
@@ -137,6 +135,42 @@ class Simulation(object):
 
         return d2
 
+    def custom_simulation(self, param_values, drug_conc, repeats,
+                          timestep=0.1, save_signal=1, log_var=None,
+                          abs_tol=1e-6, rel_tol=1e-4):
+
+        t_max = self.protocol.characteristic_time()
+
+        concentration = self.model.get(self.current_head_key + '.D')
+        concentration.set_state_value(drug_conc)
+
+        self.sim = myokit.Simulation(self.model, self.protocol)
+        self.sim.reset()
+        self.sim.set_tolerance(abs_tol=abs_tol, rel_tol=rel_tol)
+
+        self.sim.set_constant(self.current_head.var('Vhalf'),
+                              param_values['Vhalf'].values[0])
+        self.sim.set_constant(self.current_head.var('Kmax'),
+                              param_values['Kmax'].values[0])
+        self.sim.set_constant(self.current_head.var('Ku'),
+                              param_values['Ku'].values[0])
+        self.sim.set_constant(self.current_head.var('n'),
+                              param_values['N'].values[0])
+        self.sim.set_constant(self.current_head.var('halfmax'),
+                              param_values['EC50'].values[0])
+        self.sim.set_constant(self.current_head.var('Kt'), 3.5e-5)
+        self.sim.set_constant(self.current_head.var('gKr'),
+                              self.original_constants["gKr"])
+
+        self.sim.pre(t_max * (repeats - save_signal))
+        log = self.sim.run(t_max * save_signal, log=log_var,
+                           log_interval=timestep)
+        d2 = log.npview()
+        if save_signal > 1:
+            d2 = d2.fold(t_max)
+
+        return d2
+
     def extract_peak(self, signal_log, current_name):
         peaks = []
         pulses = len(signal_log.keys_like(current_name))
@@ -168,4 +202,4 @@ class Simulation(object):
             print('check')
             APD90 = len(signal) * timestep
 
-        return APD90, APD90_v
+        return APD90  # , APD90_v
