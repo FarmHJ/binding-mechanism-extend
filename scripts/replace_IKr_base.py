@@ -96,7 +96,7 @@ for i in range(len(drug_conc)):
     d2.save_csv(data_dir + 'CS_current_' + str(drug_conc[i]) + '.csv')
 
 # Plot results
-fig = modelling.figures.FigureStructure(figsize=(8, 3), gridspec=(1, 2),
+fig = modelling.figures.FigureStructure(figsize=(8, 2), gridspec=(1, 2),
                                         width_ratios=[2.5, 1.2],
                                         plot_in_subgrid=True)
 plot = modelling.figures.FigurePlot()
@@ -152,9 +152,10 @@ hERG_trapping_plot = trapping_hERG_log
 hERG_conductance_plot = conductance_hERG_log
 
 # Plot Ikr
-plot.add_multiple(panel1[0][0], hERG_trapping_plot, 'ikr.IKr', labels=labels,
-                  color=cmap)
-plot.add_multiple(panel1[0][1], hERG_conductance_plot, 'ikr.IKr',
+plot.add_multiple(panel1[0][0], hERG_trapping_plot, current_head_key + '.IKr',
+                  labels=labels, color=cmap)
+plot.add_multiple(panel1[0][1], hERG_conductance_plot,
+                  current_head_key + '.IKr',
                   labels=labels, color=cmap)
 
 # Adjust figure details
@@ -185,135 +186,136 @@ panel2[0][0].set_ylabel('Normalised peak current')
 fig_dir = '../figures/kinetics_comparison/Lei_IKr/'
 fig.savefig(fig_dir + 'lei_' + drug + '.pdf')
 
-# #
-# # Propagate to action potential
-# #
+#
+# Propagate to action potential
+#
 
-# # Set AP model
-# APmodel = '../math_model/ohara-cipa-v1-2017-opt.mmt'
-# APmodel, _, x = myokit.load(APmodel)
-# AP_model = modelling.BindingKinetics(APmodel, current_head='ikr')
+# Set AP model
+APmodel = '../math_model/AP_model/ORd-CiPA-Lei-SD.mmt'
+APmodel, _, x = myokit.load(APmodel)
+AP_model = modelling.Simulation(APmodel, current_head_key=current_head_key)
+current_model = modelling.Simulation(model, current_head_key=current_head_key)
 
-# # Define current protocol
-# pulse_time = 1000
-# AP_model.protocol = modelling.ProtocolLibrary().current_impulse(pulse_time)
-# base_conductance = APmodel.get('ikr.gKr').value()
+# Define current protocol
+pulse_time = 1000
+AP_model.protocol = modelling.ProtocolLibrary().current_impulse(pulse_time)
+base_conductance = APmodel.get('ikr.gKr').value()
 
-# offset = 50
-# save_signal = 2
-# # Use different repeats for plotting purpose - so that EAD-like behaviour
-# # happens on the same pulse
-# if drug == 'dofetilide':
-#     repeats_SD = 1000 + 1
-#     repeats_CS = 1000
-# else:
-#     repeats_SD = 1000
-#     repeats_CS = 1000
+offset = 50
+save_signal = 2
+# Use different repeats for plotting purpose - so that EAD-like behaviour
+# happens on the same pulse
+if drug == 'dofetilide':
+    repeats_SD = 1000 + 1
+    repeats_CS = 1000
+else:
+    repeats_SD = 1000
+    repeats_CS = 1000
 
-# AP_conductance = []
-# AP_trapping = []
-# APD_conductance = []
-# APD_trapping = []
+AP_conductance = []
+AP_trapping = []
+APD_conductance = []
+APD_trapping = []
 
-# # Simulate AP of the AP-SD model and the AP-CS model
-# # Compute APD90
-# for i in range(len(drug_conc)):
-#     print('simulating concentration: ' + str(drug_conc[i]))
-#     log = AP_model.drug_simulation(
-#         drug, drug_conc[i], repeats_SD, save_signal=save_signal,
-#         log_var=['engine.time', 'membrane.V', 'ikr.IKr'], abs_tol=abs_tol,
-#         rel_tol=rel_tol)
-#     log.save_csv(data_dir + 'SD_AP_' + str(drug_conc[i]) + '.csv')
+# Simulate AP of the AP-SD model and the AP-CS model
+# Compute APD90
+for i in range(len(drug_conc)):
+    print('simulating concentration: ' + str(drug_conc[i]))
+    log = AP_model.drug_simulation(
+        drug, drug_conc[i], repeats_SD, save_signal=save_signal,
+        log_var=['engine.time', 'membrane.V', 'ikr.IKr'], abs_tol=abs_tol,
+        rel_tol=rel_tol)
+    log.save_csv(data_dir + 'SD_AP_' + str(drug_conc[i]) + '.csv')
 
-#     APD_trapping_pulse = []
-#     for pulse in range(save_signal):
-#         apd90 = AP_model.APD90(log['membrane.V', pulse], offset, 0.1)
-#         APD_trapping_pulse.append(apd90)
+    APD_trapping_pulse = []
+    for pulse in range(save_signal):
+        apd90 = AP_model.APD90(log['membrane.V', pulse], offset, 0.1)
+        APD_trapping_pulse.append(apd90)
 
-#     AP_trapping.append(log)
-#     APD_trapping.append(APD_trapping_pulse)
+    AP_trapping.append(log)
+    APD_trapping.append(APD_trapping_pulse)
 
-#     reduction_scale = Hill_model.simulate(estimates[:2], drug_conc[i])
-#     d2 = AP_model.conductance_simulation(
-#         base_conductance * reduction_scale, repeats_CS,
-#         save_signal=save_signal,
-#         log_var=['engine.time', 'membrane.V', 'ikr.IKr'], abs_tol=abs_tol,
-#         rel_tol=rel_tol)
-#     d2.save_csv(data_dir + 'CS_AP_' + str(drug_conc[i]) + '.csv')
+    reduction_scale = Hill_model.simulate(estimates[:2], drug_conc[i])
+    d2 = AP_model.conductance_simulation(
+        base_conductance * reduction_scale, repeats_CS,
+        save_signal=save_signal,
+        log_var=['engine.time', 'membrane.V', 'ikr.IKr'], abs_tol=abs_tol,
+        rel_tol=rel_tol)
+    d2.save_csv(data_dir + 'CS_AP_' + str(drug_conc[i]) + '.csv')
 
-#     APD_conductance_pulse = []
-#     for pulse in range(save_signal):
-#         apd90 = AP_model.APD90(d2['membrane.V', pulse], offset, 0.1)
-#         APD_conductance_pulse.append(apd90)
+    APD_conductance_pulse = []
+    for pulse in range(save_signal):
+        apd90 = AP_model.APD90(d2['membrane.V', pulse], offset, 0.1)
+        APD_conductance_pulse.append(apd90)
 
-#     AP_conductance.append(d2)
-#     APD_conductance.append(APD_conductance_pulse)
+    AP_conductance.append(d2)
+    APD_conductance.append(APD_conductance_pulse)
 
-#     print('done concentration: ' + str(drug_conc[i]))
+    print('done concentration: ' + str(drug_conc[i]))
 
-# # Save simulated APD90 of both the AP-SD model and the AP-CS model
-# column_name = ['pulse ' + str(i) for i in range(save_signal)]
-# APD_trapping_df = pd.DataFrame(APD_trapping, columns=column_name)
-# APD_trapping_df['drug concentration'] = drug_conc
-# APD_trapping_df.to_csv(data_dir + 'SD_APD_pulses' +
-#                        str(int(save_signal)) + '.csv')
-# APD_conductance_df = pd.DataFrame(APD_conductance, columns=column_name)
-# APD_conductance_df['drug concentration'] = drug_conc
-# APD_conductance_df.to_csv(data_dir + 'CS_APD_pulses' +
-#                           str(int(save_signal)) + '.csv')
+# Save simulated APD90 of both the AP-SD model and the AP-CS model
+column_name = ['pulse ' + str(i) for i in range(save_signal)]
+APD_trapping_df = pd.DataFrame(APD_trapping, columns=column_name)
+APD_trapping_df['drug concentration'] = drug_conc
+APD_trapping_df.to_csv(data_dir + 'SD_APD_pulses' +
+                       str(int(save_signal)) + '.csv')
+APD_conductance_df = pd.DataFrame(APD_conductance, columns=column_name)
+APD_conductance_df['drug concentration'] = drug_conc
+APD_conductance_df.to_csv(data_dir + 'CS_APD_pulses' +
+                          str(int(save_signal)) + '.csv')
 
-# # Define drug concentration range for steady state APD90 comparison between
-# # models
-# drug_conc = drug_conc_lib.drug_concentrations[drug]['fine']
-# repeats = 1000
-# save_signal = 2
+# Define drug concentration range for steady state APD90 comparison between
+# models
+drug_conc = drug_conc_lib.drug_concentrations[drug]['fine']
+repeats = 1000
+save_signal = 2
 
-# APD_conductance = []
-# APD_trapping = []
+APD_conductance = []
+APD_trapping = []
 
-# for i in range(len(drug_conc)):
-#     print('simulating concentration: ' + str(drug_conc[i]))
+for i in range(len(drug_conc)):
+    print('simulating concentration: ' + str(drug_conc[i]))
 
-#     # Run simulation for the AP-SD model till steady state
-#     log = AP_model.drug_simulation(
-#         drug, drug_conc[i], repeats, save_signal=save_signal,
-#         log_var=['engine.time', 'membrane.V', 'ikr.IKr'], abs_tol=abs_tol,
-#         rel_tol=rel_tol)
+    # Run simulation for the AP-SD model till steady state
+    log = AP_model.drug_simulation(
+        drug, drug_conc[i], repeats, save_signal=save_signal,
+        log_var=['engine.time', 'membrane.V', 'ikr.IKr'], abs_tol=abs_tol,
+        rel_tol=rel_tol)
 
-#     # Compute APD90 of simulated AP
-#     APD_trapping_pulse = []
-#     for pulse in range(save_signal):
-#         apd90 = AP_model.APD90(log['membrane.V', pulse], offset, 0.1)
-#         APD_trapping_pulse.append(apd90)
+    # Compute APD90 of simulated AP
+    APD_trapping_pulse = []
+    for pulse in range(save_signal):
+        apd90 = AP_model.APD90(log['membrane.V', pulse], offset, 0.1)
+        APD_trapping_pulse.append(apd90)
 
-#     APD_trapping.append(APD_trapping_pulse)
+    APD_trapping.append(APD_trapping_pulse)
 
-#     # Run simulation for the AP-CS model till steady state
-#     reduction_scale = Hill_model.simulate(estimates[:2], drug_conc[i])
-#     d2 = AP_model.conductance_simulation(
-#         base_conductance * reduction_scale, repeats,
-#         save_signal=save_signal,
-#         log_var=['engine.time', 'membrane.V', 'ikr.IKr'], abs_tol=abs_tol,
-#         rel_tol=rel_tol)
+    # Run simulation for the AP-CS model till steady state
+    reduction_scale = Hill_model.simulate(estimates[:2], drug_conc[i])
+    d2 = AP_model.conductance_simulation(
+        base_conductance * reduction_scale, repeats,
+        save_signal=save_signal,
+        log_var=['engine.time', 'membrane.V', 'ikr.IKr'], abs_tol=abs_tol,
+        rel_tol=rel_tol)
 
-#     # Compute APD90 of simulated AP
-#     APD_conductance_pulse = []
-#     for pulse in range(save_signal):
-#         apd90 = AP_model.APD90(d2['membrane.V', pulse], offset, 0.1)
-#         APD_conductance_pulse.append(apd90)
+    # Compute APD90 of simulated AP
+    APD_conductance_pulse = []
+    for pulse in range(save_signal):
+        apd90 = AP_model.APD90(d2['membrane.V', pulse], offset, 0.1)
+        APD_conductance_pulse.append(apd90)
 
-#     APD_conductance.append(APD_conductance_pulse)
+    APD_conductance.append(APD_conductance_pulse)
 
-#     print('done concentration: ' + str(drug_conc[i]))
+    print('done concentration: ' + str(drug_conc[i]))
 
-# # Compute APD90 with AP behaviour in alternating cycles
-# APD_trapping = [max(i) for i in APD_trapping]
-# APD_conductance = [max(i) for i in APD_conductance]
+# Compute APD90 with AP behaviour in alternating cycles
+APD_trapping = [max(i) for i in APD_trapping]
+APD_conductance = [max(i) for i in APD_conductance]
 
-# # Save APD90 data
-# APD_trapping_df = pd.DataFrame(np.array(APD_trapping), columns=['APD'])
-# APD_trapping_df['drug concentration'] = drug_conc
-# APD_trapping_df.to_csv(data_dir + 'SD_APD_fine.csv')
-# APD_conductance_df = pd.DataFrame(np.array(APD_conductance), columns=['APD'])
-# APD_conductance_df['drug concentration'] = drug_conc
-# APD_conductance_df.to_csv(data_dir + 'CS_APD_fine.csv')
+# Save APD90 data
+APD_trapping_df = pd.DataFrame(np.array(APD_trapping), columns=['APD'])
+APD_trapping_df['drug concentration'] = drug_conc
+APD_trapping_df.to_csv(data_dir + 'SD_APD_fine.csv')
+APD_conductance_df = pd.DataFrame(np.array(APD_conductance), columns=['APD'])
+APD_conductance_df['drug concentration'] = drug_conc
+APD_conductance_df.to_csv(data_dir + 'CS_APD_fine.csv')
