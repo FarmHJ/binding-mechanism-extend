@@ -194,12 +194,11 @@ fig.savefig(fig_dir + 'lei_' + drug + '.pdf')
 APmodel = '../math_model/AP_model/ORd-CiPA-Lei-SD.mmt'
 APmodel, _, x = myokit.load(APmodel)
 AP_model = modelling.Simulation(APmodel, current_head_key=current_head_key)
-current_model = modelling.Simulation(model, current_head_key=current_head_key)
 
 # Define current protocol
 pulse_time = 1000
 AP_model.protocol = modelling.ProtocolLibrary().current_impulse(pulse_time)
-base_conductance = APmodel.get('ikr.gKr').value()
+base_conductance = APmodel.get(current_head_key + '.gKr').value()
 
 offset = 50
 save_signal = 2
@@ -223,13 +222,12 @@ for i in range(len(drug_conc)):
     print('simulating concentration: ' + str(drug_conc[i]))
     log = AP_model.drug_simulation(
         drug, drug_conc[i], repeats_SD, save_signal=save_signal,
-        log_var=['engine.time', 'membrane.V', 'ikr.IKr'], abs_tol=abs_tol,
-        rel_tol=rel_tol)
+        log_var=log_var, abs_tol=abs_tol, rel_tol=rel_tol)
     log.save_csv(data_dir + 'SD_AP_' + str(drug_conc[i]) + '.csv')
 
     APD_trapping_pulse = []
     for pulse in range(save_signal):
-        apd90 = AP_model.APD90(log['membrane.V', pulse], offset, 0.1)
+        apd90 = AP_model.APD90(log[model_keys['Vm'], pulse], offset, 0.1)
         APD_trapping_pulse.append(apd90)
 
     AP_trapping.append(log)
@@ -238,14 +236,13 @@ for i in range(len(drug_conc)):
     reduction_scale = Hill_model.simulate(estimates[:2], drug_conc[i])
     d2 = AP_model.conductance_simulation(
         base_conductance * reduction_scale, repeats_CS,
-        save_signal=save_signal,
-        log_var=['engine.time', 'membrane.V', 'ikr.IKr'], abs_tol=abs_tol,
+        save_signal=save_signal, log_var=log_var, abs_tol=abs_tol,
         rel_tol=rel_tol)
     d2.save_csv(data_dir + 'CS_AP_' + str(drug_conc[i]) + '.csv')
 
     APD_conductance_pulse = []
     for pulse in range(save_signal):
-        apd90 = AP_model.APD90(d2['membrane.V', pulse], offset, 0.1)
+        apd90 = AP_model.APD90(d2[model_keys['Vm'], pulse], offset, 0.1)
         APD_conductance_pulse.append(apd90)
 
     AP_conductance.append(d2)
@@ -279,13 +276,12 @@ for i in range(len(drug_conc)):
     # Run simulation for the AP-SD model till steady state
     log = AP_model.drug_simulation(
         drug, drug_conc[i], repeats, save_signal=save_signal,
-        log_var=['engine.time', 'membrane.V', 'ikr.IKr'], abs_tol=abs_tol,
-        rel_tol=rel_tol)
+        log_var=log_var, abs_tol=abs_tol, rel_tol=rel_tol)
 
     # Compute APD90 of simulated AP
     APD_trapping_pulse = []
     for pulse in range(save_signal):
-        apd90 = AP_model.APD90(log['membrane.V', pulse], offset, 0.1)
+        apd90 = AP_model.APD90(log[model_keys['Vm'], pulse], offset, 0.1)
         APD_trapping_pulse.append(apd90)
 
     APD_trapping.append(APD_trapping_pulse)
@@ -294,14 +290,13 @@ for i in range(len(drug_conc)):
     reduction_scale = Hill_model.simulate(estimates[:2], drug_conc[i])
     d2 = AP_model.conductance_simulation(
         base_conductance * reduction_scale, repeats,
-        save_signal=save_signal,
-        log_var=['engine.time', 'membrane.V', 'ikr.IKr'], abs_tol=abs_tol,
+        save_signal=save_signal, log_var=log_var, abs_tol=abs_tol,
         rel_tol=rel_tol)
 
     # Compute APD90 of simulated AP
     APD_conductance_pulse = []
     for pulse in range(save_signal):
-        apd90 = AP_model.APD90(d2['membrane.V', pulse], offset, 0.1)
+        apd90 = AP_model.APD90(d2[model_keys['Vm'], pulse], offset, 0.1)
         APD_conductance_pulse.append(apd90)
 
     APD_conductance.append(APD_conductance_pulse)

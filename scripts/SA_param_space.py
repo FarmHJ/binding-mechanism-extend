@@ -172,7 +172,7 @@ else:
                                        header=[0, 1], index_col=[0],
                                        skipinitialspace=True)
         ran_values = saved_results_df['param_id']['param_id'].values
-        expected_ids = param_values_df['param_id'].values[
+        expected_ids = param_values_df['param_id']['param_id'].values[
             file_num * samples_per_save: (file_num + 1) * samples_per_save]
         param_space_id = [i for i in expected_ids if i not in ran_values]
         if len(param_space) != 0:
@@ -206,6 +206,7 @@ for file_num in saving_file_dict['file_num']:
         for i in range(len(subset_param_space.index)):
             param_space.append(subset_param_space.iloc[[i]])
 
+        print(param_space)
         big_df = evaluator.evaluate(param_space)
 
         if os.path.exists(data_dir + filename):
