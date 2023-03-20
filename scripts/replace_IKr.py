@@ -28,9 +28,9 @@ fig_AP = modelling.figures.FigureStructure(figsize=(9, 5), gridspec=(2, 3),
                                            height_ratios=[1] * 2, hspace=0.35,
                                            wspace=0.1, plot_in_subgrid=True)
 
-subgridspecs = [(2, 1)] * 5
+subgridspecs = [(2, 1)] * 6
 subgs = []
-for i in range(5):
+for i in range(6):
     subgs.append(fig_AP.gs[i].subgridspec(*subgridspecs[i], wspace=0.1,
                                           hspace=0.1))
 axs_AP = [[[fig_AP.fig.add_subplot(subgs[k][i, j]) for j in range(
@@ -93,6 +93,7 @@ fig_AP.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
 APSD_current_keys = modelling.ModelDetails().current_keys['AP-SD']
 none_key_list = [i for i in APSD_current_keys.keys() if
                  APSD_current_keys[i] is None]
+none_key_list.extend(['time', 'Vm'])
 for i in none_key_list:
     del(APSD_current_keys[i])
 
@@ -103,6 +104,7 @@ SD_current_panel = fig_current.axs[0][2]
 SD_current_panel.set_title("O'Hara-CiPA (2017) epi")
 mp.cumulative_current(log, currents, SD_current_panel, colors=colours,
                       normalise=True)
+SD_current_panel.set_rasterization_zorder(3)
 
 #######################
 #
@@ -146,6 +148,7 @@ Grd_current_panel = fig_current.axs[0][0]
 Grd_current_panel.set_title("Grandi (2010)")
 mp.cumulative_current(log, currents, Grd_current_panel, colors=colours,
                       normalise=True)
+Grd_current_panel.set_rasterization_zorder(3)
 
 #######################
 #
@@ -190,6 +193,7 @@ TTP_current_panel = fig_current.axs[0][1]
 TTP_current_panel.set_title("ten Tusscher (2006)")
 mp.cumulative_current(log, currents, TTP_current_panel, colors=colours,
                       normalise=True)
+TTP_current_panel.set_rasterization_zorder(3)
 
 #######################
 #
@@ -233,6 +237,7 @@ Grd_SD_current_panel = fig_current.axs[1][0]
 Grd_SD_current_panel.set_title("Grandi-SD")
 mp.cumulative_current(log, currents, Grd_SD_current_panel,
                       colors=colours, normalise=True)
+Grd_SD_current_panel.set_rasterization_zorder(3)
 
 #######################
 #
@@ -279,22 +284,71 @@ TTP_SD_current_panel = fig_current.axs[1][1]
 TTP_SD_current_panel.set_title("ten Tusscher-SD")
 mp.cumulative_current(log, currents, TTP_SD_current_panel,
                       colors=colours, normalise=True)
-TTP_SD_current_panel.set_rasterization_zorder(8)
+TTP_SD_current_panel.set_rasterization_zorder(3)
 
+#######################
+#
+# ORd-SD-Lei model
+#
+#######################
+# Load ORd-SD-Lei model
+APmodel = '../math_model/AP_model/ORd-CiPA-Lei-SD.mmt'
+APmodel, _, x = myokit.load(APmodel)
+AP_model = modelling.Simulation(APmodel, current_head_key='ikr')
+AP_model.protocol = protocol
+
+log = AP_model.model_simulation(1000, abs_tol=abs_tol, rel_tol=rel_tol)
+print('Reversal potential of K for ORd-SD-Lei: ', log['rev.EK'][0])
+
+# Plot reversal potential of potassium
+fig_EK.axs[0][0].plot(log.time(), log['rev.EK'], label='ORd-SD-Lei')
+
+# Plot AP and hERG
+Lei_panel = axs_AP[5]
+plot.add_single(Lei_panel[0][0], log, 'membrane.V')
+plot.add_single(Lei_panel[1][0], log, 'ikr.IKr')
+Lei_panel[0][0].set_title("ORd-SD-Lei")
+AP_y_bottom6, AP_y_top6 = Lei_panel[0][0].get_ylim()
+IKr_y_bottom6, IKr_y_top6 = Lei_panel[1][0].get_ylim()
+fig_AP.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
+              axs=Lei_panel, subgridspec=subgridspecs[5])
+
+# Plot current contribution
+Lei_current_keys = modelling.ModelDetails().current_keys['AP-SD']
+none_key_list = [i for i in Lei_current_keys.keys() if
+                 Lei_current_keys[i] is None]
+none_key_list.extend(['time', 'Vm'])
+for i in none_key_list:
+    del(Lei_current_keys[i])
+
+colours = [cmap(current_colours[x]) for x in Lei_current_keys.keys()]
+currents = list(Lei_current_keys.values())
+
+Lei_SD_current_panel = fig_current.axs[1][2]
+Lei_SD_current_panel.set_title("ORd-SD-Lei")
+mp.cumulative_current(log, currents, Lei_SD_current_panel,
+                      colors=colours, normalise=True)
+Lei_SD_current_panel.set_rasterization_zorder(3)
+
+#######################
+#
 # Adjust figures
+#
+#######################
 fig_EK.axs[0][0].legend()
 
 AP_y_min = min(AP_y_bottom1, AP_y_bottom2, AP_y_bottom3, AP_y_bottom4,
-               AP_y_bottom5)
-AP_y_max = max(AP_y_top1, AP_y_top2, AP_y_top3, AP_y_top4, AP_y_top5)
+               AP_y_bottom5, AP_y_bottom6)
+AP_y_max = max(AP_y_top1, AP_y_top2, AP_y_top3, AP_y_top4, AP_y_top5,
+               AP_y_top6)
 IKr_y_min = min(IKr_y_bottom1, IKr_y_bottom2, IKr_y_bottom3, IKr_y_bottom4,
-                IKr_y_bottom5)
-IKr_y_max = max(IKr_y_top1, IKr_y_top2, IKr_y_top3, IKr_y_top4, IKr_y_top5)
-for i in range(5):
+                IKr_y_bottom5, IKr_y_bottom6)
+IKr_y_max = max(IKr_y_top1, IKr_y_top2, IKr_y_top3, IKr_y_top4, IKr_y_top5,
+                IKr_y_top6)
+for i in range(6):
     axs_AP[i][1][0].set_ylim(IKr_y_min, IKr_y_max)
     axs_AP[i][0][0].set_ylim(AP_y_min, AP_y_max)
     if i == 0 or i == 3:
-        print(i)
         axs_AP[i][0][0].set_ylabel('AP')
         axs_AP[i][1][0].set_ylabel(r"$I_\mathrm{Kr}$")
     else:
@@ -319,4 +373,4 @@ fig_current.sharey(["Relative contribution"] * 2, [(-1.02, 1.02)] * 2)
 # Save figures
 fig_EK.savefig(fig_dir + 'reversal_potential.pdf')
 fig_AP.savefig(fig_dir + 'AP_hERG.pdf')
-fig_current.savefig(fig_dir + 'current_contribution.png')
+fig_current.savefig(fig_dir + 'current_contribution.pdf')

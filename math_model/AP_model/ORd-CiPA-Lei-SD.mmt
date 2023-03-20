@@ -79,13 +79,10 @@ ical.jca          =  9.99973831200000052e-1
 ical.ffp          =  9.99999990900000024e-1
 ical.fcafp        =  9.99999990900000024e-1
 ical.nca          =  2.74941404400000020e-3
-ikr.IC1           =  0.999637
-ikr.IC2           =  6.83207999999999982e-5
-ikr.C1            =  1.80144999999999990e-8
-ikr.C2            =  8.26618999999999954e-5
-ikr.O             =  1.55510000000000007e-4
-ikr.IO            =  5.67622999999999969e-5
-ikr.IObound       =  0
+ikr.CI            =  0
+ikr.O             =  0
+ikr.I             =  0
+ikr.Ibound        =  0
 ikr.Obound        =  0
 ikr.Cbound        =  0
 ikr.D             =  0
@@ -168,6 +165,13 @@ vjsr = 0.0048 * vcell
 vss = 0.02 * vcell
     in [uL]
     desc: Volume of the Submembrane space near the T-tubules
+
+#
+# Rescaling of currents
+#
+[tune]
+ikr_rescale = 1
+    in [1]
 
 #
 # Physical constants
@@ -514,7 +518,7 @@ ICaL_total = ICaL + ICaK + ICaNa
 #
 [ikr]
 use membrane.V
-IKr = gKr * O * (V - rev.EK)
+IKr = gKr * tune.ikr_rescale * O * (V - rev.EK)
     in [nA]
     oxmeta: membrane_rapid_delayed_rectifier_potassium_current
 k12 = p1 * exp(p2 * V)

@@ -49,7 +49,9 @@ class ModelDetails(object):
                 'IClCa': None,
                 'IClB': None,
                 'IKACh': None,
-                'IKATP': None
+                'IKATP': None,
+                'time': 'engine.time',
+                'Vm': 'membrane.V'
             },
             'TTP': {
                 'Ito': 'transient_outward_current.i_to',
@@ -70,6 +72,27 @@ class ModelDetails(object):
                 'IKACh': None,
                 'IKATP': None,
                 'time': 'environment.time',
+                'Vm': 'membrane.V'
+            },
+            'Lei': {
+                'Ito': 'ito.Ito',
+                'IKb': 'ikb.IKb',
+                'IKs': 'iks.IKs',
+                'IKr': 'ikr.IKr',
+                'ICaP': 'ipca.IpCa',
+                'IK1': 'ik1.IK1',
+                'INaK': 'inak.INaK',
+                'ICaL': 'ical.ICaL_total',
+                'INaL': 'inal.INaL',
+                'INaCa': 'inaca.INaCa_total',
+                'ICaB': 'icab.ICab',
+                'INaB': 'inab.INab',
+                'INa': 'ina.INa',
+                'IClCa': None,
+                'IClB': None,
+                'IKACh': None,
+                'IKATP': None,
+                'time': 'engine.time',
                 'Vm': 'membrane.V'
             },
         }
