@@ -25,23 +25,24 @@ if not os.path.isdir(fig_dir):
     os.makedirs(fig_dir)
 
 # Set up structure of the figure
-fig = modelling.figures.FigureStructure(figsize=(10, 5), gridspec=(2, 2),
+fig = modelling.figures.FigureStructure(figsize=(8, 5), gridspec=(2, 2),
                                         height_ratios=[1, 1], hspace=0.4,
-                                        width_ratios=[2.5, 1.2],
+                                        wspace=0.25,
+                                        # width_ratios=[2.5, 1.2],
                                         plot_in_subgrid=True)
 plot = modelling.figures.FigurePlot()
 
 subgridspecs = [(2, 2), (1, 1), (1, 1)]
 subgs = []
-for i in range(2):
-    subgs.append(fig.gs[i].subgridspec(*subgridspecs[i], wspace=0.08,
-                                       hspace=0.08))
-subgs.append(fig.gs[3].subgridspec(*subgridspecs[i], wspace=0.08,
-                                   hspace=0.08))
+subgs.append(fig.gs[:2].subgridspec(*subgridspecs[0], wspace=0.08,
+                                    hspace=0.08))
+for i in range(1, 3):
+    subgs.append(fig.gs[i + 1].subgridspec(*subgridspecs[i], wspace=0.08,
+                                           hspace=0.08))
 axs = [[[fig.fig.add_subplot(subgs[k][i, j]) for j in range(
          subgridspecs[k][1])] for i in range(subgridspecs[k][0])]
-       for k in range(len(subgs) - 1)]
-axs.append([[fig.fig.add_subplot(subgs[2][0, 0])]])
+       for k in range(len(subgs))]
+# axs.append([[fig.fig.add_subplot(subgs[2][0, 0])]])
 
 # Bottom left panel
 # Plot action potentials and the corresponding IKr of the AP-SD model and the
@@ -116,7 +117,7 @@ current_key = model_keys['IKr']
 Vm_key = model_keys['Vm']
 
 SD_labelname = APmodel_name + '-SD model'
-CS_labelname = APmodel_name + '-SD model'
+CS_labelname = APmodel_name + '-CS model'
 
 # Plot AP and IKr at various drug concentrations
 plot.add_multiple_continuous(panel2[0][0], AP_trapping_plot,
@@ -199,8 +200,8 @@ panel4[0][0].legend(handlelength=1)
 # Add panel letter
 # fig.fig.set_size_inches(10, 5.5)
 fig.fig.text(0.1, 0.905, '(A)', fontsize=11)
-# fig.fig.text(0.1, 0.455, '(B)', fontsize=11)
-fig.fig.text(0.64, 0.905, '(B)', fontsize=11)
-fig.fig.text(0.64, 0.455, '(C)', fontsize=11)
+fig.fig.text(0.1, 0.455, '(B)', fontsize=11)
+# fig.fig.text(0.49, 0.905, '(B)', fontsize=11)
+fig.fig.text(0.53, 0.455, '(C)', fontsize=11)
 
 fig.savefig(fig_dir + "model_compare.pdf")
