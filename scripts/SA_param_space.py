@@ -172,7 +172,7 @@ else:
                                        header=[0, 1], index_col=[0],
                                        skipinitialspace=True)
         ran_values = saved_results_df['param_id']['param_id'].values
-        expected_ids = param_values_df['param_id'].values[
+        expected_ids = param_values_df['param_id']['param_id'].values[
             file_num * samples_per_save: (file_num + 1) * samples_per_save]
         param_space_id = [i for i in expected_ids if i not in ran_values]
         if len(param_space) != 0:
