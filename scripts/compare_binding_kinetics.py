@@ -63,6 +63,8 @@ if APmodel_name == 'Grandi':
     APmodel = '../math_model/AP_model/Grd-2010-IKr-SD.mmt'
 elif APmodel_name == 'TTP':
     APmodel = '../math_model/AP_model/TTP-2006-IKr-SD.mmt'
+elif APmodel_name == 'Lei':
+    APmodel = '../math_model/AP_model/ORd-CiPA-Lei-SD.mmt'
 APmodel, _, x = myokit.load(APmodel)
 model_keys = modelling.ModelDetails().current_keys[APmodel_name]
 current_key = model_keys['IKr']
@@ -114,7 +116,7 @@ for i in range(len(drug_conc)):
 
     APD_trapping_pulse = []
     for pulse in range(save_signal):
-        apd90, _ = AP_model.APD90(log[Vm_key, pulse], offset, 0.1)
+        apd90 = AP_model.APD90(log[Vm_key, pulse], offset, 0.1)
         APD_trapping_pulse.append(apd90)
 
     AP_trapping.append(log)
@@ -129,7 +131,7 @@ for i in range(len(drug_conc)):
 
     APD_conductance_pulse = []
     for pulse in range(save_signal):
-        apd90, _ = AP_model.APD90(d2[Vm_key, pulse], offset, 0.1)
+        apd90 = AP_model.APD90(d2[Vm_key, pulse], offset, 0.1)
         APD_conductance_pulse.append(apd90)
 
     AP_conductance.append(d2)
@@ -168,7 +170,7 @@ for i in range(len(drug_conc)):
     # Compute APD90 of simulated AP
     APD_trapping_pulse = []
     for pulse in range(save_signal):
-        apd90, _ = AP_model.APD90(log[Vm_key, pulse], offset, 0.1)
+        apd90 = AP_model.APD90(log[Vm_key, pulse], offset, 0.1)
         APD_trapping_pulse.append(apd90)
 
     APD_trapping.append(APD_trapping_pulse)
@@ -183,7 +185,7 @@ for i in range(len(drug_conc)):
     # Compute APD90 of simulated AP
     APD_conductance_pulse = []
     for pulse in range(save_signal):
-        apd90, _ = AP_model.APD90(d2[Vm_key, pulse], offset, 0.1)
+        apd90 = AP_model.APD90(d2[Vm_key, pulse], offset, 0.1)
         APD_conductance_pulse.append(apd90)
 
     APD_conductance.append(APD_conductance_pulse)

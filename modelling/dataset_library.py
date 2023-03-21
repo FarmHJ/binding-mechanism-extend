@@ -17,13 +17,13 @@ class DatasetLibrary(object):
             "220122_exp_data")
 
         self.protocol_choice = ["CIPA", "Pharm"]
-        self.drug_choice = ["Cisapride", "Dofetilide", "Verapamil"]
+        self.drug_choice = ["cisapride", "dofetilide", "verapamil"]
         self.protocol_title = {"CIPA": "CiPA protocol",
                                "Pharm": "Roche's protocol"}
         self.compound_name = {
-            "Cisapride": ["19"],
-            "Dofetilide": ["110", "RO0319253-000-001"],
-            "Verapamil": ["13"]}
+            "cisapride": ["19"],
+            "dofetilide": ["110", "RO0319253-000-001"],
+            "verapamil": ["13"]}
 
     def exp_data_list(self, protocol, drug):
         """
@@ -38,8 +38,8 @@ class DatasetLibrary(object):
 
         if drug not in self.drug_choice:
             raise ValueError(
-                "Choice of drug must be one of 'Cisapride', 'Dofetilide' \
-                    and 'Verapamil'")
+                "Choice of drug must be one of 'cisapride', 'dofetilide' \
+                    and 'verapamil'")
 
         filepath = os.path.join(self._directory, protocol, drug)
         file_cells = os.listdir(filepath)

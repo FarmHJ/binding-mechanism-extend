@@ -88,3 +88,7 @@ venv.bak/
 # VSCode config
 .vscode
 .DS_Store
+
+# Data, results and figures
+exp_data/
+scripts/checking_script/
