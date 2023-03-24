@@ -16,8 +16,8 @@ class DatasetLibrary(object):
                 os.path.dirname(__file__))),
             "220122_exp_data")
 
-        self.protocol_choice = ["CIPA", "Pharm"]
-        self.drug_choice = ["cisapride", "dofetilide", "verapamil"]
+        self.protocol_list = ["CIPA", "Pharm"]
+        self.drug_list = ["cisapride", "dofetilide", "verapamil"]
         self.protocol_title = {"CIPA": "CiPA protocol",
                                "Pharm": "Roche's protocol"}
         self.compound_name = {
@@ -32,11 +32,11 @@ class DatasetLibrary(object):
         """
 
         # check protocol choice
-        if protocol not in self.protocol_choice:
+        if protocol not in self.protocol_list:
             raise ValueError(
                 "Choice of protocol must be either 'CIPA' or 'Pharm'")
 
-        if drug not in self.drug_choice:
+        if drug not in self.drug_list:
             raise ValueError(
                 "Choice of drug must be one of 'cisapride', 'dofetilide' \
                     and 'verapamil'")
