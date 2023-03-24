@@ -104,7 +104,7 @@ SD_current_panel = fig_current.axs[0][2]
 SD_current_panel.set_title("O'Hara-CiPA (2017) epi")
 mp.cumulative_current(log, currents, SD_current_panel, colors=colours,
                       normalise=True)
-SD_current_panel.set_rasterization_zorder(3)
+SD_current_panel.set_rasterization_zorder(2)
 
 #######################
 #
@@ -148,7 +148,7 @@ Grd_current_panel = fig_current.axs[0][0]
 Grd_current_panel.set_title("Grandi (2010)")
 mp.cumulative_current(log, currents, Grd_current_panel, colors=colours,
                       normalise=True)
-Grd_current_panel.set_rasterization_zorder(3)
+Grd_current_panel.set_rasterization_zorder(2)
 
 #######################
 #
@@ -193,7 +193,7 @@ TTP_current_panel = fig_current.axs[0][1]
 TTP_current_panel.set_title("ten Tusscher (2006)")
 mp.cumulative_current(log, currents, TTP_current_panel, colors=colours,
                       normalise=True)
-TTP_current_panel.set_rasterization_zorder(3)
+TTP_current_panel.set_rasterization_zorder(2)
 
 #######################
 #
@@ -237,7 +237,7 @@ Grd_SD_current_panel = fig_current.axs[1][0]
 Grd_SD_current_panel.set_title("Grandi-SD")
 mp.cumulative_current(log, currents, Grd_SD_current_panel,
                       colors=colours, normalise=True)
-Grd_SD_current_panel.set_rasterization_zorder(3)
+Grd_SD_current_panel.set_rasterization_zorder(2)
 
 #######################
 #
@@ -284,7 +284,7 @@ TTP_SD_current_panel = fig_current.axs[1][1]
 TTP_SD_current_panel.set_title("ten Tusscher-SD")
 mp.cumulative_current(log, currents, TTP_SD_current_panel,
                       colors=colours, normalise=True)
-TTP_SD_current_panel.set_rasterization_zorder(3)
+TTP_SD_current_panel.set_rasterization_zorder(2)
 
 #######################
 #
@@ -328,7 +328,7 @@ Lei_SD_current_panel = fig_current.axs[1][2]
 Lei_SD_current_panel.set_title("ORd-SD-Lei")
 mp.cumulative_current(log, currents, Lei_SD_current_panel,
                       colors=colours, normalise=True)
-Lei_SD_current_panel.set_rasterization_zorder(3)
+Lei_SD_current_panel.set_rasterization_zorder(2)
 
 #######################
 #
@@ -356,16 +356,16 @@ for i in range(6):
         axs_AP[i][1][0].set_yticklabels([])
 
 legend_panel = fig_current.axs[1][2]
-legend_panel.xaxis.set_visible(False)
-legend_panel.yaxis.set_visible(False)
-legend_panel.set_frame_on(False)
+# legend_panel.xaxis.set_visible(False)
+# legend_panel.yaxis.set_visible(False)
+# legend_panel.set_frame_on(False)
 lines = []
 for current, i in current_colours.items():
     lines.append(matplotlib.lines.Line2D([0], [0], color=cmap(i), lw=5))
 del(current_colours['IKACh'])
 del(current_colours['IKATP'])
 labels = [modelling.ModelDetails().current_names[x] for x in current_colours]
-legend_panel.legend(lines, labels, loc=(0, 0.05), ncol=2)
+legend_panel.legend(lines, labels, loc=(1.02, 0.05), ncol=2)
 
 fig_current.sharex(["Time (ms)"] * 3, [(0, plotting_pulse_time)] * 3)
 fig_current.sharey(["Relative contribution"] * 2, [(-1.02, 1.02)] * 2)

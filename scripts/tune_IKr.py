@@ -111,6 +111,7 @@ Grd_current_panel[0][0].set_ylabel("Relative contribution")
 Grd_current_panel[0][0].set_ylim(-1.02, 1.02)
 mp.cumulative_current(log, currents, Grd_current_panel[0][0], colors=colours,
                       normalise=True)
+Grd_current_panel[0][0].set_rasterization_zorder(2)
 
 #######################
 #
@@ -161,6 +162,7 @@ Grd_SD_current_panel[0][0].set_yticklabels([])
 Grd_SD_current_panel[0][0].set_ylim(-1.02, 1.02)
 mp.cumulative_current(log_tune1, currents, Grd_SD_current_panel[0][0],
                       colors=colours, normalise=True)
+Grd_SD_current_panel[0][0].set_rasterization_zorder(2)
 
 #######################
 # Tuning method 2: scale conductance to have same APD90
@@ -211,6 +213,7 @@ Grd_SD_current_panel[0][0].set_yticklabels([])
 Grd_SD_current_panel[0][0].set_ylim(-1.02, 1.02)
 mp.cumulative_current(log_tune2, currents, Grd_SD_current_panel[0][0],
                       colors=colours, normalise=True)
+Grd_SD_current_panel[0][0].set_rasterization_zorder(2)
 
 #######################
 # Tuning method 3: scale conductance to have same hERG current flux
@@ -262,6 +265,7 @@ Grd_SD_current_panel[0][0].set_yticklabels([])
 Grd_SD_current_panel[0][0].set_ylim(-1.02, 1.02)
 mp.cumulative_current(log_tune3, currents, Grd_SD_current_panel[0][0],
                       colors=colours, normalise=True)
+Grd_SD_current_panel[0][0].set_rasterization_zorder(2)
 
 # Adjust figures
 AP_y_min = min(AP_y_bottom1, AP_y_bottom2, AP_y_bottom3, AP_y_bottom4)
