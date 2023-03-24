@@ -206,7 +206,6 @@ for file_num in saving_file_dict['file_num']:
         for i in range(len(subset_param_space.index)):
             param_space.append(subset_param_space.iloc[[i]])
 
-        print(param_space)
         big_df = evaluator.evaluate(param_space)
 
         if os.path.exists(data_dir + filename):
