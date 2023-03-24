@@ -91,4 +91,4 @@ venv.bak/
 
 # Data, results and figures
 exp_data/
-scripts/checking_script/
+scripts/checking_scripts/
