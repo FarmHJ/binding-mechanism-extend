@@ -12,9 +12,10 @@ class DatasetLibrary(object):
         super(DatasetLibrary, self).__init__()
 
         self._directory = os.path.join(
-            os.path.dirname(os.path.dirname(
-                os.path.dirname(__file__))),
-            "220122_exp_data")
+            os.path.dirname(os.path.dirname(os.path.dirname(
+                os.path.dirname(os.path.dirname(os.path.dirname(
+                    __file__)))))),
+            "home/scratch/220122_exp_data")
 
         self.protocol_list = ["CIPA", "Pharm"]
         self.drug_list = ["cisapride", "dofetilide", "verapamil"]
@@ -85,11 +86,11 @@ class DatasetLibrary(object):
         capacitance, seal resistance and series resistance.
         """
         # check protocol choice
-        if protocol not in self.protocol_choice:
+        if protocol not in self.protocol_list:
             raise ValueError(
                 "Choice of protocol must be either 'CIPA' or 'Pharm'")
 
-        if drug not in self.drug_choice:
+        if drug not in self.drug_list:
             raise ValueError(
                 "Choice of drug must be one of 'Cisapride', 'Dofetilide' \
                     and 'Verapamil'")
