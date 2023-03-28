@@ -12,11 +12,11 @@ class DatasetLibrary(object):
         super(DatasetLibrary, self).__init__()
 
         self._directory = os.path.join(
-            # os.path.dirname(os.path.dirname(os.path.dirname(
-            #     os.path.dirname(os.path.dirname(os.path.dirname(
-            #         __file__)))))),
-            # "home/scratch/220122_exp_data")
-            os.path.dirname(os.path.dirname(__file__)), "exp_data")
+            os.path.dirname(os.path.dirname(os.path.dirname(
+                os.path.dirname(os.path.dirname(os.path.dirname(
+                    __file__)))))),
+            "home/scratch/220122_exp_data")
+            # os.path.dirname(os.path.dirname(__file__)), "exp_data")
 
         self.protocol_list = ["CIPA", "Pharm"]
         self.drug_list = ["cisapride", "dofetilide", "verapamil"]
@@ -26,6 +26,13 @@ class DatasetLibrary(object):
             "cisapride": ["19", "Cisapride"],
             "dofetilide": ["110", "RO0319253-000-001"],
             "verapamil": ["13", "Verapamil"]}
+
+        self.compound_function = {
+            "NMDG60 0.2%DMSO": "reference",
+            "NMDG60 1uM E4031 0.2%DMSO": "positive block",
+            "19": "cisapride", "13": "verapamil", "110": 'dofetilide',
+            "S Solution": "reference", "Cisapride": "cisapride",
+            "Verapamil": "verapamil", "RO0319253-000-001": 'dofetilide'}
 
     def exp_data_list(self, protocol, drug):
         """

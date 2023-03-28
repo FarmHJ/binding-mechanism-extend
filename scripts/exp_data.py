@@ -1,7 +1,4 @@
-import matplotlib
-import matplotlib.pyplot as plt
 import numpy as np
-import os
 import pandas as pd
 
 import modelling
@@ -10,34 +7,11 @@ dataset = modelling.DatasetLibrary()
 
 drug_list = dataset.drug_list
 protocol_list = dataset.protocol_list
-# del (drug_list[1])
-# print(drug_list)
-
-# Set up structure of the figure
-gridspec = (len(drug_list) + 1, len(protocol_list))
-fig = modelling.figures.FigureStructure(figsize=(6.5, 6), gridspec=gridspec,
-                                        hspace=0.4, wspace=0.25,)
-
-plot = modelling.figures.FigurePlot()
 
 protocol_title = {"CIPA": "CiPA protocol", "Pharm": "Roche's protocol"}
-compound_name = {"19": "cisapride", "13": "verapamil", "110": 'dofetilide',
-                 "Cisapride": "cisapride", "Verapamil": "verapamil",
-                 "RO0319253-000-001": 'dofetilide'}
-# cell_choice = pd.DataFrame(data={"cisapride": ["K22", "F17"],
-#                                  "verapamil": ["H18", "N17"]})
-# cell_choice = cell_choice.rename(index={0: "CIPA", 1: "Pharm"})
-# drug_concentration = pd.DataFrame(data={"cisapride": ["0.3uM", "1um"],
-#                                         "verapamil": ["0.3uM", "0.3uM"]})
-# drug_concentration = drug_concentration.rename(index={0: "CIPA", 1: "Pharm"})
-
-# for i in range(len(protocol_list)):
-#     for j in range(len(drug_list) - 1):
-#         print('main: ', (1, i))
-#         print('share: ', (j + 2, i))
-#         fig.axs[1][i].sharex(fig.axs[j + 2][i])
 
 count = 0
+colors = ['blue', 'orange', 'green']
 for drug_count, drug in enumerate(drug_list):
     protocol_count = 0
     for protocol in protocol_list:
@@ -45,20 +19,33 @@ for drug_count, drug in enumerate(drug_list):
         detail_list = dataset.detail_read(protocol, drug)
         if detail_list.index[0] == "Well ID":
             detail_list = detail_list.rename(index={"Well ID": "Parameter"})
-        # print(detail_list)
 
+        drug_concs_list = cell_list["drug_concentration"].values
+        unique_drug_concs = pd.unique(drug_concs_list)
+        cell_counts = pd.Series(drug_concs_list).value_counts()
+        max_cell_per_conc = max(cell_counts.values)
+
+        # Set up structure of the figure
+        gridspec = (len(unique_drug_concs), max_cell_per_conc)
+        fig = modelling.figures.FigureStructure(
+            figsize=(2 * max_cell_per_conc, 2 * len(unique_drug_concs)),
+            gridspec=gridspec, hspace=0.2, wspace=0.25,
+            height_ratios=[1] * len(unique_drug_concs), plot_in_subgrid=True)
+        plot = modelling.figures.FigurePlot()
+
+        axs = [[fig.fig.add_subplot(fig.gs[i, j]) for j in
+                range(cell_counts[unique_drug_concs[i]])] for i in
+               range(len(unique_drug_concs))]
+
+        cell_count = 0
+        y_lb = 0
+        y_ub = 0.5
         for cell in cell_list['cells'].values:
             cell_file_path = cell_list.loc[cell_list["cells"] == cell][
                 "file_path"].values[0]
             drug_conc = cell_list.loc[cell_list["cells"] == cell][
                 "drug_concentration"].values[0]
-    #         for cell in [cell_list["file_path"][0]]:
-            # for cell in [cell_file_path]:
             data = dataset.exp_data_read(cell_file_path)
-            # cell_name = cell_list.loc[cell_list["file_path"] == cell][
-            #     "cells"].reset_index(drop=True)[0]
-
-#             cell_name = cell[-8:-5]
 
             # get drug concentration info
             test = detail_list.loc[["Parameter", cell], :]
@@ -79,69 +66,83 @@ for drug_count, drug in enumerate(drug_list):
             compound_names = detail["Compound Name"].values.ravel()
             compound_names = pd.unique(compound_names)
 
-            # get stimulus
-            stimulus = data["Stimulus"] * 1000
             time = data["Sample Time (us)"] / 1000
-            fig.axs[0][protocol_count].plot(time, stimulus)
-#             protocol_axs[protocol_count].set_title(protocol_title[protocol])
-            fig.axs[0][protocol_count].set_ylabel('Voltage (mV)')
-            fig.axs[0][protocol_count].set_xlabel('Time (ms)')
+            drug_conc_index = np.where(unique_drug_concs == drug_conc)[0][0]
+            cell_num_index = np.count_nonzero(
+                drug_concs_list[:cell_count] == drug_conc)
 
-#             compound_count1 = 0
-#             compound_count2 = 0
-#             for sweep in range(data.shape[1] - 4):
-#                 signal = data.iloc[:, sweep + 3]
-# #                 conc = detail.loc[sweep + 1, "Concentration"]
-#                 compound = detail.loc[sweep + 1, "Compound Name"]
-#                 if compound == compound_names[0]:
-#                     compound_count1 += 1
-#                     label = 'before drug'
-#                     if compound_count1 >= 10:
-#                         fig.axs[drug_count + 1][protocol_count].plot(
-#                             time, signal / 1e-9, color='blue',
-#                             label=label, alpha=0.5, zorder=-5)
-#                 elif compound == compound_names[1]:
-#                     compound_count2 += 1
-#                     label = drug_conc + ' ' + compound_name[compound]
-#                     if compound_count2 >= 10:
-#                         fig.axs[drug_count + 1][protocol_count].plot(
-#                             time, signal / 1e-9, color='red',
-#                             label=label, alpha=0.5, zorder=-5)
-# #                 else:
-# #                     label = 'after washout'
-# #                     axs[count].plot(time, signal, color='blue',
-# #                                     label=compound)
-# #         axs[count].set_title(drug)
-#         fig.axs[drug_count + 1][protocol_count].set_ylabel('Current (nA)')
-#         fig.axs[drug_count + 1][protocol_count].set_xlabel('Time (ms)')
-#         fig.axs[drug_count + 1][protocol_count].set_ylim(0, 1.1)
-#         # fig.axs[drug_count + 1][count].legend()
-#         fig.axs[drug_count + 1][protocol_count].set_rasterization_zorder(0)
-#         # legend_without_duplicate_labels(axs[count])
-#         count += 1
-#         protocol_count += 1
+            compound_count = 0
+            pulse_count = 0
+            previous_compound = detail.loc[1, "Compound Name"]
+            for sweep in range(data.shape[1] - 4):
+                signal = data.iloc[:, sweep + 3]
+                compound = detail.loc[sweep + 1, "Compound Name"]
+                if compound == previous_compound:
+                    pulse_count += 1
+                    if pulse_count >= 10:
+                        axs[drug_conc_index][cell_num_index].plot(
+                            time, signal / 1e-9, color=colors[compound_count],
+                            label=dataset.compound_function[
+                                compound_names[compound_count]],
+                            alpha=0.5, zorder=-1)
+                    previous_compound = compound
+                elif compound != previous_compound:
+                    pulse_count = 1
+                    previous_compound = compound
+                    compound_count += 1
 
-# axs[0].set_xticks([])
-# axs[1].set_xticks([])
-# for ax in protocol_axs:
-#     ax.spines['right'].set_visible(False)
-#     ax.spines['top'].set_visible(False)
-# for ax in axs:
-#     ax.spines['right'].set_visible(False)
-#     ax.spines['top'].set_visible(False)
+            y_bottom, y_top = axs[drug_conc_index][cell_num_index].get_ylim()
+            if y_bottom < y_lb:
+                y_lb = y_bottom
+            if y_top > y_ub:
+                y_ub = y_top
+            cell_count += 1
 
-# fig.text(0.055, 0.975, '(a)', fontsize=10)
-# fig.text(0.555, 0.975, '(b)', fontsize=10)
-# fig.text(0.055, 0.805, '(c)', fontsize=10)
-# fig.text(0.555, 0.805, '(d)', fontsize=10)
-# fig.text(0.055, 0.405, '(e)', fontsize=10)
-# fig.text(0.555, 0.405, '(f)', fontsize=10)
+        unique_label = fig.legend_without_duplicate_labels(axs[0][0])
+        axs[0][0].legend(*zip(*unique_label), handlelength=1, loc='upper left')
+        for i in range(len(unique_drug_concs)):
+            for j in range(cell_counts[unique_drug_concs[i]]):
+                axs[i][j].set_ylim(y_lb, y_ub)
+                axs[i][j].set_rasterization_zorder(0)
 
-# fig1.text(0.055, 0.975, '(a)', fontsize=10)
-# fig1.text(0.055, 0.775, '(b)', fontsize=10)
-# fig1.text(0.055, 0.425, '(c)', fontsize=10)
+                # Share x-axis with first column
+                if j != 0:
+                    axs[i][j].sharex(axs[i][0])
+                    axs[i][j].sharey(axs[i][0])
 
-fig.fig.set_tight_layout(True)
-# plt.subplots_adjust(wspace=0, hspace=0)
-fig.savefig("../figures/experimental_data/exp_data_visualisation.pdf")
-# plt.show()
+                # Label x-axis at the last row
+                if i != len(unique_drug_concs) - 1:
+                    axs[i][j].tick_params(labelbottom=False)
+                else:
+                    axs[i][j].set_xlabel('Time (ms)')
+
+                # Label y-axis at the first column
+                if j != 0:
+                    axs[i][j].tick_params(labelleft=False)
+                else:
+                    title_str_num = "{0:.0e}".format(unique_drug_concs[i] /
+                                                   1e-6)
+                    base, power = title_str_num.split("e")
+                    power = int(power)
+                    axs[i][j].set_ylabel(
+                        base + r"$\times 10^{:d} \mu$".format(power) +
+                        'M\nCurrent (nA)')
+
+        # get stimulus
+        stimulus = data["Stimulus"] * 1000
+        free_panel_row = min([i for i in range(len(unique_drug_concs)) if
+                              cell_counts[unique_drug_concs[i]] <
+                              max_cell_per_conc])
+        free_panel_col = cell_counts[unique_drug_concs[free_panel_row]]
+        protocol_axs = fig.fig.add_subplot(
+            fig.gs[free_panel_row, free_panel_col])
+        protocol_axs.plot(time, stimulus, 'k')
+
+        protocol_axs.yaxis.tick_right()
+        protocol_axs.yaxis.set_label_position('right')
+        protocol_axs.set_ylabel('Voltage (mV)')
+        protocol_axs.sharex(axs[0][0])
+        protocol_axs.tick_params(labelbottom=False, labelleft=False)
+
+        filename = protocol + "_" + drug + ".pdf"
+        fig.savefig("../figures/experimental_data/" + filename)
