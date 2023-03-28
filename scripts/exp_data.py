@@ -10,8 +10,8 @@ dataset = modelling.DatasetLibrary()
 
 drug_list = dataset.drug_list
 protocol_list = dataset.protocol_list
-del (drug_list[1])
-print(drug_list)
+# del (drug_list[1])
+# print(drug_list)
 
 # Set up structure of the figure
 gridspec = (len(drug_list) + 1, len(protocol_list))
@@ -24,12 +24,12 @@ protocol_title = {"CIPA": "CiPA protocol", "Pharm": "Roche's protocol"}
 compound_name = {"19": "cisapride", "13": "verapamil", "110": 'dofetilide',
                  "Cisapride": "cisapride", "Verapamil": "verapamil",
                  "RO0319253-000-001": 'dofetilide'}
-cell_choice = pd.DataFrame(data={"cisapride": ["K22", "F17"],
-                                 "verapamil": ["H18", "N17"]})
-cell_choice = cell_choice.rename(index={0: "CIPA", 1: "Pharm"})
-drug_concentration = pd.DataFrame(data={"cisapride": ["0.3uM", "1um"],
-                                        "verapamil": ["0.3uM", "0.3uM"]})
-drug_concentration = drug_concentration.rename(index={0: "CIPA", 1: "Pharm"})
+# cell_choice = pd.DataFrame(data={"cisapride": ["K22", "F17"],
+#                                  "verapamil": ["H18", "N17"]})
+# cell_choice = cell_choice.rename(index={0: "CIPA", 1: "Pharm"})
+# drug_concentration = pd.DataFrame(data={"cisapride": ["0.3uM", "1um"],
+#                                         "verapamil": ["0.3uM", "0.3uM"]})
+# drug_concentration = drug_concentration.rename(index={0: "CIPA", 1: "Pharm"})
 
 # for i in range(len(protocol_list)):
 #     for j in range(len(drug_list) - 1):
@@ -45,21 +45,23 @@ for drug_count, drug in enumerate(drug_list):
         detail_list = dataset.detail_read(protocol, drug)
         if detail_list.index[0] == "Well ID":
             detail_list = detail_list.rename(index={"Well ID": "Parameter"})
+        # print(detail_list)
 
-        cell = cell_choice.loc[protocol, drug]
-        cell_file_path = cell_list.loc[cell_list["cells"] == cell][
-            "file_path"].reset_index(drop=True)[0]
-        drug_conc = drug_concentration.loc[protocol, drug]
-#         for cell in [cell_list["file_path"][0]]:
-        for cell in [cell_file_path]:
-            data = dataset.exp_data_read(cell)
-            cell_name = cell_list.loc[cell_list["file_path"] == cell][
-                "cells"].reset_index(drop=True)[0]
+        for cell in cell_list['cells'].values:
+            cell_file_path = cell_list.loc[cell_list["cells"] == cell][
+                "file_path"].values[0]
+            drug_conc = cell_list.loc[cell_list["cells"] == cell][
+                "drug_concentration"].values[0]
+    #         for cell in [cell_list["file_path"][0]]:
+            # for cell in [cell_file_path]:
+            data = dataset.exp_data_read(cell_file_path)
+            # cell_name = cell_list.loc[cell_list["file_path"] == cell][
+            #     "cells"].reset_index(drop=True)[0]
 
 #             cell_name = cell[-8:-5]
 
             # get drug concentration info
-            test = detail_list.loc[["Parameter", cell_name], :]
+            test = detail_list.loc[["Parameter", cell], :]
             detail = test.T.reset_index().rename(columns={"index": "Sweep"})
 
             for i in range(len(detail.index)):
@@ -69,14 +71,13 @@ for drug_count, drug in enumerate(drug_list):
                 else:
                     detail.loc[i, "Sweep"] = int(sweep_string[-5:-2])
 
-            detail = detail.rename(columns={cell_name: "values",
-                                            "Parameter": cell_name})
-            detail = detail.pivot(index='Sweep', columns=cell_name,
+            detail = detail.rename(columns={cell: "values",
+                                            "Parameter": cell})
+            detail = detail.pivot(index='Sweep', columns=cell,
                                   values='values')
 
             compound_names = detail["Compound Name"].values.ravel()
             compound_names = pd.unique(compound_names)
-            print(compound_names)
 
             # get stimulus
             stimulus = data["Stimulus"] * 1000
@@ -86,39 +87,39 @@ for drug_count, drug in enumerate(drug_list):
             fig.axs[0][protocol_count].set_ylabel('Voltage (mV)')
             fig.axs[0][protocol_count].set_xlabel('Time (ms)')
 
-            compound_count1 = 0
-            compound_count2 = 0
-            for sweep in range(data.shape[1] - 4):
-                signal = data.iloc[:, sweep + 3]
-#                 conc = detail.loc[sweep + 1, "Concentration"]
-                compound = detail.loc[sweep + 1, "Compound Name"]
-                if compound == compound_names[0]:
-                    compound_count1 += 1
-                    label = 'before drug'
-                    if compound_count1 >= 10:
-                        fig.axs[drug_count + 1][protocol_count].plot(
-                            time, signal / 1e-9, color='blue',
-                            label=label, alpha=0.5, zorder=-5)
-                elif compound == compound_names[1]:
-                    compound_count2 += 1
-                    label = drug_conc + ' ' + compound_name[compound]
-                    if compound_count2 >= 10:
-                        fig.axs[drug_count + 1][protocol_count].plot(
-                            time, signal / 1e-9, color='red',
-                            label=label, alpha=0.5, zorder=-5)
-#                 else:
-#                     label = 'after washout'
-#                     axs[count].plot(time, signal, color='blue',
-#                                     label=compound)
-#         axs[count].set_title(drug)
-        fig.axs[drug_count + 1][protocol_count].set_ylabel('Current (nA)')
-        fig.axs[drug_count + 1][protocol_count].set_xlabel('Time (ms)')
-        fig.axs[drug_count + 1][protocol_count].set_ylim(0, 1.1)
-        # fig.axs[drug_count + 1][count].legend()
-        fig.axs[drug_count + 1][protocol_count].set_rasterization_zorder(0)
-        # legend_without_duplicate_labels(axs[count])
-        count += 1
-        protocol_count += 1
+#             compound_count1 = 0
+#             compound_count2 = 0
+#             for sweep in range(data.shape[1] - 4):
+#                 signal = data.iloc[:, sweep + 3]
+# #                 conc = detail.loc[sweep + 1, "Concentration"]
+#                 compound = detail.loc[sweep + 1, "Compound Name"]
+#                 if compound == compound_names[0]:
+#                     compound_count1 += 1
+#                     label = 'before drug'
+#                     if compound_count1 >= 10:
+#                         fig.axs[drug_count + 1][protocol_count].plot(
+#                             time, signal / 1e-9, color='blue',
+#                             label=label, alpha=0.5, zorder=-5)
+#                 elif compound == compound_names[1]:
+#                     compound_count2 += 1
+#                     label = drug_conc + ' ' + compound_name[compound]
+#                     if compound_count2 >= 10:
+#                         fig.axs[drug_count + 1][protocol_count].plot(
+#                             time, signal / 1e-9, color='red',
+#                             label=label, alpha=0.5, zorder=-5)
+# #                 else:
+# #                     label = 'after washout'
+# #                     axs[count].plot(time, signal, color='blue',
+# #                                     label=compound)
+# #         axs[count].set_title(drug)
+#         fig.axs[drug_count + 1][protocol_count].set_ylabel('Current (nA)')
+#         fig.axs[drug_count + 1][protocol_count].set_xlabel('Time (ms)')
+#         fig.axs[drug_count + 1][protocol_count].set_ylim(0, 1.1)
+#         # fig.axs[drug_count + 1][count].legend()
+#         fig.axs[drug_count + 1][protocol_count].set_rasterization_zorder(0)
+#         # legend_without_duplicate_labels(axs[count])
+#         count += 1
+#         protocol_count += 1
 
 # axs[0].set_xticks([])
 # axs[1].set_xticks([])
