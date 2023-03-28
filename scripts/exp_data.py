@@ -79,7 +79,6 @@ for drug_count, drug in enumerate(drug_list):
                 signal = data.iloc[:, sweep + 3]
                 compound = detail.loc[sweep + 1, "Compound Name"]
                 if compound == previous_compound:
-                    pulse_count += 1
                     if pulse_count >= 10:
                         axs[drug_conc_index][cell_num_index].plot(
                             time, signal / 1e-9, color=colors[compound_count],
@@ -87,6 +86,7 @@ for drug_count, drug in enumerate(drug_list):
                                 compound_names[compound_count]],
                             alpha=0.5, zorder=-1)
                     previous_compound = compound
+                    pulse_count += 1
                 elif compound != previous_compound:
                     pulse_count = 1
                     previous_compound = compound
