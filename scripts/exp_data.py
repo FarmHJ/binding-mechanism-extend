@@ -16,6 +16,7 @@ for drug_count, drug in enumerate(drug_list):
     protocol_count = 0
     for protocol in protocol_list:
         cell_list = dataset.exp_data_list(protocol, drug)
+        cell_list = cell_list.sort_values('drug_concentration')
         detail_list = dataset.detail_read(protocol, drug)
         if detail_list.index[0] == "Well ID":
             detail_list = detail_list.rename(index={"Well ID": "Parameter"})
@@ -78,7 +79,6 @@ for drug_count, drug in enumerate(drug_list):
                 signal = data.iloc[:, sweep + 3]
                 compound = detail.loc[sweep + 1, "Compound Name"]
                 if compound == previous_compound:
-                    pulse_count += 1
                     if pulse_count >= 10:
                         axs[drug_conc_index][cell_num_index].plot(
                             time, signal / 1e-9, color=colors[compound_count],
@@ -86,6 +86,7 @@ for drug_count, drug in enumerate(drug_list):
                                 compound_names[compound_count]],
                             alpha=0.5, zorder=-1)
                     previous_compound = compound
+                    pulse_count += 1
                 elif compound != previous_compound:
                     pulse_count = 1
                     previous_compound = compound
@@ -120,13 +121,21 @@ for drug_count, drug in enumerate(drug_list):
                 if j != 0:
                     axs[i][j].tick_params(labelleft=False)
                 else:
-                    title_str_num = "{0:.0e}".format(unique_drug_concs[i] /
-                                                   1e-6)
-                    base, power = title_str_num.split("e")
-                    power = int(power)
-                    axs[i][j].set_ylabel(
-                        base + r"$\times 10^{:d} \mu$".format(power) +
-                        'M\nCurrent (nA)')
+                    axs[i][j].set_ylabel('Current (nA)')
+
+            title_str_num = "{0:.0e}".format(unique_drug_concs[i] / 1e-6)
+            base, power = title_str_num.split("e")
+            power = int(power)
+            if i == 0:
+                axs[i][1].text(
+                    10, 0.95 * y_ub,
+                    base + r"$\times 10^{{{:d}}} \mu$".format(power) + 'M',
+                    fontsize=8, ha='left', va='top')
+            else:
+                axs[i][0].text(
+                    10, 0.95 * y_ub,
+                    base + r"$\times 10^{{{:d}}} \mu$".format(power) + 'M',
+                    fontsize=8, ha='left', va='top')
 
         # get stimulus
         stimulus = data["Stimulus"] * 1000
@@ -143,6 +152,8 @@ for drug_count, drug in enumerate(drug_list):
         protocol_axs.set_ylabel('Voltage (mV)')
         protocol_axs.sharex(axs[0][0])
         protocol_axs.tick_params(labelbottom=False, labelleft=False)
+        protocol_axs.spines['top'].set_visible(False)
+        protocol_axs.spines['left'].set_visible(False)
 
         filename = protocol + "_" + drug + ".pdf"
         fig.savefig("../figures/experimental_data/" + filename)
