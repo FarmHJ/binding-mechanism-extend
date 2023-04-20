@@ -148,8 +148,8 @@ scale_map = matplotlib.cm.ScalarMappable(norm=cmap_norm, cmap=cmap)
 
 # Plot points in the parameter space
 axs.scatter(Vhalf_range, np.log10(Kmax_range), np.log10(Ku_range),
-               c=scale_map.to_rgba(Error_space),
-               s=5, marker='o', zorder=-10, alpha=0.5)
+            c=scale_map.to_rgba(Error_space),
+            s=5, marker='o', zorder=-10, alpha=0.5)
 axs.view_init(32, 55)
 
 # Plot points of all synthetic drugs and those with RMSD within the defined
@@ -200,8 +200,8 @@ fig.colorbar(scale_map, orientation='horizontal', ax=axs, cax=cax)
 # fig.text(0.5, 0.75, '(B)', fontsize=11)
 
 # Save figure
-plt.subplots_adjust(hspace=0)
-plt.savefig(fig_dir + 'Fig7_SA_3D_test.png')  # , bbox_inches='tight')
+# plt.subplots_adjust(hspace=0)
+plt.savefig(fig_dir + 'SA_3D.png', bbox_inches='tight', pad_inches=0.2)
 
 # #
 # # Plot previous figures at different angles (for supplementary materials)
