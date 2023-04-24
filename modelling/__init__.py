@@ -25,3 +25,7 @@ from .dataset_library import (
     DatasetLibrary,
     ProtocolLibrary
 )
+
+from .data_QC import (
+    QualityControl
+)
