@@ -25,6 +25,73 @@ class ModelComparison(object):
         self.Hill_model = modelling.HillModel()
         self.optimiser = modelling.HillModelOpt(self.Hill_model)
 
+    def compute_Hill(self, BKmodel, drug_conc=None, steady_state_pulse=1000,
+                     Hill_upper_thres=0.9, Hill_lower_thres=0.05,
+                     norm_constant=1, parallel=True):
+
+        if drug_conc is None:
+            drug_conc = list(np.append(0, 10**np.linspace(-1, 1, 5)))
+
+        drug_conc = [i / norm_constant for i in drug_conc]
+
+        peaks = []
+        for i in range(len(drug_conc)):
+            log = BKmodel.custom_simulation(
+                self.drug_param_values, drug_conc[i], steady_state_pulse,
+                log_var=['engine.time', 'ikr.IKr'],
+                abs_tol=1e-7, rel_tol=1e-8)
+            peak, _ = BKmodel.extract_peak(log, 'ikr.IKr')
+            peaks.append(peak[-1])
+
+        peaks_norm = (peaks - min(peaks)) / (max(peaks) - min(peaks))
+
+        # Make sure there are enough data points for the head of Hill curve
+        data_pt_checker = [True if i > Hill_upper_thres else False
+                           for i in peaks_norm]
+        counter = 0
+        while sum(data_pt_checker) < 3 and counter < 20:
+            drug_conc.insert(1, drug_conc[1] / np.sqrt(10))
+            log = BKmodel.custom_simulation(
+                self.drug_param_values, drug_conc[1], steady_state_pulse,
+                log_var=['engine.time', 'ikr.IKr'],
+                abs_tol=1e-7, rel_tol=1e-8)
+            peak, _ = BKmodel.extract_peak(log, 'ikr.IKr')
+            peaks.insert(1, peak[-1])
+            peaks_norm = (peaks - min(peaks)) / (max(peaks) - min(peaks))
+            data_pt_checker = [True if i > Hill_upper_thres else False
+                               for i in peaks_norm]
+            counter += 1
+
+        if counter == 20:
+            return 'Hill curve did not form.', drug_conc, peaks_norm
+
+        # Make sure there are enough data points for the tail of Hill curve
+        data_pt_checker = [True if i < Hill_lower_thres else False
+                           for i in peaks_norm]
+        counter = 0
+        while sum(data_pt_checker) < 3 and counter < 20:
+            drug_conc = drug_conc + [max(drug_conc) * np.sqrt(10)]
+            log = BKmodel.custom_simulation(
+                self.drug_param_values, drug_conc[-1], steady_state_pulse,
+                log_var=['engine.time', 'ikr.IKr'],
+                abs_tol=1e-7, rel_tol=1e-8)
+            peak, _ = BKmodel.extract_peak(log, 'ikr.IKr')
+            peaks.append(peak[-1])
+            peaks_norm = (peaks - min(peaks)) / (max(peaks) - min(peaks))
+            data_pt_checker = [True if i < Hill_lower_thres else False
+                               for i in peaks_norm]
+            counter += 1
+
+        if counter == 20:
+            return 'Hill curve did not form.', drug_conc, peaks_norm
+
+        # return 0, drug_conc, peaks_norm
+        # Fit Hill curve
+        Hill_curve, _ = self.optimiser.optimise(drug_conc, peaks_norm,
+                                                parallel=parallel)
+
+        return Hill_curve[:2], drug_conc, peaks_norm
+
     def APD_sim(self, AP_model, Hill_curve_coefs, drug_conc=None,
                 steady_state_pulse=1000, save_signal=2, offset=50,
                 data_points=20, EAD=False, norm_constant=1,

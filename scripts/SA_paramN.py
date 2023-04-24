@@ -15,11 +15,19 @@ import modelling
 APmodel_name = sys.argv[1]
 
 # Define directory to save simulation data
-data_filepath = '../simulation_data/parameter_SA/APD90diff_N/' + APmodel_name + '/'
+data_filepath = '../simulation_data/parameter_SA/APD90diff_N/' + \
+    APmodel_name + '/'
 if not os.path.isdir(data_filepath):
     os.makedirs(data_filepath)
 
 # Load IKr model and set up protocol
+model_filepath = '../math_model/current_model/ohara-cipa-2017-IKr.mmt'
+model, _, x = myokit.load(model_filepath)
+Milnes_protocol = modelling.ProtocolLibrary().Milnes(25e3)
+current_model = modelling.Simulation(model, protocol=Milnes_protocol,
+                                     current_head_key='ikr')
+
+# Load AP model and set up protocol
 if APmodel_name == 'Grandi':
     AP_model_filepath = '../math_model/AP_model/Grd-2010-IKr-SD.mmt'
 elif APmodel_name == 'TTP':
@@ -48,20 +56,30 @@ drug_list = param_lib.drug_compounds
 param_names = modelling.SDModelDetails().param_names
 parameter_interest = 'N'
 
+# Get name of parameters
+param_names = modelling.SDModelDetails().param_names
 
-def param_evaluation(param, inputs):
+starting_param_df = pd.DataFrame([1] * 5, index=param_names).T
+ComparisonController = modelling.ModelComparison(starting_param_df,
+                                                 [time_key, Vm_key])
+
+
+def param_evaluation(param, param_values):
 
     # Define parameter values of virtual drug
-    param_values = inputs['param_values']
-    param_values[parameter_interest][0] = param
-    drug_conc_Hill = inputs['drug_conc_Hill'].values[0]
-    drug_conc_Hill = drug_conc_Hill[~np.isnan(drug_conc_Hill)]
-
+    param_values.loc[0, parameter_interest] = param
     orig_half_effect_conc = param_values['EC50'][0]
-    param_values['EC50'][0] = 1
+    param_values.loc[0, 'EC50'] = 1
     ComparisonController.drug_param_values = param_values
 
-    Hill_curve_coefs = inputs['Hill_curve'].values[0]
+    Hill_n = param_values['N'][0]
+    norm_constant = np.power(orig_half_effect_conc, 1 / Hill_n)
+
+    # Compute Hill curve of the synthetic drug with the SD model
+    Hill_curve_coefs, drug_conc_Hill, peaks_norm = \
+        ComparisonController.compute_Hill(current_model,
+                                          norm_constant=norm_constant,
+                                          parallel=False)
 
     # Define drug concentration range similar to the drug concentration used
     # to infer Hill curve
@@ -101,9 +119,10 @@ def param_evaluation(param, inputs):
     all_index = [(i, j) for i in index_dict.keys() for j in index_dict[i]]
     index = pd.MultiIndex.from_tuples(all_index)
 
-    param_values['EC50'][0] = orig_half_effect_conc
+    param_values.loc[0, 'EC50'] = orig_half_effect_conc
+
     big_df = pd.DataFrame(
-        drug_conc_Hill + list(Hill_curve_coefs) +
+        list(drug_conc_Hill) + list(peaks_norm) + list(Hill_curve_coefs) +
         list(param_values.values[0]) + list(drug_conc_AP) + APD_trapping +
         APD_conductance + [RMSError] + [MAError], index=index)
 
@@ -132,11 +151,11 @@ drug_space_df = pd.read_csv(sample_filepath,
 for drug in drug_list:
     # Get parameter values of each synthetic drug
     param_values = drug_space_df.loc[drug_space_df[('drug', 'drug')] == drug][
-        ['drug_conc_Hill', 'Hill_curve', 'param_values']]
+        'param_values']
 
     # Define parameter values to the system
-    ComparisonController = modelling.ModelComparison(param_values['param_values'],
-                                                     [time_key, Vm_key])
+    ComparisonController = modelling.ModelComparison(
+        param_values, [time_key, Vm_key])
 
     # Check for completed simulations to prevent repetition
     filename = 'SA_' + drug + '_' + parameter_interest + '.csv'
