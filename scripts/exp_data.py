@@ -1,3 +1,4 @@
+import matplotlib.patches as patches
 import numpy as np
 import pandas as pd
 
@@ -40,6 +41,8 @@ for drug_count, drug in enumerate(drug_list):
 
         cell_count = 0
         y_lb, y_ub = 0, 0.5
+        x_lb, x_ub = 10, 0
+
         for cell in cell_list['cells'].values:
             cell_file_path = cell_list.loc[cell_list["cells"] == cell][
                 "file_path"].values[0]
@@ -91,13 +94,29 @@ for drug_count, drug in enumerate(drug_list):
                     previous_compound = compound
                     compound_count += 1
 
+            y_bottom, y_top = axs[drug_conc_index][cell_num_index].get_ylim()
+            if y_bottom < y_lb:
+                y_lb = y_bottom
+            if y_top > y_ub:
+                y_ub = y_top
+            x_left, x_right = axs[drug_conc_index][cell_num_index].get_xlim()
+            if x_left < x_lb:
+                x_lb = x_left
+            if x_right > x_ub:
+                x_ub = x_right
+            cell_count += 1
+
             exp_const = [float(i) for i in
                          detail.loc[:, 'Seal Resistance'].values]
             constants_thres = modelling.QualityControl().Rseal_thres
             if any(np.array(exp_const) < constants_thres[0]) or \
                     any(np.array(exp_const) > constants_thres[1]):
-                axs[drug_conc_index][cell_num_index].patch.set_edgecolor('red')
-                axs[drug_conc_index][cell_num_index].patch.set_linewidth(6)
+                # axs[drug_conc_index][cell_num_index].patch.set_edgecolor('red')
+                # axs[drug_conc_index][cell_num_index].patch.set_linewidth(6)
+                rect = patches.Rectangle((x_lb, y_lb), x_ub - x_lb,
+                                         y_ub - y_lb, linewidth=2,
+                                         edgecolor='r', facecolor='none')
+                axs[drug_conc_index][cell_num_index].add_patch(rect)
             exp_const = [float(i) for i in
                          detail.loc[:, 'Capacitance'].values]
             constants_thres = modelling.QualityControl().Cm_thres
@@ -112,13 +131,6 @@ for drug_count, drug in enumerate(drug_list):
                     any(np.array(exp_const) > constants_thres[1]):
                 axs[drug_conc_index][cell_num_index].patch.set_edgecolor('purple')
                 axs[drug_conc_index][cell_num_index].patch.set_linewidth(2)
-
-            y_bottom, y_top = axs[drug_conc_index][cell_num_index].get_ylim()
-            if y_bottom < y_lb:
-                y_lb = y_bottom
-            if y_top > y_ub:
-                y_ub = y_top
-            cell_count += 1
 
         unique_label = fig.legend_without_duplicate_labels(axs[0][0])
         axs[0][0].legend(*zip(*unique_label), handlelength=1, loc='upper left')
