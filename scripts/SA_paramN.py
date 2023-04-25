@@ -56,9 +56,6 @@ drug_list = param_lib.drug_compounds
 param_names = modelling.SDModelDetails().param_names
 parameter_interest = 'N'
 
-# Get name of parameters
-param_names = modelling.SDModelDetails().param_names
-
 starting_param_df = pd.DataFrame([1] * 5, index=param_names).T
 ComparisonController = modelling.ModelComparison(starting_param_df,
                                                  [time_key, Vm_key])
@@ -79,6 +76,7 @@ def param_evaluation(param, param_values):
     Hill_curve_coefs, drug_conc_Hill, peaks_norm = \
         ComparisonController.compute_Hill(current_model,
                                           norm_constant=norm_constant,
+                                          max_counter=30,
                                           parallel=False)
 
     # Define drug concentration range similar to the drug concentration used
@@ -86,7 +84,6 @@ def param_evaluation(param, param_values):
     drug_conc_AP = 10**np.linspace(np.log10(drug_conc_Hill[1]),
                                    np.log10(max(drug_conc_Hill)),
                                    APD_points)
-
     try:
         # Simulate APs and APD90s of the ORd-SD model and the ORd-CS model
         APD_trapping, APD_conductance, drug_conc_AP = \
@@ -148,7 +145,10 @@ drug_space_df = pd.read_csv(sample_filepath,
                             header=[0, 1], index_col=[0],
                             skipinitialspace=True)
 
+drug_list = [drug_list[-2]]
+print(drug_list)
 for drug in drug_list:
+    print(drug)
     # Get parameter values of each synthetic drug
     param_values = drug_space_df.loc[drug_space_df[('drug', 'drug')] == drug][
         'param_values']

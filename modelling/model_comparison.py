@@ -26,7 +26,7 @@ class ModelComparison(object):
         self.optimiser = modelling.HillModelOpt(self.Hill_model)
 
     def compute_Hill(self, BKmodel, drug_conc=None, steady_state_pulse=1000,
-                     Hill_upper_thres=0.9, Hill_lower_thres=0.05,
+                     Hill_upper_thres=0.9, Hill_lower_thres=0.05, max_counter=20,
                      norm_constant=1, parallel=True):
 
         if drug_conc is None:
@@ -49,7 +49,7 @@ class ModelComparison(object):
         data_pt_checker = [True if i > Hill_upper_thres else False
                            for i in peaks_norm]
         counter = 0
-        while sum(data_pt_checker) < 3 and counter < 20:
+        while sum(data_pt_checker) < 3 and counter < max_counter:
             drug_conc.insert(1, drug_conc[1] / np.sqrt(10))
             log = BKmodel.custom_simulation(
                 self.drug_param_values, drug_conc[1], steady_state_pulse,
@@ -62,14 +62,14 @@ class ModelComparison(object):
                                for i in peaks_norm]
             counter += 1
 
-        if counter == 20:
+        if counter == max_counter:
             return 'Hill curve did not form.', drug_conc, peaks_norm
 
         # Make sure there are enough data points for the tail of Hill curve
         data_pt_checker = [True if i < Hill_lower_thres else False
                            for i in peaks_norm]
         counter = 0
-        while sum(data_pt_checker) < 3 and counter < 20:
+        while sum(data_pt_checker) < 3 and counter < max_counter:
             drug_conc = drug_conc + [max(drug_conc) * np.sqrt(10)]
             log = BKmodel.custom_simulation(
                 self.drug_param_values, drug_conc[-1], steady_state_pulse,
@@ -82,7 +82,7 @@ class ModelComparison(object):
                                for i in peaks_norm]
             counter += 1
 
-        if counter == 20:
+        if counter == max_counter:
             return 'Hill curve did not form.', drug_conc, peaks_norm
 
         # return 0, drug_conc, peaks_norm
