@@ -77,7 +77,9 @@ for drug_count, drug in enumerate(drug_list):
             compound_count = 0
             pulse_count = 0
             previous_compound = detail.loc[1, "Compound Name"]
-            for sweep in range(data.shape[1] - 4):
+            total_pulses = data.shape[1] - 4
+            compound_change = []
+            for sweep in range(total_pulses):
                 signal = data.iloc[:, sweep + 3]
                 compound = detail.loc[sweep + 1, "Compound Name"]
                 if compound == previous_compound:
@@ -92,6 +94,7 @@ for drug_count, drug in enumerate(drug_list):
                 elif compound != previous_compound:
                     pulse_count = 1
                     previous_compound = compound
+                    compound_change.append(sweep + 1)
                     compound_count += 1
 
             y_bottom, y_top = axs[drug_conc_index][cell_num_index].get_ylim()
@@ -106,31 +109,57 @@ for drug_count, drug in enumerate(drug_list):
                 x_ub = x_right
             cell_count += 1
 
-            exp_const = [float(i) for i in
-                         detail.loc[:, 'Seal Resistance'].values]
-            constants_thres = modelling.QualityControl().Rseal_thres
-            if any(np.array(exp_const) < constants_thres[0]) or \
-                    any(np.array(exp_const) > constants_thres[1]):
-                # axs[drug_conc_index][cell_num_index].patch.set_edgecolor('red')
-                # axs[drug_conc_index][cell_num_index].patch.set_linewidth(6)
-                rect = patches.Rectangle((x_lb, y_lb), x_ub - x_lb,
-                                         y_ub - y_lb, linewidth=2,
+            # QC to choose data with experimental constants within threshold
+            trace_qc = modelling.QualityControl()
+            Rseal = [float(i) for i in detail.loc[:, 'Seal Resistance'].values]
+            Rseries = [float(i) for i in
+                       detail.loc[:, 'Series Resistance'].values]
+            Cm = [float(i) for i in detail.loc[:, 'Capacitance'].values]
+            QC_constants = trace_qc.qc_general(Rseal, Cm, Rseries)
+            if not QC_constants[0]:
+                rect = patches.Rectangle((x_lb + 0.07 * np.abs(x_lb),
+                                          y_lb + 0.07 * np.abs(y_lb)),
+                                         0.98 * (x_ub - x_lb),
+                                         0.98 * (y_ub - y_lb), linewidth=2,
                                          edgecolor='r', facecolor='none')
                 axs[drug_conc_index][cell_num_index].add_patch(rect)
-            exp_const = [float(i) for i in
-                         detail.loc[:, 'Capacitance'].values]
-            constants_thres = modelling.QualityControl().Cm_thres
-            if any(np.array(exp_const) < constants_thres[0]) or \
-                    any(np.array(exp_const) > constants_thres[1]):
+            if not QC_constants[1]:
                 axs[drug_conc_index][cell_num_index].patch.set_edgecolor('blue')
                 axs[drug_conc_index][cell_num_index].patch.set_linewidth(4)
-            exp_const = [float(i) for i in
-                         detail.loc[:, 'Series Resistance'].values]
-            constants_thres = modelling.QualityControl().Rseries_thres
-            if any(np.array(exp_const) < constants_thres[0]) or \
-                    any(np.array(exp_const) > constants_thres[1]):
-                axs[drug_conc_index][cell_num_index].patch.set_edgecolor('purple')
-                axs[drug_conc_index][cell_num_index].patch.set_linewidth(2)
+            if not QC_constants[2]:
+                axs[drug_conc_index][cell_num_index].patch.set_edgecolor('C1')
+                axs[drug_conc_index][cell_num_index].patch.set_linewidth(4)
+
+            # QC to make sure the traces are stable at the end of the block
+            filenumber = 0
+            print(drug, protocol, cell)
+            print(compound_change)
+            for sweep in compound_change:
+                valid_trace_ind = 1
+                chosen_trace = []
+                nan_trace = 2
+                while nan_trace > 0:
+                    temp_trace = data.iloc[:, sweep + 3 - valid_trace_ind]
+                    if not any(np.isnan(np.array(temp_trace))):
+                        print('chosen sweep:', sweep - valid_trace_ind)
+                        chosen_trace.append(temp_trace)
+                        nan_trace -= 1
+                    valid_trace_ind += 1
+                trace1 = chosen_trace[0] / 1e-9
+                trace2 = chosen_trace[1] / 1e-9
+                import matplotlib.pyplot as plt
+                plt.figure()
+                plt.plot(trace1)
+                plt.plot(trace2)
+                filename = str(filenumber) + '.pdf'
+                plt.savefig("../figures/experimental_data/traces/" + filename)
+                compound = detail.loc[sweep + 1 - 1, "Compound Name"]
+                QC_stable = trace_qc.qc_stable(trace1, trace2)
+                if not QC_stable:
+                    axs[drug_conc_index][cell_num_index].text(
+                        (x_ub - x_lb) * 0.5, 0.9 * y_ub, compound,
+                        fontsize=6, ha='left', va='top')
+                filenumber += 1
 
         unique_label = fig.legend_without_duplicate_labels(axs[0][0])
         axs[0][0].legend(*zip(*unique_label), handlelength=1, loc='upper left')
