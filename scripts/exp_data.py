@@ -131,6 +131,7 @@ for drug_count, drug in enumerate(drug_list):
                 axs[drug_conc_index][cell_num_index].patch.set_linewidth(4)
 
             # QC to make sure the traces are stable at the end of the block
+            text_pos = 0
             for sweep in compound_change:
                 valid_trace_ind = 1
                 chosen_trace = []
@@ -138,7 +139,6 @@ for drug_count, drug in enumerate(drug_list):
                 while nan_trace > 0:
                     temp_trace = data.iloc[:, sweep + 3 - valid_trace_ind]
                     if not any(np.isnan(np.array(temp_trace))):
-                        print('chosen sweep:', sweep - valid_trace_ind)
                         chosen_trace.append(temp_trace)
                         nan_trace -= 1
                     valid_trace_ind += 1
@@ -148,9 +148,10 @@ for drug_count, drug in enumerate(drug_list):
                 QC_stable = trace_qc.qc_stable(trace1, trace2)
                 if not QC_stable:
                     axs[drug_conc_index][cell_num_index].text(
-                        (x_ub - x_lb) * 0.3, 0.7 * y_ub,
+                        (x_ub - x_lb) * 0.3, 0.7 * y_ub - text_pos * 0.25,
                         dataset.compound_function[compound],
                         fontsize=6, ha='left', va='top', color='red')
+                    text_pos += 1
 
         unique_label = fig.legend_without_duplicate_labels(axs[0][0])
         axs[0][0].legend(*zip(*unique_label), handlelength=1, loc='upper left')
