@@ -12,17 +12,18 @@ import pandas as pd
 import pints
 import sys
 
+APmodel_name = sys.argv[1]
+
 # Read APD90 differences for all synthetic drug
 data_dir = '../../simulation_data/parameter_SA/'
-filename = 'SA_alldrugs.csv'
+filename = 'SA_alldrugs_' + APmodel_name + '.csv'
 drug_df = pd.read_csv(data_dir + filename,
                       header=[0, 1], index_col=[0],
                       skipinitialspace=True)
 drug_list = drug_df[('drug', 'drug')].values
-# drug_list = drug_list[:-1]
+drug_list = drug_list[:-1]
 
 # Define directories and variables
-APmodel_name = sys.argv[1]
 data_dir = '../../simulation_data/parameter_SA/APD90diff_N/' + \
     APmodel_name + '/'
 percentage_diff_filename = 'N_percentage_diff.csv'
