@@ -109,6 +109,7 @@ if not os.path.isdir(fig_dir):
 plt.savefig(fig_dir + 'RMSD_N.pdf', bbox_inches='tight')
 
 # Show mean and standard deviation of the histogram
-with open(data_dir + 'overall_stats.csv', 'w') as f:
-    f.write('mean: ' + pints.strfloat(np.mean(arr)) + '\n')
-    f.write('std: ' + pints.strfloat(np.std(arr)))
+overall_stats = pd.DataFrame({'mean': np.mean(arr), 'std': np.std(arr),
+                              'min': np.min(arr), 'max': np.max(arr)},
+                             index=[0])
+overall_stats.to_csv(data_dir + 'overall_stats.csv')

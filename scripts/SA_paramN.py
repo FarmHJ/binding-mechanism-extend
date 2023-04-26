@@ -145,8 +145,8 @@ drug_space_df = pd.read_csv(sample_filepath,
                             header=[0, 1], index_col=[0],
                             skipinitialspace=True)
 
-drug_list = [drug_list[-2]]
-print(drug_list)
+# drug_list = [drug_list[-2]]
+# print(drug_list)
 for drug in drug_list:
     print(drug)
     # Get parameter values of each synthetic drug
