@@ -75,6 +75,8 @@ class ModelDetails(object):
                 'Vm': 'membrane.V'
             },
             'Tomek': {
+                'IClB': 'ICl.IClb',
+                'IClCa': 'ICl.IClCa',
                 'Ito': 'Ito.Ito',
                 'IKb': 'IKb.IKb',
                 'IKs': 'IKs.IKs',
@@ -88,8 +90,6 @@ class ModelDetails(object):
                 'ICaB': 'ICab.ICab',
                 'INaB': 'INab.INab',
                 'INa': 'INa.INa',
-                'IClCa': 'ICl.IClCa',
-                'IClB': 'ICl.IClb',
                 'IKACh': None,
                 'IKATP': None,
                 'time': 'environment.time',

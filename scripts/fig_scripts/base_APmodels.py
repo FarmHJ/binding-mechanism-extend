@@ -19,7 +19,7 @@ fig_dir = '../../figures/basic_sim/'
 
 # Set up figure for reversal potential, AP and current contribution
 plot = modelling.figures.FigurePlot()
-fig_current = modelling.figures.FigureStructure(figsize=(9, 5),
+fig_current = modelling.figures.FigureStructure(figsize=(8, 5),
                                                 gridspec=(2, 2),
                                                 height_ratios=[1] * 2,
                                                 hspace=0.35, wspace=0.1)
@@ -74,10 +74,10 @@ colours = [cmap(current_colours[x]) for x in APSD_current_keys.keys()]
 currents = list(APSD_current_keys.values())
 
 SD_current_panel = fig_current.axs[1][0]
-SD_current_panel.set_title("O'Hara-CiPA (2017) epi")
+SD_current_panel.set_title("O'Hara-CiPA (2017)")
 mp.cumulative_current(log, currents, SD_current_panel, colors=colours,
                       normalise=True)
-# SD_current_panel.set_rasterization_zorder(2)
+SD_current_panel.set_rasterization_zorder(2)
 
 #######################
 #
@@ -107,7 +107,7 @@ Grd_current_panel = fig_current.axs[0][0]
 Grd_current_panel.set_title("Grandi (2010)")
 mp.cumulative_current(log, currents, Grd_current_panel, colors=colours,
                       normalise=True)
-# Grd_current_panel.set_rasterization_zorder(2)
+Grd_current_panel.set_rasterization_zorder(2)
 
 #######################
 #
@@ -137,7 +137,38 @@ TTP_current_panel = fig_current.axs[0][1]
 TTP_current_panel.set_title("ten Tusscher (2006)")
 mp.cumulative_current(log, currents, TTP_current_panel, colors=colours,
                       normalise=True)
-# TTP_current_panel.set_rasterization_zorder(2)
+TTP_current_panel.set_rasterization_zorder(2)
+
+
+#######################
+#
+# Tomek (2019) model
+#
+#######################
+# Load Tomek (2019) model
+APmodel = '../../math_model/AP_model/Tomek-2019.mmt'
+APmodel, _, x = myokit.load(APmodel)
+AP_model = modelling.Simulation(APmodel, base_constant=None)
+AP_model.protocol = protocol
+
+log = AP_model.model_simulation(1000, abs_tol=abs_tol, rel_tol=rel_tol)
+
+# Plot current contribution
+Tomek_current_keys = modelling.ModelDetails().current_keys['Tomek']
+none_key_list = [i for i in Tomek_current_keys.keys() if
+                 Tomek_current_keys[i] is None]
+none_key_list.extend(['time', 'Vm'])
+for i in none_key_list:
+    del(Tomek_current_keys[i])
+
+colours = [cmap(current_colours[x]) for x in Tomek_current_keys.keys()]
+currents = list(Tomek_current_keys.values())
+
+Tomek_current_panel = fig_current.axs[1][1]
+Tomek_current_panel.set_title("Tomek (2019)")
+mp.cumulative_current(log, currents, Tomek_current_panel, colors=colours,
+                      normalise=True)
+Tomek_current_panel.set_rasterization_zorder(2)
 
 #######################
 #
@@ -155,9 +186,10 @@ for current, i in current_colours.items():
 del(current_colours['IKACh'])
 del(current_colours['IKATP'])
 labels = [modelling.ModelDetails().current_names[x] for x in current_colours]
-legend_panel.legend(lines, labels, loc=(1.02, 0.05), ncol=2)
+legend_panel.legend(lines, labels, loc=(1.04, 0.45), ncol=1, handlelength=1)
+# legend_panel.legend(lines, labels, loc=(0.02, 0.05), ncol=2)
 
-fig_current.sharex(["Time (ms)"] * 3, [(0, plotting_pulse_time)] * 3)
+fig_current.sharex(["Time (ms)"] * 2, [(0, plotting_pulse_time)] * 2)
 fig_current.sharey(["Relative contribution"] * 2, [(-1.02, 1.02)] * 2)
 
 # Save figures

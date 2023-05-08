@@ -901,23 +901,27 @@ trpnmax = 0.07 [mM]
     in [mM]
 
 [membrane]
-Istim = piecewise(environment.time >= i_Stim_Start and environment.time <= i_Stim_End and environment.time - i_Stim_Start - floor((environment.time - i_Stim_Start) / i_Stim_Period) * i_Stim_Period <= i_Stim_PulseDuration, i_Stim_Amplitude, 0 [A/F])
+# Istim = piecewise(environment.time >= i_Stim_Start and environment.time <= i_Stim_End and environment.time - i_Stim_Start - floor((environment.time - i_Stim_Start) / i_Stim_Period) * i_Stim_Period <= i_Stim_PulseDuration, i_Stim_Amplitude, 0 [A/F])
+Istim = pace * i_Stim_Amplitude
     in [A/F]
     oxmeta: membrane_stimulus_current
-i_Stim_Amplitude = -53 [A/F]
+# i_Stim_Amplitude = -53 [A/F]
+i_Stim_Amplitude = -80 [A/F]
     in [A/F]
     oxmeta: membrane_stimulus_current_amplitude
-i_Stim_End = 1e17 [ms]
-    in [ms]
-i_Stim_Period = 1000 [ms]
-    in [ms]
-    oxmeta: membrane_stimulus_current_period
-i_Stim_PulseDuration = 1 [ms]
-    in [ms]
-    oxmeta: membrane_stimulus_current_duration
-i_Stim_Start = 0 [ms]
-    in [ms]
-    oxmeta: membrane_stimulus_current_offset
+# i_Stim_End = 1e17 [ms]
+#     in [ms]
+# i_Stim_Period = 1000 [ms]
+#     in [ms]
+#     oxmeta: membrane_stimulus_current_period
+# i_Stim_PulseDuration = 1 [ms]
+#     in [ms]
+#     oxmeta: membrane_stimulus_current_duration
+# i_Stim_Start = 50 [ms]
+#     in [ms]
+#     oxmeta: membrane_stimulus_current_offset
+pace = 0 bind pace
+    in [1]
 dot(v) = -(INa.INa + INaL.INaL + Ito.Ito + ICaL.ICaL + ICaL.ICaNa + ICaL.ICaK + IKr.IKr + IKs.IKs + IK1.IK1 + INaCa.INaCa_i + INaCa.INaCa_ss + INaK.INaK + INab.INab + IKb.IKb + IpCa.IpCa + ICab.ICab + ICl.IClCa + ICl.IClb + I_katp.I_katp + Istim)
     in [mV]
     oxmeta: membrane_voltage
