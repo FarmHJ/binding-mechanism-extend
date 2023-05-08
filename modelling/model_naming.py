@@ -74,6 +74,27 @@ class ModelDetails(object):
                 'time': 'environment.time',
                 'Vm': 'membrane.V'
             },
+            'Tomek': {
+                'Ito': 'Ito.Ito',
+                'IKb': 'IKb.IKb',
+                'IKs': 'IKs.IKs',
+                'IKr': 'IKr.IKr',
+                'ICaP': 'IpCa.IpCa',
+                'IK1': 'IK1.IK1',
+                'INaK': 'INaK.INaK',
+                'ICaL': 'ICaL.ICaL',
+                'INaL': 'INaL.INaL',
+                'INaCa': 'INaCa.INaCa_total',
+                'ICaB': 'ICab.ICab',
+                'INaB': 'INab.INab',
+                'INa': 'INa.INa',
+                'IClCa': 'ICl.IClCa',
+                'IClB': 'ICl.IClb',
+                'IKACh': None,
+                'IKATP': None,
+                'time': 'environment.time',
+                'Vm': 'membrane.v'
+            },
             'Lei': {
                 'Ito': 'ito.Ito',
                 'IKb': 'ikb.IKb',
