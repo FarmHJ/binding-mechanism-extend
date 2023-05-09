@@ -8,5 +8,5 @@ i = myokit.formats.importer('cellml')
 # m = i.model(model_dir + 'Grd10.cellml')
 # myokit.save_model(model_dir + 'Grd-2010.mmt', m)
 
-m = i.model(model_dir + 'Tomek_model_epi.cellml')
-myokit.save_model(model_dir + 'Tomek-2019.mmt', m)
+m = i.model(model_dir + 'ORd11.cellml')
+myokit.save_model(model_dir + 'ORd-2011.mmt', m)

@@ -11,6 +11,27 @@ class ModelDetails(object):
                              'INaL', 'ICaL', 'INaCa', 'INaB', 'ICaB', 'IClCa',
                              'IClB', 'ICaP', 'IKACh', 'IKATP']
         self.current_keys = {
+            'ORd': {
+                'Ito': 'Ito.Ito',
+                'IKb': 'IKb.IKb',
+                'IKs': 'IKs.IKs',
+                'IKr': 'IKr.IKr',
+                'ICaP': 'IpCa.IpCa',
+                'IK1': 'IK1.IK1',
+                'INaK': 'INaK.INaK',
+                'ICaL': 'ICaL.ICaL_total',
+                'INaL': 'INaL.INaL',
+                'INaCa': 'INaCa_i.INaCa_total',
+                'ICaB': 'ICab.ICab',
+                'INaB': 'INab.INab',
+                'INa': 'INa.INa',
+                'IClCa': None,
+                'IClB': None,
+                'IKACh': None,
+                'IKATP': None,
+                'time': 'environment.time',
+                'Vm': 'membrane.v'
+            },
             'Grandi': {
                 'IClB': 'I_ClCa.I_Clbk',
                 'IClCa': 'I_ClCa.I_ClCa',
