@@ -19,10 +19,19 @@ fig_dir = '../../figures/basic_sim/'
 
 # Set up figure for reversal potential, AP and current contribution
 plot = modelling.figures.FigurePlot()
-fig_current = modelling.figures.FigureStructure(figsize=(8, 5),
-                                                gridspec=(2, 2),
-                                                height_ratios=[1] * 2,
-                                                hspace=0.35, wspace=0.1)
+fig = modelling.figures.FigureStructure(figsize=(10, 5),
+                                        gridspec=(1, 2), wspace=0.1,
+                                        plot_in_subgrid=True)
+
+subgridspecs = [(2, 2), (1, 1)]
+subgs = []
+
+for i in range(2):
+    subgs.append(fig.gs[i].subgridspec(*subgridspecs[i], wspace=0.1,
+                                       hspace=0.3))
+axs = [[[fig.fig.add_subplot(subgs[k][i, j]) for j in range(
+    subgridspecs[k][1])] for i in range(subgridspecs[k][0])] for
+    k in range(1)]
 
 # Figure parameters
 cmap = matplotlib.cm.get_cmap('tab20')
@@ -73,7 +82,7 @@ for i in none_key_list:
 colours = [cmap(current_colours[x]) for x in APSD_current_keys.keys()]
 currents = list(APSD_current_keys.values())
 
-SD_current_panel = fig_current.axs[1][0]
+SD_current_panel = axs[0][1][0]
 SD_current_panel.set_title("O'Hara-CiPA (2017)")
 mp.cumulative_current(log, currents, SD_current_panel, colors=colours,
                       normalise=True)
@@ -103,7 +112,7 @@ for i in none_key_list:
 colours = [cmap(current_colours[x]) for x in Grd_current_keys.keys()]
 currents = list(Grd_current_keys.values())
 
-Grd_current_panel = fig_current.axs[0][0]
+Grd_current_panel = axs[0][0][0]
 Grd_current_panel.set_title("Grandi (2010)")
 mp.cumulative_current(log, currents, Grd_current_panel, colors=colours,
                       normalise=True)
@@ -133,7 +142,7 @@ for i in none_key_list:
 colours = [cmap(current_colours[x]) for x in TTP_current_keys.keys()]
 currents = list(TTP_current_keys.values())
 
-TTP_current_panel = fig_current.axs[0][1]
+TTP_current_panel = axs[0][0][1]
 TTP_current_panel.set_title("ten Tusscher (2006)")
 mp.cumulative_current(log, currents, TTP_current_panel, colors=colours,
                       normalise=True)
@@ -164,7 +173,7 @@ for i in none_key_list:
 colours = [cmap(current_colours[x]) for x in Tomek_current_keys.keys()]
 currents = list(Tomek_current_keys.values())
 
-Tomek_current_panel = fig_current.axs[1][1]
+Tomek_current_panel = axs[0][1][1]
 Tomek_current_panel.set_title("Tomek (2019)")
 mp.cumulative_current(log, currents, Tomek_current_panel, colors=colours,
                       normalise=True)
@@ -176,7 +185,7 @@ Tomek_current_panel.set_rasterization_zorder(2)
 #
 #######################
 
-legend_panel = fig_current.axs[1][1]
+legend_panel = axs[0][1][1]
 # legend_panel.xaxis.set_visible(False)
 # legend_panel.yaxis.set_visible(False)
 # legend_panel.set_frame_on(False)
@@ -189,8 +198,10 @@ labels = [modelling.ModelDetails().current_names[x] for x in current_colours]
 legend_panel.legend(lines, labels, loc=(1.04, 0.45), ncol=1, handlelength=1)
 # legend_panel.legend(lines, labels, loc=(0.02, 0.05), ncol=2)
 
-fig_current.sharex(["Time (ms)"] * 2, [(0, plotting_pulse_time)] * 2)
-fig_current.sharey(["Relative contribution"] * 2, [(-1.02, 1.02)] * 2)
+fig.sharex(["Time (ms)"] * 2, [(0, plotting_pulse_time)] * 2,
+           axs=axs[0], subgridspec=(2, 2))
+fig.sharey(["Relative contribution"] * 2, [(-1.02, 1.02)] * 2,
+           axs=axs[0], subgridspec=(2, 2))
 
 # Save figures
-fig_current.savefig(fig_dir + 'base_APmodels.pdf')
+fig.savefig(fig_dir + 'base_models.pdf')

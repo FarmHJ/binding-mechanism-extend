@@ -8,9 +8,9 @@ import modelling
 fig_dir = '../figures/basic_sim/IKr_replacement/'
 
 # Define protocol
-cycle_length = 2000
+cycle_length = 1000
 protocol_offset = 50
-protocol = myokit.pacing.blocktrain(cycle_length, 1, offset=protocol_offset)
+protocol = myokit.pacing.blocktrain(cycle_length, 0.5, offset=protocol_offset)
 
 # Define constants
 repeats = 1000
@@ -25,6 +25,7 @@ rel_tol = 1e-8
 # Load ORd model
 APmodel_name = 'ORd'
 APmodel = '../math_model/AP_model/ORd-2011.mmt'
+# APmodel = '../math_model/AP_model/ohara-2011.mmt'
 APmodel, _, x = myokit.load(APmodel)
 AP_model = modelling.Simulation(APmodel, base_constant=None)
 AP_model.protocol = protocol
@@ -36,17 +37,14 @@ current_key = model_keys['IKr']
 
 # Simulate AP clamp protocol
 APclamp = AP_model.model_simulation(repeats, abs_tol=abs_tol, rel_tol=rel_tol,
+                                    timestep=None,
                                     log_var=[time_key, Vm_key])
-
-import matplotlib.pyplot as plt
-plt.figure()
-plt.plot(APclamp[time_key], APclamp[Vm_key])
-plt.show()
 
 times = APclamp[time_key]
 clamp_protocol = APclamp[Vm_key]
-t_max = times[-1] + 1
+t_max = times[-1]
 
+hERGmodel = '../math_model/current_model/ohara-cipa-2017-IKr.mmt'
 APsim = myokit.Simulation(APmodel)
 APsim.set_fixed_form_protocol(times, clamp_protocol)
 APsim.reset()
