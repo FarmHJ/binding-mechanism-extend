@@ -79,7 +79,7 @@ def param_evaluation(inputs):
         APD_trapping, APD_conductance, drug_conc_AP = \
             ComparisonController.APD_sim(
                 AP_model, Hill_curve_coefs, drug_conc=drug_conc_AP,
-                EAD=True)
+                IKr_tuning_factor=scaling_factor, EAD=True)
         print('simulation done')
 
         # Calculate RMSD and MD of simulated APD90 of the two models
@@ -116,6 +116,15 @@ def param_evaluation(inputs):
 
     return big_df
 
+
+# Load IKr tuning factor
+scaling_df_filepath = '../simulation_data/' + APmodel_name + \
+    '_conductance_scale.csv'
+scaling_df = pd.read_csv(scaling_df_filepath, index_col=[0])
+if APmodel_name == 'Lei':
+    scaling_factor = scaling_df.loc['AP_duration']['conductance scale']
+else:
+    scaling_factor = scaling_df.loc['hERG_peak']['conductance scale']
 
 # Assuming drug concentration are all normalised, the EC50 value in the model
 # becomes 1.

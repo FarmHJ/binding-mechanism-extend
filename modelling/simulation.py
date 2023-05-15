@@ -61,8 +61,10 @@ class Simulation(object):
         return d2
 
     def drug_simulation(self, drug, drug_conc, repeats,
-                        timestep=0.1, save_signal=1, log_var=None,
-                        set_state=None, abs_tol=1e-6, rel_tol=1e-4):
+                        timestep=0.1, save_signal=1,
+                        conductance_name=None, conductance_value=None,
+                        log_var=None, set_state=None,
+                        abs_tol=1e-6, rel_tol=1e-4):
 
         param_lib = modelling.BindingParameters()
 
@@ -92,6 +94,9 @@ class Simulation(object):
         self.sim.set_constant(self.current_head.var('Kt'), 3.5e-5)
         self.sim.set_constant(self.current_head.var('gKr'),
                               self.original_constants["gKr"])
+        
+        if conductance_name is not None:
+            self.sim.set_constant(conductance_name, conductance_value)
 
         self.sim.pre(t_max * (repeats - save_signal))
         log = self.sim.run(t_max * save_signal, log=log_var,
@@ -103,8 +108,10 @@ class Simulation(object):
         return d2
 
     def conductance_simulation(self, conductance, repeats,
-                               timestep=0.1, save_signal=1, log_var=None,
-                               abs_tol=1e-6, rel_tol=1e-4, set_state=None):
+                               timestep=0.1, save_signal=1,
+                               conductance_name=None, conductance_value=None,
+                               log_var=None, set_state=None,
+                               abs_tol=1e-6, rel_tol=1e-4):
         self.sim = myokit.Simulation(self.model, self.protocol)
         self.sim.reset()
         if set_state:
@@ -124,6 +131,10 @@ class Simulation(object):
         self.sim.set_constant(self.current_head.var('Kt'),
                               self.original_constants["Kt"])
         self.sim.set_constant(self.current_head.var('gKr'), conductance)
+
+        if conductance_name is not None:
+            self.sim.set_constant(conductance_name, conductance_value)
+
         t_max = self.protocol.characteristic_time()
 
         self.sim.pre(t_max * (repeats - save_signal))
@@ -136,8 +147,9 @@ class Simulation(object):
         return d2
 
     def custom_simulation(self, param_values, drug_conc, repeats,
-                          timestep=0.1, save_signal=1, log_var=None,
-                          abs_tol=1e-6, rel_tol=1e-4):
+                          timestep=0.1, save_signal=1,
+                          conductance_name=None, conductance_value=None,
+                          log_var=None, abs_tol=1e-6, rel_tol=1e-4):
 
         t_max = self.protocol.characteristic_time()
 
@@ -161,6 +173,9 @@ class Simulation(object):
         self.sim.set_constant(self.current_head.var('Kt'), 3.5e-5)
         self.sim.set_constant(self.current_head.var('gKr'),
                               self.original_constants["gKr"])
+
+        if conductance_name is not None:
+            self.sim.set_constant(conductance_name, conductance_value)
 
         self.sim.pre(t_max * (repeats - save_signal))
         log = self.sim.run(t_max * save_signal, log=log_var,
