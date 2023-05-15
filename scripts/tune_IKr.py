@@ -44,10 +44,11 @@ axs = [[[fig.fig.add_subplot(subgs[k][i, j]) for j in range(
 
 # Figure parameters
 cmap = matplotlib.cm.get_cmap('tab20')
-current_list = modelling.ModelDetails().current_list
-model_keys = modelling.ModelDetails().current_keys[APmodel_name]
+model_details = modelling.ModelDetails()
+current_list = model_details.current_list
+model_keys = model_details.current_keys[APmodel_name]
 plotting_pulse_time = 800
-current_colours = modelling.ModelDetails().current_colours
+current_colours = model_details.current_colours
 
 time_key = model_keys['time']
 Vm_key = model_keys['Vm']
@@ -60,15 +61,19 @@ current_head_key = IKr_key[:IKr_key.index('.')]
 #
 #######################
 # Load Grandi (2010) model
-if APmodel_name == 'Grandi':
-    APmodel = '../math_model/AP_model/Grd-2010.mmt'
-    model_title = 'Grandi (2010)'
-elif APmodel_name == 'TTP':
-    APmodel = '../math_model/AP_model/TTP-2006.mmt'
-    model_title = 'ten Tusscher (2006)'
-elif APmodel_name == 'Lei':
-    APmodel = '../math_model/AP_model/ohara-cipa-2017.mmt'
-    model_title = 'ORd-CiPA'
+# if APmodel_name == 'Grandi':
+#     APmodel = '../math_model/AP_model/Grd-2010.mmt'
+#     model_title = 'Grandi (2010)'
+# elif APmodel_name == 'TTP':
+#     APmodel = '../math_model/AP_model/TTP-2006.mmt'
+#     model_title = 'ten Tusscher (2006)'
+# elif APmodel_name == 'Lei':
+#     APmodel = '../math_model/AP_model/ohara-cipa-2017.mmt'
+#     model_title = 'ORd-CiPA'
+# elif APmodel_name
+model_filenames = model_details.file_names[APmodel_name]
+APmodel = '../' + model_filenames['AP_path']
+model_title = model_filenames['label']
 APmodel, _, x = myokit.load(APmodel)
 AP_model = modelling.Simulation(APmodel, base_constant=None)
 AP_model.protocol = protocol
@@ -120,12 +125,7 @@ Grd_current_panel[0][0].set_rasterization_zorder(2)
 #######################
 # Tuning method 1: scale conductance to have same peak of hERG current
 # Load Grandi-SD model
-if APmodel_name == 'Grandi':
-    APmodel = '../math_model/AP_model/Grd-2010-IKr-SD.mmt'
-elif APmodel_name == 'TTP':
-    APmodel = '../math_model/AP_model/TTP-2006-IKr-SD.mmt'
-elif APmodel_name == 'Lei':
-    APmodel = '../math_model/AP_model/ORd-CiPA-Lei-SD.mmt'
+APmodel = '../' + model_filenames['AP_SD_path']
 APmodel, _, x = myokit.load(APmodel)
 AP_model = modelling.Simulation(APmodel, current_head_key=current_head_key)
 AP_model.protocol = protocol

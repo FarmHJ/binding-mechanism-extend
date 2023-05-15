@@ -179,6 +179,38 @@ class ModelDetails(object):
             'IKATP': 'IK,ATP',
         }
 
+        self.file_names = {
+            'ORd': {
+                'AP_path': 'math_model/AP_model/ORd-2011.mmt',
+                'label': 'ORd (2011)'
+            },
+            'Grandi': {
+                'AP_path': 'math_model/AP_model/Grd-2010.mmt',
+                'AP_SD_path': 'math_model/AP_model/Grd-2010-IKr-SD.mmt',
+                'label': 'Grandi (2010)'
+            },
+            'AP-SD': {
+                'AP_path': 'math_model/AP_model/ohara-cipa-2017.mmt',
+                'label': "O'Hara-CiPA (2017)"
+            },
+            'TTP': {
+                'AP_path': 'math_model/AP_model/TTP-2006.mmt',
+                'AP_SD_path': 'math_model/AP_model/TTP-2006-IKr-SD.mmt',
+                'label': 'ten Tusscher (2006)'
+            },
+            'Tomek': {
+                'AP_path': 'math_model/AP_model/Tomek-2019.mmt',
+                'AP_SD_path': 'math_model/AP_model/Tomek-2019-IKr-SD.mmt',
+                'label': 'Tomek (2019)'
+            },
+            'Lei': {
+                'IKr_path': 'math_model/current_model/lei2019.mmt',
+                'AP_path': 'math_model/AP_model/ohara-cipa-2017.mmt',
+                'AP_SD_path': 'math_model/AP_model/ORd-CiPA-Lei-SD.mmt',
+                'label': 'Lei (2019)'
+            },
+        }
+
 
 class SDModelDetails(object):
     """
