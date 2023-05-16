@@ -132,6 +132,7 @@ plot.add_multiple_continuous(panel2[1][1], AP_conductance_plot,
                              current_key, cmap=cmap, labels=labels)
 panel2[0][0].set_title(SD_labelname)
 panel2[0][1].set_title(CS_labelname)
+panel2[0][0].legend(handlelength=0.9, ncol=2, columnspacing=0.9)
 
 # Adjust axes
 fig.sharex(['Time (ms)'] * 2, [(0, plotting_pulse_time)] * 2,
