@@ -59,14 +59,12 @@ Hill_coef = Hill_coef.values.tolist()[0][1:-1]
 
 # Propagate to action potential
 # Set AP model
-if APmodel_name == 'Grandi':
-    APmodel = '../math_model/AP_model/Grd-2010-IKr-SD.mmt'
-elif APmodel_name == 'TTP':
-    APmodel = '../math_model/AP_model/TTP-2006-IKr-SD.mmt'
-elif APmodel_name == 'Lei':
-    APmodel = '../math_model/AP_model/ORd-CiPA-Lei-SD.mmt'
+model_details = modelling.ModelDetails()
+model_filename = model_details.file_names[APmodel_name]
+APmodel = '../' + model_filename['AP_SD_path']
+
 APmodel, _, x = myokit.load(APmodel)
-model_keys = modelling.ModelDetails().current_keys[APmodel_name]
+model_keys = model_details.current_keys[APmodel_name]
 current_key = model_keys['IKr']
 current_head_key = current_key[:current_key.index('.')]
 AP_model = modelling.Simulation(APmodel, current_head_key=current_head_key)
