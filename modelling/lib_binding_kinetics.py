@@ -421,7 +421,7 @@ class DrugConcentrations(object):
         self.drug_concentrations = {
             'dofetilide': {
                 'coarse': [0, 0.1, 1, 10, 30, 100, 300, 500, 1000],
-                'fine': 10.0**np.linspace(-1, 2.5, 20),
+                'fine': 10.0**np.linspace(-1, 3, 20),
                 'lit_default': [1, 3, 10, 30]
             },
             'verapamil': {
