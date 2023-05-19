@@ -20,7 +20,7 @@ abs_tol = 1e-7
 rel_tol = 1e-8
 
 model_details = modelling.ModelDetails()
-model_list = ['Grandi', 'TTP', 'Tomek', 'Lei']
+model_list = ['Grandi', 'TTP', 'Tomek-Cl', 'Lei']
 drug_list = ['dofetilide', 'verapamil']
 tuning_method = ['hERG_peak'] * 3 + ['AP_duration']
 
@@ -59,7 +59,7 @@ for num, APmodel_name in enumerate(model_list):
         drug_conc = APD_trapping_df['drug concentration'].values.tolist()
         APD_trapping = APD_trapping_df['APD'].values.tolist()
         APD_conductance = APD_conductance_df['APD'].values.tolist()
-        EAD_marker = [False if (i >= 1000 or j >= 1000) else True for (i, j)
+        EAD_marker = [False if (np.isnan((i, j)).any()) else True for (i, j)
                       in zip(APD_trapping, APD_conductance)]
 
         APD_trapping = np.array(APD_trapping)[np.array(EAD_marker)]

@@ -116,11 +116,14 @@ class ModelComparison(object):
                 log_var=[self.time_key, self.Vm_key])
 
             # Compute APD90
-            APD_trapping_pulse = []
-            for pulse in range(save_signal):
-                apd90 = AP_model.APD90(log[self.Vm_key, pulse], offset, 0.1)
-                APD_trapping_pulse.append(apd90)
-            APD_trapping.append(APD_trapping_pulse)
+            protocol_duration = AP_model.protocol.characteristic_time()
+            Vm_signal = list(log[self.Vm_key, 0])
+            for pulse in range(1, save_signal):
+                Vm_signal += list(log[self.Vm_key, pulse])
+
+            APDs = AP_model.APD90_update(log.time(), Vm_signal, offset,
+                                         protocol_duration)
+            APD_trapping.append(APDs)
 
             # Run simulation for conductance model
             reduction_scale = self.Hill_model.simulate(
@@ -133,19 +136,21 @@ class ModelComparison(object):
                 rel_tol=rel_tol, log_var=[self.time_key, self.Vm_key])
 
             # Compute APD90
-            APD_conductance_pulse = []
-            for pulse in range(save_signal):
-                apd90 = AP_model.APD90(d2[self.Vm_key, pulse], offset, 0.1)
-                APD_conductance_pulse.append(apd90)
-            APD_conductance.append(APD_conductance_pulse)
+            Vm_signal = list(d2[self.Vm_key, 0])
+            for pulse in range(1, save_signal):
+                Vm_signal += list(d2[self.Vm_key, pulse])
 
-        APD_trapping = [max(i) for i in APD_trapping]
-        APD_conductance = [max(i) for i in APD_conductance]
+            APDs = AP_model.APD90_update(d2.time(), Vm_signal, offset,
+                                         protocol_duration)
+            APD_conductance.append(APDs)
+
+        APD_trapping = [float('nan') if np.isnan(i).any() else max(i)
+                        for i in APD_trapping]
+        APD_conductance = [float('nan') if np.isnan(i).any() else max(i)
+                           for i in APD_conductance]
         if EAD:
-            checker_trapping = [True if i >= 1000 else False
-                                for i in APD_trapping]
-            checker_conductance = [True if i >= 1000 else False
-                                   for i in APD_conductance]
+            checker_trapping = [np.isnan(i) for i in APD_trapping]
+            checker_conductance = [np.isnan(i) for i in APD_conductance]
             checker_count = min(sum(checker_trapping),
                                 sum(checker_conductance))
             counter = 0
@@ -159,12 +164,14 @@ class ModelComparison(object):
                     rel_tol=rel_tol, log_var=[self.time_key, self.Vm_key])
 
                 # Compute APD90
-                APD_trapping_pulse = []
-                for pulse in range(save_signal):
-                    apd90 = AP_model.APD90(log[self.Vm_key, pulse],
-                                           offset, 0.1)
-                    APD_trapping_pulse.append(apd90)
-                APD_trapping.append(max(APD_trapping_pulse))
+                Vm_signal = list(log[self.Vm_key, 0])
+                for pulse in range(1, save_signal):
+                    Vm_signal += list(log[self.Vm_key, pulse])
+
+                APDs = AP_model.APD90_update(log.time(), Vm_signal, offset,
+                                             protocol_duration)
+                APD_trapping_pulse = float('nan') if np.isnan(APDs).any() else max(APDs)
+                APD_trapping.append(APD_trapping_pulse)
 
                 # Run simulation for conductance model
                 reduction_scale = self.Hill_model.simulate(
@@ -177,17 +184,17 @@ class ModelComparison(object):
                     rel_tol=rel_tol, log_var=[self.time_key, self.Vm_key])
 
                 # Compute APD90
-                APD_conductance_pulse = []
-                for pulse in range(save_signal):
-                    apd90 = AP_model.APD90(d2[self.Vm_key, pulse],
-                                           offset, 0.1)
-                    APD_conductance_pulse.append(apd90)
-                APD_conductance.append(max(APD_conductance_pulse))
+                Vm_signal = list(d2[self.Vm_key, 0])
+                for pulse in range(1, save_signal):
+                    Vm_signal += list(d2[self.Vm_key, pulse])
 
-                checker_trapping = [True if i >= 1000 else False
-                                    for i in APD_trapping]
-                checker_conductance = [True if i >= 1000 else False
-                                       for i in APD_conductance]
+                APDs = AP_model.APD90_update(d2.time(), Vm_signal, offset,
+                                             protocol_duration)
+                APD_conductance_pulse = float('nan') if np.isnan(APDs).any() else max(APDs)
+                APD_conductance.append(APD_conductance_pulse)
+
+                checker_trapping = [np.isnan(i) for i in APD_trapping]
+                checker_conductance = [np.isnan(i) for i in APD_conductance]
                 checker_count = min(sum(checker_trapping),
                                     sum(checker_conductance))
 
