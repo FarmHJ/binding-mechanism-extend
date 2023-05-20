@@ -170,7 +170,8 @@ class ModelComparison(object):
 
                 APDs = AP_model.APD90_update(log.time(), Vm_signal, offset,
                                              protocol_duration)
-                APD_trapping_pulse = float('nan') if np.isnan(APDs).any() else max(APDs)
+                APD_trapping_pulse = float('nan') if np.isnan(APDs).any() \
+                    else max(APDs)
                 APD_trapping.append(APD_trapping_pulse)
 
                 # Run simulation for conductance model
@@ -190,7 +191,8 @@ class ModelComparison(object):
 
                 APDs = AP_model.APD90_update(d2.time(), Vm_signal, offset,
                                              protocol_duration)
-                APD_conductance_pulse = float('nan') if np.isnan(APDs).any() else max(APDs)
+                APD_conductance_pulse = float('nan') if np.isnan(APDs).any() \
+                    else max(APDs)
                 APD_conductance.append(APD_conductance_pulse)
 
                 checker_trapping = [np.isnan(i) for i in APD_trapping]
