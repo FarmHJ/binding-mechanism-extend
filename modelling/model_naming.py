@@ -116,6 +116,27 @@ class ModelDetails(object):
                 'time': 'environment.time',
                 'Vm': 'membrane.v'
             },
+            'Tomek-Cl': {
+                'IClB': 'ICl.IClb',
+                'IClCa': 'ICl.IClCa',
+                'Ito': 'Ito.Ito',
+                'IKb': 'IKb.IKb',
+                'IKs': 'IKs.IKs',
+                'IKr': 'IKr.IKr',
+                'ICaP': 'IpCa.IpCa',
+                'IK1': 'IK1.IK1',
+                'INaK': 'INaK.INaK',
+                'ICaL': 'ICaL.ICaL',
+                'INaL': 'INaL.INaL',
+                'INaCa': 'INaCa.INaCa_total',
+                'ICaB': 'ICab.ICab',
+                'INaB': 'INab.INab',
+                'INa': 'INa.INa',
+                'IKACh': None,
+                'IKATP': None,
+                'time': 'environment.time',
+                'Vm': 'membrane.v'
+            },
             'Lei': {
                 'Ito': 'ito.Ito',
                 'IKb': 'ikb.IKb',
@@ -202,6 +223,11 @@ class ModelDetails(object):
                 'AP_path': 'math_model/AP_model/Tomek-2019.mmt',
                 'AP_SD_path': 'math_model/AP_model/Tomek-2019-IKr-SD.mmt',
                 'label': 'Tomek (2019)'
+            },
+            'Tomek-Cl': {
+                'AP_path': 'math_model/AP_model/Tomek-Cl-2020.mmt',
+                'AP_SD_path': 'math_model/AP_model/Tomek-Cl-2020-IKr-SD.mmt',
+                'label': 'Tomek (2020)'
             },
             'Lei': {
                 'IKr_path': 'math_model/current_model/lei2019.mmt',

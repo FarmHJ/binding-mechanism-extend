@@ -94,7 +94,7 @@ class Simulation(object):
         self.sim.set_constant(self.current_head.var('Kt'), 3.5e-5)
         self.sim.set_constant(self.current_head.var('gKr'),
                               self.original_constants["gKr"])
-        
+
         if conductance_name is not None:
             self.sim.set_constant(conductance_name, conductance_value)
 
@@ -210,11 +210,47 @@ class Simulation(object):
         offset_index = int(offset / timestep)
         index = np.abs(np.array(signal[offset_index + min_APD:]) -
                        APD90_v).argmin()
-        APD90 = index * timestep + min_APD * timestep  # - offset
-        # index = np.abs(np.array(signal[offset:]) - APD90_v).argmin()
-        # APD90 = index * timestep - offset
+        APD90 = index * timestep + min_APD * timestep
         if APD90 < 1:
             print('check')
             APD90 = len(signal) * timestep
 
-        return APD90  # , APD90_v
+        return APD90
+
+    def APD90_update(self, time_signal, Vm_signal, offset, protocol_duration):
+        timestep = (max(time_signal) - min(time_signal)) / len(time_signal)
+        pulse_num = round(len(Vm_signal) / len(time_signal))
+
+        APD90s = []
+        for i in range(pulse_num):
+            AP_Vm = Vm_signal[
+                round(i * protocol_duration / timestep):
+                round((i + 1) * (protocol_duration + offset) / timestep)]
+            APamp = max(AP_Vm) - min(AP_Vm)
+            APD90_v = min(AP_Vm) + 0.1 * APamp
+
+            time_signal = np.concatenate((time_signal, time_signal +
+                                          max(time_signal) + timestep))
+
+            min_APD = int(5 / timestep)
+            offset_index = int(offset / timestep)
+
+            start_time = time_signal[offset_index]
+            end_time = None
+            for ind, v in enumerate(AP_Vm[offset_index + min_APD:]):
+                if v < APD90_v:
+                    t_prev = time_signal[offset_index + min_APD:][ind - 1]
+                    v_prev = AP_Vm[offset_index + min_APD:][ind - 1]
+                    t_current = time_signal[offset_index + min_APD:][ind]
+                    end_time = t_prev + (APD90_v - v_prev) / (v - v_prev) * \
+                        (t_current - t_prev)
+                    break
+
+            if end_time is not None:
+                APD90_value = end_time - start_time
+            else:
+                APD90_value = float('Nan')
+
+            APD90s.append(APD90_value)
+
+        return APD90s

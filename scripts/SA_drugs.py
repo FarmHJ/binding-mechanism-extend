@@ -130,7 +130,7 @@ else:
     scaling_factor = scaling_df.loc['hERG_peak']['conductance scale']
 
 # Determine completed simulations so that same simulations are not repeated
-filename = 'SA_alldrugs_' + APmodel_name + '_tuned.csv'
+filename = 'SA_alldrugs_' + APmodel_name + '_tuned_APDupdate.csv'
 if os.path.exists(data_dir + filename):
     results_df = pd.read_csv(data_dir + filename, header=[0, 1], index_col=[0],
                              skipinitialspace=True)

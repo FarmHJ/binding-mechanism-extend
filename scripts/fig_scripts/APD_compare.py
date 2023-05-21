@@ -154,7 +154,9 @@ APD_conductance_df = pd.read_csv(data_dir + 'CS_APD_fine.csv')
 drug_conc = APD_trapping_df['drug concentration'].values.tolist()
 APD_trapping = APD_trapping_df['APD'].values.tolist()
 APD_conductance = APD_conductance_df['APD'].values.tolist()
-EAD_marker = [1050 if (i >= 1000 or j >= 1000) else None for (i, j)
+print(APD_trapping)
+print(APD_conductance)
+EAD_marker = [1050 if (np.isnan((i, j)).any()) else None for (i, j)
               in zip(APD_trapping, APD_conductance)]
 
 # Plot APD90 of both models
@@ -183,9 +185,9 @@ SD_qNet = APD_trapping_df['qNet'].values.tolist()
 CS_qNet = APD_conductance_df['qNet'].values.tolist()
 
 # EAD_indicator = np.array([1 if i is None else None for i in EAD_marker])
-SD_qNet = [None if APD_trapping[i] >= 1000 else SD_qNet[i] for i in
+SD_qNet = [None if np.isnan(APD_trapping[i]) else SD_qNet[i] for i in
            range(len(SD_qNet))]
-CS_qNet = [None if APD_conductance[i] >= 1000 else CS_qNet[i] for i in
+CS_qNet = [None if np.isnan(APD_conductance[i]) else CS_qNet[i] for i in
            range(len(CS_qNet))]
 
 # Plot APD90 of both models
