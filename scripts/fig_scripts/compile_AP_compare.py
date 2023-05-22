@@ -30,8 +30,8 @@ if not os.path.isdir(fig_dir):
 
 drug_color = ['k', 'r']
 
-fig = modelling.figures.FigureStructure(figsize=(8, 3), gridspec=(1, 2),
-                                        wspace=0.25)
+fig = modelling.figures.FigureStructure(figsize=(8, 3), gridspec=(2, 2),
+                                        height_ratios=[1, 3], wspace=0.25)
 plot = modelling.figures.FigurePlot()
 
 APD_metric = {
@@ -73,8 +73,10 @@ for num, APmodel_name in enumerate(model_list):
         RMSDiff_APD = np.sqrt(square_sum) / count
         APD_metric[drug].append(RMSDiff_APD)
 
-        # fig.axs[0][0].bar(num * 3 + drug_ind, RMSDiff_APD,
-        #                   color=drug_color[drug_ind], label=drug)
+        fig.axs[0][0].bar(num * 3 + drug_ind, RMSDiff_APD,
+                          color=drug_color[drug_ind], label=drug)
+        fig.axs[1][0].bar(num * 3 + drug_ind, RMSDiff_APD,
+                          color=drug_color[drug_ind], label=drug)
 
         SD_qNet = APD_trapping_df['qNet'].values.tolist()
         CS_qNet = APD_conductance_df['qNet'].values.tolist()
@@ -90,9 +92,10 @@ for num, APmodel_name in enumerate(model_list):
         RMSDiff_qNet = np.sqrt(square_sum) / count
         qNet_metric[drug].append(RMSDiff_qNet)
 
-        # fig.axs[0][1].bar(num * 3 + drug_ind, RMSDiff_qNet,
-        #                   color=drug_color[drug_ind], label=drug)
-
+        fig.axs[0][1].bar(num * 3 + drug_ind, RMSDiff_qNet,
+                          color=drug_color[drug_ind], label=drug)
+        fig.axs[1][1].bar(num * 3 + drug_ind, RMSDiff_qNet,
+                          color=drug_color[drug_ind], label=drug)
 
 x = np.arange(len(model_list))
 bar_width = 0.3
@@ -110,6 +113,24 @@ for drug, metric in qNet_metric.items():
     fig.axs[0][1].bar(x + offset, metric, bar_width,
                       label=drug)
     multiplier += 1
+
+y_bottom, y_top = fig.axs[0][0].get_ylim()
+fig.axs[0][0].set_ylim(30, y_top)
+fig.axs[1][0].set_ylim(y_bottom, 15)
+fig.axs[0][0].spines['bottom'].set_visible(False)
+fig.axs[1][0].spines['top'].set_visible(False)
+fig.axs[0][0].xaxis.tick_top()
+fig.axs[0][0].tick_params(labeltop=False)
+fig.axs[1][0].xaxis.tick_bottom()
+
+y_bottom, y_top = fig.axs[0][1].get_ylim()
+fig.axs[0][1].set_ylim(0.017, y_top)
+fig.axs[1][1].set_ylim(y_bottom, 0.012)
+fig.axs[0][1].spines['bottom'].set_visible(False)
+fig.axs[1][1].spines['top'].set_visible(False)
+fig.axs[0][1].xaxis.tick_top()
+fig.axs[0][1].tick_params(labeltop=False)
+fig.axs[1][1].xaxis.tick_bottom()
 
 # Adjust figure
 fig.axs[0][0].set_title(r'APD$_{90}$')
