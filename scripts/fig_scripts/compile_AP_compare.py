@@ -28,10 +28,14 @@ fig_dir = '../../figures/kinetics_comparison/'
 if not os.path.isdir(fig_dir):
     os.makedirs(fig_dir)
 
-drug_color = ['k', 'r']
+drug_color = {
+    'dofetilide': 'k',
+    'verapamil': 'r'
+}
 
 fig = modelling.figures.FigureStructure(figsize=(8, 3), gridspec=(2, 2),
-                                        height_ratios=[1, 3], wspace=0.25)
+                                        height_ratios=[1, 3], wspace=0.25,
+                                        hspace=0.15)
 plot = modelling.figures.FigurePlot()
 
 APD_metric = {
@@ -73,10 +77,10 @@ for num, APmodel_name in enumerate(model_list):
         RMSDiff_APD = np.sqrt(square_sum) / count
         APD_metric[drug].append(RMSDiff_APD)
 
-        fig.axs[0][0].bar(num * 3 + drug_ind, RMSDiff_APD,
-                          color=drug_color[drug_ind], label=drug)
-        fig.axs[1][0].bar(num * 3 + drug_ind, RMSDiff_APD,
-                          color=drug_color[drug_ind], label=drug)
+        # fig.axs[0][0].bar(num * 3 + drug_ind, RMSDiff_APD,
+        #                   color=drug_color[drug_ind], label=drug)
+        # fig.axs[1][0].bar(num * 3 + drug_ind, RMSDiff_APD,
+        #                   color=drug_color[drug_ind], label=drug)
 
         SD_qNet = APD_trapping_df['qNet'].values.tolist()
         CS_qNet = APD_conductance_df['qNet'].values.tolist()
@@ -92,10 +96,10 @@ for num, APmodel_name in enumerate(model_list):
         RMSDiff_qNet = np.sqrt(square_sum) / count
         qNet_metric[drug].append(RMSDiff_qNet)
 
-        fig.axs[0][1].bar(num * 3 + drug_ind, RMSDiff_qNet,
-                          color=drug_color[drug_ind], label=drug)
-        fig.axs[1][1].bar(num * 3 + drug_ind, RMSDiff_qNet,
-                          color=drug_color[drug_ind], label=drug)
+        # fig.axs[0][1].bar(num * 3 + drug_ind, RMSDiff_qNet,
+        #                   color=drug_color[drug_ind], label=drug)
+        # fig.axs[1][1].bar(num * 3 + drug_ind, RMSDiff_qNet,
+        #                   color=drug_color[drug_ind], label=drug)
 
 x = np.arange(len(model_list))
 bar_width = 0.3
@@ -104,14 +108,18 @@ multiplier = 0
 for drug, metric in APD_metric.items():
     offset = bar_width * multiplier
     fig.axs[0][0].bar(x + offset, metric, bar_width,
-                      label=drug)
+                      label=drug, color=drug_color[drug])
+    fig.axs[1][0].bar(x + offset, metric, bar_width,
+                      label=drug, color=drug_color[drug])
     multiplier += 1
 
 multiplier = 0
 for drug, metric in qNet_metric.items():
     offset = bar_width * multiplier
     fig.axs[0][1].bar(x + offset, metric, bar_width,
-                      label=drug)
+                      label=drug, color=drug_color[drug])
+    fig.axs[1][1].bar(x + offset, metric, bar_width,
+                      label=drug, color=drug_color[drug])
     multiplier += 1
 
 y_bottom, y_top = fig.axs[0][0].get_ylim()
@@ -119,8 +127,8 @@ fig.axs[0][0].set_ylim(30, y_top)
 fig.axs[1][0].set_ylim(y_bottom, 15)
 fig.axs[0][0].spines['bottom'].set_visible(False)
 fig.axs[1][0].spines['top'].set_visible(False)
-fig.axs[0][0].xaxis.tick_top()
-fig.axs[0][0].tick_params(labeltop=False)
+# fig.axs[0][0].xaxis.tick_top()
+fig.axs[0][0].tick_params(bottom=False, labelbottom=False)
 fig.axs[1][0].xaxis.tick_bottom()
 
 y_bottom, y_top = fig.axs[0][1].get_ylim()
@@ -128,16 +136,26 @@ fig.axs[0][1].set_ylim(0.017, y_top)
 fig.axs[1][1].set_ylim(y_bottom, 0.012)
 fig.axs[0][1].spines['bottom'].set_visible(False)
 fig.axs[1][1].spines['top'].set_visible(False)
-fig.axs[0][1].xaxis.tick_top()
-fig.axs[0][1].tick_params(labeltop=False)
+# fig.axs[0][1].xaxis.tick_top()
+fig.axs[0][1].tick_params(bottom=False, labelbottom=False)
 fig.axs[1][1].xaxis.tick_bottom()
+
+# Add diagonal lines on yaxis
+d = 0.015
+for i in range(2):
+    kwargs = dict(transform=fig.axs[0][i].transAxes, color='k', clip_on=False)
+    fig.axs[0][i].plot((-d, +d), (-d, +d), **kwargs)        # top-left diagonal
+    fig.axs[0][i].plot((1 - d, 1 + d), (-d, +d), **kwargs)  # top-right diagonal
+    kwargs.update(transform=fig.axs[1][i].transAxes)
+    fig.axs[1][i].plot((-d, +d), (1 - d / 2, 1 + d / 2), **kwargs)  # bottom-left diagonal
+    fig.axs[1][i].plot((1 - d, 1 + d), (1 - d / 2, 1 + d / 2), **kwargs)  # bottom-right diagonal
 
 # Adjust figure
 fig.axs[0][0].set_title(r'APD$_{90}$')
 fig.axs[0][1].set_title('qNet')
 for i in range(2):
-    fig.axs[0][i].set_ylabel('RMSD')
-    fig.axs[0][i].set_xticks(x + bar_width / 2, model_list)
+    fig.axs[1][i].set_ylabel('RMSD')
+    fig.axs[1][i].set_xticks(x + bar_width / 2, model_list)
 fig.axs[0][0].legend(handlelength=1)
 
 # Add panel letter

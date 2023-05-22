@@ -4,7 +4,6 @@
 # for a given virtual drug.
 #
 
-import itertools
 import myokit
 import numpy as np
 import os
@@ -21,15 +20,15 @@ if not os.path.exists(data_filepath):
     os.makedirs(data_filepath)
 
 APmodel_name = sys.argv[1]
+model_details = modelling.ModelDetails()
+
 # Model directory
-if APmodel_name == 'Grandi':
-    AP_model_filepath = '../math_model/AP_model/Grd-2010-IKr-SD.mmt'
-elif APmodel_name == 'TTP':
-    AP_model_filepath = '../math_model/AP_model/TTP-2006-IKr-SD.mmt'
+AP_model_filepath = '../' + model_details.file_names[
+    APmodel_name]['AP_SD_path']
 
 # Load AP model and set current protocol
 APmodel, _, x = myokit.load(AP_model_filepath)
-model_keys = modelling.ModelDetails().current_keys[APmodel_name]
+model_keys = model_details.current_keys[APmodel_name]
 current_key = model_keys['IKr']
 time_key = model_keys['time']
 Vm_key = model_keys['Vm']

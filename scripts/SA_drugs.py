@@ -24,10 +24,6 @@ current_model = modelling.Simulation(model, protocol=Milnes_protocol,
                                      current_head_key='ikr')
 
 # Load AP model and set up protocol
-# if APmodel_name == 'Grandi':
-#     AP_model_filepath = '../math_model/AP_model/Grd-2010-IKr-SD.mmt'
-# elif APmodel_name == 'TTP':
-#     AP_model_filepath = '../math_model/AP_model/TTP-2006-IKr-SD.mmt'
 model_details = modelling.ModelDetails()
 AP_model_filepath = '../' + model_details.file_names[
     APmodel_name]['AP_SD_path']
@@ -40,7 +36,10 @@ current_head_key = current_key[:current_key.index('.')]
 AP_model = modelling.Simulation(APmodel, current_head_key=current_head_key)
 
 pulse_time = 1000
-AP_model.protocol = modelling.ProtocolLibrary().current_impulse(pulse_time)
+# AP_model.protocol = modelling.ProtocolLibrary().current_impulse(pulse_time)
+protocol_offset = 50
+protocol = myokit.pacing.blocktrain(pulse_time, 0.5, offset=protocol_offset)
+AP_model.protocol = protocol
 
 # Define constants for simulations
 offset = 50
