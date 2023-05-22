@@ -23,8 +23,7 @@ class BindingParameters(object):
         self.drug_compounds = ['dofetilide', 'bepridil', 'terfenadine',
                                'cisapride', 'verapamil', 'ranolazine',
                                'quinidine', 'sotalol', 'chlorpromazine',
-                               'ondansetron', 'diltiazem', 'mexiletine',
-                               'droperidol']
+                               'ondansetron', 'diltiazem', 'mexiletine']
         self.binding_parameters = {
             'dofetilide': {
                 'Kmax': 1e8,

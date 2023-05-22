@@ -26,8 +26,8 @@ class ModelComparison(object):
         self.optimiser = modelling.HillModelOpt(self.Hill_model)
 
     def compute_Hill(self, BKmodel, drug_conc=None, steady_state_pulse=1000,
-                     Hill_upper_thres=0.9, Hill_lower_thres=0.05, max_counter=20,
-                     norm_constant=1, parallel=True):
+                     Hill_upper_thres=0.9, Hill_lower_thres=0.05,
+                     max_counter=20, norm_constant=1, parallel=True):
 
         if drug_conc is None:
             drug_conc = list(np.append(0, 10**np.linspace(-1, 1, 5)))
@@ -209,7 +209,8 @@ class ModelComparison(object):
         square_sum = 0
         count = 0
         for i in range(len(APD_trapping)):
-            if APD_trapping[i] < 1000 and APD_conductance[i] < 1000:
+            if not np.isnan(APD_trapping[i]) and not \
+                    np.isnan(APD_conductance[i]):
                 square_sum += (APD_trapping[i] - APD_conductance[i])**2
                 count += 1
 
@@ -226,7 +227,8 @@ class ModelComparison(object):
         diff_sum = 0
         count = 0
         for i in range(len(APD_trapping)):
-            if APD_trapping[i] < 1000 and APD_conductance[i] < 1000:
+            if not np.isnan(APD_trapping[i]) and not \
+                    np.isnan(APD_conductance[i]):
                 diff_sum += (APD_trapping[i] - APD_conductance[i])
                 count += 1
 
