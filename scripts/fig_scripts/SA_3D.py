@@ -47,7 +47,7 @@ Error_drug = np.array(RMSError_drug) * np.array(MError_drug) / \
 
 # Read simulated data of virtual drugs in the parameter space
 data_dir = root_dir + 'parameter_space_exploration/SA_space/' + \
-    APmodel_name + '/'
+    APmodel_name + '_untuned/'
 file_prefix = 'SA_allparam'
 result_files = [data_dir + f for f in os.listdir(data_dir)
                 if f.startswith(file_prefix)]
@@ -151,8 +151,8 @@ scale_map = matplotlib.cm.ScalarMappable(norm=cmap_norm, cmap=cmap)
 
 # Plot points in the parameter space
 axs[0].scatter(Vhalf_range, np.log10(Kmax_range), np.log10(Ku_range),
-            c=scale_map.to_rgba(Error_space),
-            s=5, marker='o', zorder=-10, alpha=0.5)
+               c=scale_map.to_rgba(Error_space),
+               s=5, marker='o', zorder=-10, alpha=0.5)
 axs[0].view_init(32, 55)
 
 # Plot points of all synthetic drugs and those with RMSD within the defined
@@ -165,14 +165,14 @@ axs[1].scatter(Vhalf_chosen, np.log10(Kmax_chosen), np.log10(Ku_chosen),
 axs[1].scatter(Vhalf_list, np.log10(Kmax_list), np.log10(Ku_list),
                c=scale_map.to_rgba(Error_drug),
                s=100, marker='^', zorder=-1)
-# axs[1].scatter(xmin * np.ones(len(Vhalf_list)), np.log10(Kmax_list),
-#                np.log10(Ku_list), s=50, marker='o', zorder=-1, c='red')
+axs[1].scatter(xmin * np.ones(len(Vhalf_list)), np.log10(Kmax_list),
+               np.log10(Ku_list), s=50, marker='o', zorder=-1, c='red')
 
-# for i in range(len(Vhalf_list)):
-#     axs[1].plot([xmin, Vhalf_list[i]],
-#                 [np.log10(Kmax_list[i]), np.log10(Kmax_list[i])],
-#                 zs=[np.log10(Ku_list[i]), np.log10(Ku_list[i])],
-#                 color='red', linestyle='--', linewidth=0.7)
+for i in range(len(Vhalf_list)):
+    axs[1].plot([xmin, Vhalf_list[i]],
+                [np.log10(Kmax_list[i]), np.log10(Kmax_list[i])],
+                zs=[np.log10(Ku_list[i]), np.log10(Ku_list[i])],
+                color='red', linestyle='--', linewidth=0.7)
 axs[1].view_init(32, 55)
 
 # Adjust figure details
@@ -200,8 +200,8 @@ scale_map.set_array(Error_space)
 fig.colorbar(scale_map, orientation='horizontal', ax=axs, cax=cax)
 
 # Add panel labels
-# fig.text(0.075, 0.75, '(A)', fontsize=11)
-# fig.text(0.5, 0.75, '(B)', fontsize=11)
+fig.text(0.075, 0.75, '(A)', fontsize=11)
+fig.text(0.5, 0.75, '(B)', fontsize=11)
 
 # Save figure
 # plt.subplots_adjust(hspace=0)
