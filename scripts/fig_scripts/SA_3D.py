@@ -47,7 +47,7 @@ Error_drug = np.array(RMSError_drug) * np.array(MError_drug) / \
 
 # Read simulated data of virtual drugs in the parameter space
 data_dir = root_dir + 'parameter_space_exploration/SA_space/' + \
-    APmodel_name + '_untuned/'
+    APmodel_name + '/'
 file_prefix = 'SA_allparam'
 result_files = [data_dir + f for f in os.listdir(data_dir)
                 if f.startswith(file_prefix)]
@@ -57,6 +57,7 @@ result_files = [data_dir + f for f in os.listdir(data_dir)
 data_dir = root_dir + 'parameter_SA/APD90diff_N/' + APmodel_name + '/'
 overall_stats = pd.read_csv(data_dir + 'overall_stats.csv', index_col=[0])
 error_range = overall_stats['max'].values[0] * 1.2
+print(error_range)
 
 # Load results and extract points where the RMSD value is within the defined
 # range
