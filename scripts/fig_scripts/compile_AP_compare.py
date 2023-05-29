@@ -77,11 +77,6 @@ for num, APmodel_name in enumerate(model_list):
         RMSDiff_APD = np.sqrt(square_sum) / count
         APD_metric[drug].append(RMSDiff_APD)
 
-        # fig.axs[0][0].bar(num * 3 + drug_ind, RMSDiff_APD,
-        #                   color=drug_color[drug_ind], label=drug)
-        # fig.axs[1][0].bar(num * 3 + drug_ind, RMSDiff_APD,
-        #                   color=drug_color[drug_ind], label=drug)
-
         SD_qNet = APD_trapping_df['qNet'].values.tolist()
         CS_qNet = APD_conductance_df['qNet'].values.tolist()
 
@@ -95,11 +90,6 @@ for num, APmodel_name in enumerate(model_list):
             count += 1
         RMSDiff_qNet = np.sqrt(square_sum) / count
         qNet_metric[drug].append(RMSDiff_qNet)
-
-        # fig.axs[0][1].bar(num * 3 + drug_ind, RMSDiff_qNet,
-        #                   color=drug_color[drug_ind], label=drug)
-        # fig.axs[1][1].bar(num * 3 + drug_ind, RMSDiff_qNet,
-        #                   color=drug_color[drug_ind], label=drug)
 
 x = np.arange(len(model_list))
 bar_width = 0.3
@@ -162,4 +152,4 @@ fig.axs[0][0].legend(handlelength=1)
 fig.fig.text(0.1, 0.905, '(A)', fontsize=11)
 fig.fig.text(0.52, 0.905, '(B)', fontsize=11)
 
-fig.savefig(fig_dir + "model_compare_all.pdf")
+fig.savefig(fig_dir + "model_compare_all.svg")

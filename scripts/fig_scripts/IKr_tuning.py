@@ -40,7 +40,7 @@ current_list = model_details.current_list
 plotting_pulse_time = 800
 current_colours = model_details.current_colours
 
-model_list = ['Grandi', 'TTP', 'Tomek', 'Lei']
+model_list = ['Grandi', 'TTP', 'Tomek-Cl', 'Lei']
 
 # Figure y-axes limits
 AP_bottom_list = []
@@ -122,4 +122,4 @@ for i in range(4):
         axs[i][0][0].set_yticklabels([])
         axs[i][1][0].set_yticklabels([])
 
-fig.savefig(fig_dir + 'AP_tune_IKr.pdf')
+fig.savefig(fig_dir + 'AP_tune_IKr.svg')
