@@ -18,7 +18,8 @@ class QualityControl(object):
         # General
         self.Rseal_thres = [1e8, 1e12]
         self.Cm_thres = [1e-12, 1e-10]
-        self.Rseries_thres = [1e6, 2.5e7]
+        # self.Rseries_thres = [1e6, 2.5e7]
+        self.Rseries_thres = [5e6, 2e7]
 
         # Stability of traces
         self.rmsd0c = 0.2

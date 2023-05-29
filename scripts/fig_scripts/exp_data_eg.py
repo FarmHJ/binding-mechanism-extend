@@ -18,6 +18,7 @@ plot = modelling.figures.FigurePlot()
 count = 0
 colors = ['blue', 'orange', 'green']
 
+# Experimental data examples
 chosen_cells = {
     'CIPA': {
         'dofetilide': 'J07',
