@@ -241,4 +241,4 @@ fig_protocol.axs[0][1].set_title('Step protocol')
 # Add panel letter
 fig_protocol.fig.text(0.1, 0.935, '(A)', fontsize=11)
 fig_protocol.fig.text(0.52, 0.935, '(B)', fontsize=11)
-fig_protocol.savefig("../figures/experimental_data/" + 'protocol.pdf')
+fig_protocol.savefig("../figures/experimental_data/" + 'protocol.svg')

@@ -6,7 +6,7 @@ class ModelDetails(object):
     def __init__(self):
         super(ModelDetails, self).__init__()
 
-        self.APmodels = ['Grandi', 'TTP', 'AP-SD', 'Grandi-SD']
+        self.APmodels = ['Grandi', 'TTP', 'ORd-CiPA', 'Grandi-SD']
         self.current_list = ['IKr', 'IKs', 'Ito', 'IKb', 'IK1', 'INaK', 'INa',
                              'INaL', 'ICaL', 'INaCa', 'INaB', 'ICaB', 'IClCa',
                              'IClB', 'ICaP', 'IKACh', 'IKATP']
@@ -53,7 +53,7 @@ class ModelDetails(object):
                 'time': 'environment.time',
                 'Vm': 'membrane_potential.V_m',
             },
-            'AP-SD': {
+            'ORd-CiPA': {
                 'Ito': 'ito.Ito',
                 'IKb': 'ikb.IKb',
                 'IKs': 'iks.IKs',
@@ -203,6 +203,7 @@ class ModelDetails(object):
         self.file_names = {
             'ORd': {
                 'AP_path': 'math_model/AP_model/ORd-2011.mmt',
+                'AP_SD_path': 'math_model/AP_model/ohara-cipa-2017.mmt',
                 'label': 'ORd (2011)'
             },
             'Grandi': {
@@ -210,7 +211,7 @@ class ModelDetails(object):
                 'AP_SD_path': 'math_model/AP_model/Grd-2010-IKr-SD.mmt',
                 'label': 'Grandi (2010)'
             },
-            'AP-SD': {
+            'ORd-CiPA': {
                 'AP_path': 'math_model/AP_model/ohara-cipa-2017.mmt',
                 'label': "O'Hara-CiPA (2017)"
             },
