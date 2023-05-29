@@ -175,5 +175,5 @@ fig.axs[0][0].legend(*zip(*unique_label), handlelength=1, loc=(0.03, 0.5))
 fig.fig.text(0.1, 0.895, '(A)', fontsize=11)
 fig.fig.text(0.1, 0.455, '(B)', fontsize=11)
 
-filename = "exp_data_eg.pdf"
+filename = "exp_data_eg.svg"
 fig.savefig("../../figures/experimental_data/" + filename)

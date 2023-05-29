@@ -20,9 +20,9 @@ abs_tol = 1e-7
 rel_tol = 1e-8
 
 model_details = modelling.ModelDetails()
-model_list = ['Grandi', 'TTP', 'Tomek-Cl', 'Lei']
+model_list = ['ORd-CiPA', 'Grandi', 'TTP', 'Tomek-Cl', 'Lei']
 drug_list = ['dofetilide', 'verapamil']
-tuning_method = ['hERG_peak'] * 3 + ['AP_duration']
+tuning_method = ['hERG_peak'] * 4 + ['AP_duration']
 
 fig_dir = '../../figures/kinetics_comparison/'
 if not os.path.isdir(fig_dir):
@@ -152,4 +152,4 @@ fig.axs[0][0].legend(handlelength=1)
 fig.fig.text(0.1, 0.905, '(A)', fontsize=11)
 fig.fig.text(0.52, 0.905, '(B)', fontsize=11)
 
-fig.savefig(fig_dir + "model_compare_all.svg")
+fig.savefig(fig_dir + "model_compare_all.svg", format='svg')
