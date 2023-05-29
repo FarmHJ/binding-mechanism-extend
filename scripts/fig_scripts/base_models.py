@@ -25,8 +25,8 @@ fig = modelling.figures.FigureStructure(figsize=(10, 5),
                                         hspace=0.3, wspace=0.1)
 
 # Figure parameters
-# model_list = ['ORd', 'Grandi', 'TTP', 'Tomek']
-model_list = ['Tomek', 'Tomek2']
+model_list = ['ORd', 'Grandi', 'TTP', 'Tomek-Cl']
+# model_list = ['Tomek', 'Tomek2']
 model_details = modelling.ModelDetails()
 current_list = model_details.current_list
 current_colours = model_details.current_colours
@@ -34,14 +34,14 @@ current_colours = model_details.current_colours
 cmap = matplotlib.cm.get_cmap('tab20')
 plotting_pulse_time = 800
 
-model_current_keys = model_details.current_keys['Tomek']
-none_key_list = [i for i in model_current_keys.keys() if
-                 model_current_keys[i] is None]
-none_key_list.extend(['time', 'Vm'])
-for i in none_key_list:
-    del(model_current_keys[i])
-
 for num, APmodel_name in enumerate(model_list):
+    model_current_keys = model_details.current_keys[APmodel_name]
+    none_key_list = [i for i in model_current_keys.keys() if
+                    model_current_keys[i] is None]
+    none_key_list.extend(['time', 'Vm'])
+    for i in none_key_list:
+        del(model_current_keys[i])
+
     # Load model
     model_filenames = model_details.file_names[APmodel_name]
     APmodel = '../../' + model_filenames['AP_path']
@@ -81,4 +81,4 @@ fig.sharex(["Time (ms)"] * 2, [(0, plotting_pulse_time)] * 2)
 fig.sharey(["Relative contribution"] * 2, [(-1.02, 1.02)] * 2)
 
 # Save figures
-fig.savefig(fig_dir + 'base_APmodels_Tomek.pdf')
+fig.savefig(fig_dir + 'base_APmodels.pdf')
