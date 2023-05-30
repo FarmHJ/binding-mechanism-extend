@@ -25,7 +25,7 @@ fig = modelling.figures.FigureStructure(figsize=(10, 5),
                                         hspace=0.3, wspace=0.1)
 
 # Figure parameters
-model_list = ['ORd', 'Grandi', 'TTP', 'Tomek-Cl']
+model_list = ['ORd-CiPA', 'Grandi', 'TTP', 'Tomek-Cl']
 # model_list = ['Tomek', 'Tomek2']
 model_details = modelling.ModelDetails()
 current_list = model_details.current_list
@@ -37,7 +37,7 @@ plotting_pulse_time = 800
 for num, APmodel_name in enumerate(model_list):
     model_current_keys = model_details.current_keys[APmodel_name]
     none_key_list = [i for i in model_current_keys.keys() if
-                    model_current_keys[i] is None]
+                     model_current_keys[i] is None]
     none_key_list.extend(['time', 'Vm'])
     for i in none_key_list:
         del(model_current_keys[i])
