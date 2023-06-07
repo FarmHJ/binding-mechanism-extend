@@ -204,29 +204,32 @@ samples_to_run = saving_file_dict['sample_id_each_file'][file_num]
 samples_num = len(samples_to_run)
 filename = file_prefix + str(file_num) + '.csv'
 
-for i in range(1):
-    subset_samples_to_run = samples_to_run[
-        n_workers * i:n_workers * (i + 1)]
-    print('Running samples ', int(subset_samples_to_run[0]), ' to ',
-            int(subset_samples_to_run[-1]))
-    subset_param_space = param_values_df.loc[
-        param_values_df[('param_id', 'param_id')].isin(
-            subset_samples_to_run)]
-    param_space = []
-    for i in range(len(subset_param_space.index)):
-        param_space.append(subset_param_space.iloc[[i]])
+subset_samples_to_run = samples_to_run[
+    n_workers * 0:n_workers * (1)]
+print('Running samples ', int(subset_samples_to_run[0]), ' to ',
+      int(subset_samples_to_run[-1]))
+subset_param_space = param_values_df.loc[
+    param_values_df[('param_id', 'param_id')].isin(
+        subset_samples_to_run)]
+# param_space = []
+for i in range(len(subset_param_space.index)):
+    param_space.append(subset_param_space.iloc[[i]])
+param_space = subset_param_space.iloc[[0]]
+# print(param_space)
 
-    big_df = evaluator.evaluate(param_space)
+output = param_evaluation(param_space)
+output = param_evaluation(param_space)
+# big_df = evaluator.evaluate(param_space)
 
-    if os.path.exists(data_dir + filename):
-        combined_df = pd.read_csv(data_dir + filename,
-                                    header=[0, 1], index_col=[0],
-                                    skipinitialspace=True)
-        for i in range(len(big_df)):
-            combined_df = pd.concat([combined_df, big_df[i].T])
-    else:
-        combined_df = big_df[0].T
-        for i in range(1, len(big_df)):
-            combined_df = pd.concat([combined_df, big_df[i].T])
+# if os.path.exists(data_dir + filename):
+#     combined_df = pd.read_csv(data_dir + filename,
+#                                 header=[0, 1], index_col=[0],
+#                                 skipinitialspace=True)
+#     for i in range(len(big_df)):
+#         combined_df = pd.concat([combined_df, big_df[i].T])
+# else:
+#     combined_df = big_df[0].T
+#     for i in range(1, len(big_df)):
+#         combined_df = pd.concat([combined_df, big_df[i].T])
 
-    combined_df.to_csv(data_dir + filename)
+# combined_df.to_csv(data_dir + filename)
