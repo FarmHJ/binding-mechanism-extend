@@ -60,30 +60,47 @@ for protocol_count, protocol in enumerate(protocol_list):
             if not QC_constants[0]:
                 removed_cells[protocol][drug].append(cell)
 
-print(removed_cells)
-print(removed_cells.keys())
-print(removed_cells.items())
-print('##########################')
 total_cellcount = []
 subfigure_rows = []
+fig_each_row = []
+max_fig_per_row = 5
+testing_cell_count = {
+    'CIPA': 0,
+    'Pharm': 15
+}
 for prot in removed_cells.keys():
-    cell_count = 0
-    for drug in removed_cells[prot].keys():
-        cell_count += len(removed_cells[prot][drug])
+    # cell_count = 0
+    # for drug in removed_cells[prot].keys():
+    #     cell_count += len(removed_cells[prot][drug])
+    cell_count = testing_cell_count[prot]
     total_cellcount.append(cell_count)
-    subfigure_rows.append(np.ceil(cell_count / 5))
+    subfigure_rows.append(np.ceil(cell_count / max_fig_per_row))
+    fig_num = [max_fig_per_row] * int(np.ceil(cell_count / max_fig_per_row) - 1) \
+        + [max_fig_per_row if cell_count % max_fig_per_row == 0 else
+           cell_count % max_fig_per_row]
+    fig_each_row.append(fig_num)
 print(total_cellcount)
 print(subfigure_rows)
-# gridspec = (len(protocol_list), max_cell_per_conc)
-# fig = modelling.figures.FigureStructure(
-#     figsize=(2 * max_cell_per_conc, 2 * len(unique_drug_concs)),
-#     gridspec=gridspec, hspace=0.2, wspace=0.25,
-#     height_ratios=[1] * len(unique_drug_concs), plot_in_subgrid=True)
+print(fig_each_row)
+
+gridspec = (len(protocol_list), 1)
+fig = modelling.figures.FigureStructure(
+    figsize=(2 * max_fig_per_row, 2 * sum(subfigure_rows)),
+    gridspec=gridspec, hspace=0.2, wspace=0.25,
+    height_ratios=subfigure_rows, plot_in_subgrid=True)
 
 # axs = [[fig.fig.add_subplot(fig.gs[i, j]) for j in
 #         range(cell_counts[unique_drug_concs[i]])] for i in
 #         range(len(unique_drug_concs))]
 
+for p in range(2):
+    subfigure_rows[p]
+    gs = fig.gs[p].subgridspec(int(subfigure_rows[p]), int(total_cellcount[p]))
+    axs = [[fig.fig.add_subplot(gs[i, j]) for j in range(int(total_cellcount[p]))]
+           for i in range(int(subfigure_rows[p]))]
+# for prot in removed_cells.keys():
+    
+#     for drug in removed_cells[prot].keys():
 
         # drug_concs_list = cell_list["drug_concentration"].values
         # unique_drug_concs = pd.unique(drug_concs_list)
@@ -205,3 +222,4 @@ print(subfigure_rows)
         # fig.savefig("../figures/experimental_data/" + filename)
 
 # print(removed_cells)
+fig.savefig("../../figures/experimental_data/testing.pdf")
