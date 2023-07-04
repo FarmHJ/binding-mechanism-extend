@@ -206,7 +206,7 @@ fig.text(0.5, 0.75, '(B)', fontsize=11)
 
 # Save figure
 # plt.subplots_adjust(hspace=0)
-plt.savefig(fig_dir + 'SA_3D.png', bbox_inches='tight', pad_inches=0.2)
+plt.savefig(fig_dir + 'SA_3D_tuned.png', bbox_inches='tight', pad_inches=0.2)
 
 # #
 # # Plot previous figures at different angles (for supplementary materials)
