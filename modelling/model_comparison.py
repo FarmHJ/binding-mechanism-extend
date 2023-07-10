@@ -202,6 +202,10 @@ class ModelComparison(object):
 
                 counter += 1
 
+        del log
+        del d2
+        del Vm_signal
+
         return APD_trapping, APD_conductance, drug_conc
 
     def compute_RMSE(self, APD_trapping, APD_conductance):
