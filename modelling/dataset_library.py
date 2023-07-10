@@ -12,11 +12,11 @@ class DatasetLibrary(object):
         super(DatasetLibrary, self).__init__()
 
         self._directory = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(
-                os.path.dirname(os.path.dirname(os.path.dirname(
-                    __file__)))))),
-            "home/scratch/220122_exp_data")
-            # os.path.dirname(os.path.dirname(__file__)), "exp_data")
+            # os.path.dirname(os.path.dirname(os.path.dirname(
+            #     os.path.dirname(os.path.dirname(os.path.dirname(
+            #         __file__)))))),
+            # "home/scratch/220122_exp_data")
+            os.path.dirname(os.path.dirname(__file__)), "exp_data")
 
         self.protocol_list = ["CIPA", "Pharm"]
         self.drug_list = ["cisapride", "dofetilide", "verapamil"]
@@ -110,7 +110,33 @@ class DatasetLibrary(object):
                 file_dir = os.path.join(filepath, filename)
                 data = pd.read_csv(file_dir, index_col=0)
 
+        if data.index[0] == "Well ID":
+            data = data.rename(index={"Well ID": "Parameter"})
+
         return data
+
+    def cell_detail(self, detail_list, cell):
+        """
+        Returns parameters of the experiment for a specific cell.
+        Including added compound name, its concentration,
+        capacitance, seal resistance and series resistance.
+        """
+        test = detail_list.loc[["Parameter", cell], :]
+        detail = test.T.reset_index().rename(columns={"index": "Sweep"})
+
+        for i in range(len(detail.index)):
+            sweep_string = detail.loc[i, "Sweep"]
+            if len(sweep_string) == 9:
+                detail.loc[i, "Sweep"] = int(sweep_string[-3:])
+            else:
+                detail.loc[i, "Sweep"] = int(sweep_string[-5:-2])
+
+        detail = detail.rename(columns={cell: "values",
+                                        "Parameter": cell})
+        detail = detail.pivot(index='Sweep', columns=cell,
+                              values='values')
+
+        return detail
 
 
 class ProtocolLibrary(object):
