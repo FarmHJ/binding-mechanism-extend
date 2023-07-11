@@ -180,6 +180,26 @@ class ModelDetails(object):
             'IKATP': 19,
         })
 
+        self.qNet_current_colours = dict({
+            'IKr': 0,
+            'IKs': 0,
+            'Ito': 0,
+            'IKb': 19,
+            'IK1': 0,
+            'INaK': 19,
+            'INa': 19,
+            'INaL': 0,
+            'ICaL': 0,
+            'INaCa': 19,
+            'INaB': 19,
+            'ICaB': 19,
+            'IClCa': 19,
+            'IClB': 19,
+            'ICaP': 19,
+            'IKACh': 19,
+            'IKATP': 19,
+        })
+
         self.current_names = {
             'IKr': 'IKr',
             'IKs': 'IKs',
@@ -213,6 +233,7 @@ class ModelDetails(object):
             },
             'ORd-CiPA': {
                 'AP_path': 'math_model/AP_model/ohara-cipa-2017.mmt',
+                'AP_SD_path': 'math_model/AP_model/ohara-cipa-2017.mmt',
                 'label': "O'Hara-CiPA (2017)"
             },
             'TTP': {
