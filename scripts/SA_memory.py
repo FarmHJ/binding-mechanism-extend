@@ -115,6 +115,8 @@ def param_evaluation(inputs):
         APD_trapping + APD_conductance + [RMSError] + [MAError],
         index=index)
 
+    del index
+
     return big_df
 
 
