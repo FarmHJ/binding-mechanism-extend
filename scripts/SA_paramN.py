@@ -28,10 +28,13 @@ current_model = modelling.Simulation(model, protocol=Milnes_protocol,
                                      current_head_key='ikr')
 
 # Load AP model and set up protocol
-if APmodel_name == 'Grandi':
-    AP_model_filepath = '../math_model/AP_model/Grd-2010-IKr-SD.mmt'
-elif APmodel_name == 'TTP':
-    AP_model_filepath = '../math_model/AP_model/TTP-2006-IKr-SD.mmt'
+# if APmodel_name == 'Grandi':
+#     AP_model_filepath = '../math_model/AP_model/Grd-2010-IKr-SD.mmt'
+# elif APmodel_name == 'TTP':
+#     AP_model_filepath = '../math_model/AP_model/TTP-2006-IKr-SD.mmt'
+model_details = modelling.ModelDetails()
+AP_model_filepath = '../' + model_details.file_names[
+    APmodel_name]['AP_SD_path']
 APmodel, _, x = myokit.load(AP_model_filepath)
 model_keys = modelling.ModelDetails().current_keys[APmodel_name]
 current_key = model_keys['IKr']
