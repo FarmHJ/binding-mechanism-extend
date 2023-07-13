@@ -93,7 +93,7 @@ def param_evaluation(inputs):
         MAError = float("Nan")
         print('simulation error')
 
-    # # Create dataframe to save results
+    # Create dataframe to save results
     conc_Hill_ind = ['conc_' + str(i) for i, _ in
                      enumerate(drug_conc_Hill)]
     conc_AP_ind = ['conc_' + str(i) for i, _ in enumerate(drug_conc_AP)]

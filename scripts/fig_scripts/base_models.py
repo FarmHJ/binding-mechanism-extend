@@ -2,6 +2,7 @@
 import matplotlib
 import myokit
 import myokit.lib.plots as mp
+import pandas as pd
 
 import modelling
 
@@ -29,7 +30,7 @@ model_list = ['ORd-CiPA', 'Grandi', 'TTP', 'Tomek-Cl']
 # model_list = ['Tomek', 'Tomek2']
 model_details = modelling.ModelDetails()
 current_list = model_details.current_list
-current_colours = model_details.current_colours
+current_colours = model_details.qNet_current_colours
 
 cmap = matplotlib.cm.get_cmap('tab20')
 plotting_pulse_time = 800
@@ -44,12 +45,20 @@ for num, APmodel_name in enumerate(model_list):
 
     # Load model
     model_filenames = model_details.file_names[APmodel_name]
-    APmodel = '../../' + model_filenames['AP_path']
+    APmodel = '../../' + model_filenames['AP_SD_path']
     model_title = model_filenames['label']
 
     APmodel, _, x = myokit.load(APmodel)
     AP_model = modelling.Simulation(APmodel, base_constant=None)
     AP_model.protocol = protocol
+
+    if APmodel_name != 'ORd-CiPA':
+        # Scale conductance value - method 1
+        scale_df = pd.read_csv('../../simulation_data/' + APmodel_name +
+                               '_conductance_scale.csv',
+                               index_col=[0], skipinitialspace=True)
+        conductance_scale = scale_df.loc['hERG_peak'].values[0]
+        AP_model.model.set_value('tune.ikr_rescale', conductance_scale)
 
     # Simulate AP
     log = AP_model.model_simulation(repeats, abs_tol=abs_tol, rel_tol=rel_tol)
@@ -81,4 +90,4 @@ fig.sharex(["Time (ms)"] * 2, [(0, plotting_pulse_time)] * 2)
 fig.sharey(["Relative contribution"] * 2, [(-1.02, 1.02)] * 2)
 
 # Save figures
-fig.savefig(fig_dir + 'base_APmodels.pdf')
+fig.savefig(fig_dir + 'base_APmodels_qNet.pdf')

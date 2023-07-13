@@ -199,8 +199,8 @@ for i in range(len(drug_conc)):
 pulse_time = 2000
 AP_model.protocol = myokit.pacing.blocktrain(pulse_time, 0.5)
 save_signal = 1
-qNet_current_list = [model_keys['ICaL'], current_key, model_keys['IKs'],
-                     model_keys['IK1'], model_keys['Ito']]
+qNet_current_list = [model_keys['ICaL'], model_keys['INaL'], current_key,
+                     model_keys['IKs'], model_keys['IK1'], model_keys['Ito']]
 control_log = AP_model.conductance_simulation(
     base_conductance, repeats, timestep=0.01, abs_tol=abs_tol,
     rel_tol=rel_tol)
