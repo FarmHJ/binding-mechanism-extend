@@ -24,6 +24,7 @@ removed_cells = {
     }
 }
 
+removed_cell_list = []
 for protocol_count, protocol in enumerate(protocol_list):
     for drug_count, drug in enumerate(drug_list):
         cell_list = dataset.exp_data_list(protocol, drug)
@@ -41,7 +42,6 @@ for protocol_count, protocol in enumerate(protocol_list):
             Rseries = [float(i) for i in
                        detail.loc[:, 'Series Resistance'].values]
             Cm = [float(i) for i in detail.loc[:, 'Capacitance'].values]
-            QC_constants = trace_qc.qc_general(Rseal, Cm, Rseries)
             # if not QC_constants[2]:
             # if all(QC_constants):
             #     removed_cells[protocol][drug].append(cell)
@@ -50,11 +50,33 @@ for protocol_count, protocol in enumerate(protocol_list):
             compound_change = []
             previous_compound = detail.loc[1, "Compound Name"]
             for sweep in range(total_pulses):
-                signal = data.iloc[:, sweep + 3]
                 compound = detail.loc[sweep + 1, "Compound Name"]
                 if compound != previous_compound:
                     previous_compound = compound
                     compound_change.append(sweep + 1)
+
+            exp_c_range = trace_qc.const_range(Rseal, Cm, Rseries)
+            if not exp_c_range[0]:
+                removed_cell = ['const_range.Rseal', protocol, drug, cell]
+                removed_cell_list.append(removed_cell)
+            if not exp_c_range[1]:
+                removed_cell = ['const_range.Cm', protocol, drug, cell]
+                removed_cell_list.append(removed_cell)
+            if not exp_c_range[2]:
+                removed_cell = ['const_range.Rseries', protocol, drug, cell]
+                removed_cell_list.append(removed_cell)
+
+            exp_c_stab = trace_qc.const_stable(Rseal, Cm, Rseries,
+                                               compound_change)
+            if not exp_c_stab[0]:
+                removed_cell = ['const_stab.Rseal', protocol, drug, cell]
+                removed_cell_list.append(removed_cell)
+            if not exp_c_stab[1]:
+                removed_cell = ['const_stab.Cm', protocol, drug, cell]
+                removed_cell_list.append(removed_cell)
+            if not exp_c_stab[2]:
+                removed_cell = ['const_stab.Rseries', protocol, drug, cell]
+                removed_cell_list.append(removed_cell)
 
             # QC to make sure the traces are stable at the end of the block
             signal_stable = []
@@ -71,11 +93,15 @@ for protocol_count, protocol in enumerate(protocol_list):
                 trace1 = chosen_trace[0] / 1e-9
                 trace2 = chosen_trace[1] / 1e-9
                 compound = detail.loc[sweep + 1 - 1, "Compound Name"]
-                QC_stable = trace_qc.qc_stable(trace1, trace2)
+                QC_stable = trace_qc.signal_stable(trace1, trace2)
                 signal_stable.append(QC_stable)
-            print(signal_stable)
-            if all(signal_stable) and all(QC_constants):
-                removed_cells[protocol][drug].append(cell)
+            if not all(signal_stable):
+                removed_cell = ['signal_stab', protocol, drug, cell]
+                removed_cell_list.append(removed_cell)
+
+removed_cell_df = pd.DataFrame(removed_cell_list,
+                               columns=['QC name', 'Protocol', 'Drug', 'Cell'])
+removed_cell_df.to_csv()
 
 fig_each_row = []
 for prot in removed_cells.keys():
