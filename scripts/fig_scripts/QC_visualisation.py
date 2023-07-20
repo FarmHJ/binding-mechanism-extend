@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 import modelling
@@ -23,6 +24,7 @@ removed_cells = {
     }
 }
 
+removed_cell_list = []
 for protocol_count, protocol in enumerate(protocol_list):
     for drug_count, drug in enumerate(drug_list):
         cell_list = dataset.exp_data_list(protocol, drug)
@@ -31,15 +33,75 @@ for protocol_count, protocol in enumerate(protocol_list):
 
         for cell in cell_list['cells'].values:
             detail = dataset.cell_detail(detail_list, cell)
+            cell_file_path = cell_list.loc[cell_list["cells"] == cell][
+                "file_path"].values[0]
+            data = dataset.exp_data_read(cell_file_path)
 
             # QC to choose data with experimental constants within threshold
             Rseal = [float(i) for i in detail.loc[:, 'Seal Resistance'].values]
             Rseries = [float(i) for i in
                        detail.loc[:, 'Series Resistance'].values]
             Cm = [float(i) for i in detail.loc[:, 'Capacitance'].values]
-            QC_constants = trace_qc.qc_general(Rseal, Cm, Rseries)
-            if not QC_constants[2]:
-                removed_cells[protocol][drug].append(cell)
+            # if not QC_constants[2]:
+            # if all(QC_constants):
+            #     removed_cells[protocol][drug].append(cell)
+
+            total_pulses = data.shape[1] - 4
+            compound_change = []
+            previous_compound = detail.loc[1, "Compound Name"]
+            for sweep in range(total_pulses):
+                compound = detail.loc[sweep + 1, "Compound Name"]
+                if compound != previous_compound:
+                    previous_compound = compound
+                    compound_change.append(sweep + 1)
+
+            exp_c_range = trace_qc.const_range(Rseal, Cm, Rseries)
+            if not exp_c_range[0]:
+                removed_cell = ['const_range.Rseal', protocol, drug, cell]
+                removed_cell_list.append(removed_cell)
+            if not exp_c_range[1]:
+                removed_cell = ['const_range.Cm', protocol, drug, cell]
+                removed_cell_list.append(removed_cell)
+            if not exp_c_range[2]:
+                removed_cell = ['const_range.Rseries', protocol, drug, cell]
+                removed_cell_list.append(removed_cell)
+
+            exp_c_stab = trace_qc.const_stable(Rseal, Cm, Rseries,
+                                               compound_change)
+            if not exp_c_stab[0]:
+                removed_cell = ['const_stab.Rseal', protocol, drug, cell]
+                removed_cell_list.append(removed_cell)
+            if not exp_c_stab[1]:
+                removed_cell = ['const_stab.Cm', protocol, drug, cell]
+                removed_cell_list.append(removed_cell)
+            if not exp_c_stab[2]:
+                removed_cell = ['const_stab.Rseries', protocol, drug, cell]
+                removed_cell_list.append(removed_cell)
+
+            # QC to make sure the traces are stable at the end of the block
+            signal_stable = []
+            for sweep in compound_change:
+                valid_trace_ind = 1
+                chosen_trace = []
+                nan_trace = 2
+                while nan_trace > 0:
+                    temp_trace = data.iloc[:, sweep + 3 - valid_trace_ind]
+                    if not any(np.isnan(np.array(temp_trace))):
+                        chosen_trace.append(temp_trace)
+                        nan_trace -= 1
+                    valid_trace_ind += 1
+                trace1 = chosen_trace[0] / 1e-9
+                trace2 = chosen_trace[1] / 1e-9
+                compound = detail.loc[sweep + 1 - 1, "Compound Name"]
+                QC_stable = trace_qc.signal_stable(trace1, trace2)
+                signal_stable.append(QC_stable)
+            if not all(signal_stable):
+                removed_cell = ['signal_stab', protocol, drug, cell]
+                removed_cell_list.append(removed_cell)
+
+removed_cell_df = pd.DataFrame(removed_cell_list,
+                               columns=['QC name', 'Protocol', 'Drug', 'Cell'])
+removed_cell_df.to_csv()
 
 fig_each_row = []
 for prot in removed_cells.keys():
@@ -48,6 +110,7 @@ for prot in removed_cells.keys():
         if cell_count > 0:
             fig_each_row.append(cell_count)
 
+print('ready for figure')
 gridspec = (len(fig_each_row), max(fig_each_row))
 fig = modelling.figures.FigureStructure(
     figsize=(2 * max(fig_each_row), 2 * len(fig_each_row)),
@@ -161,7 +224,7 @@ legend_axs = fig.fig.add_subplot(
 legend_axs.xaxis.set_visible(False)
 legend_axs.yaxis.set_visible(False)
 legend_axs.set_frame_on(False)
-unique_label = fig.legend_without_duplicate_labels(axs[free_panel_row][0])
+unique_label = fig.legend_without_duplicate_labels(axs[0][0])
 legend_axs.legend(*zip(*unique_label), handlelength=1, loc='upper left')
 
 min_thres, max_thres = trace_qc.Rseries_thres
@@ -174,8 +237,9 @@ max_thres_str = "{:.0f}".format(max_thres / 1e6)
 # max_base, max_power = max_thres_str.split("e")
 # fig.fig.suptitle('membrane capacitance: [' + str(int(min_thres)) + ', ' +
 #                  str(int(max_thres)) + '] pF')
-fig.fig.suptitle('series resistance: [' + min_thres_str + ', ' +
-                 max_thres_str + '] ' + r"$M\Omega$")
+# fig.fig.suptitle('series resistance: [' + min_thres_str + ', ' +
+#                  max_thres_str + '] ' + r"$M\Omega$")
+fig.fig.suptitle('chosen_cells')
 
-filename = "series_resistance.pdf"
+filename = "chosen_cells.pdf"
 fig.savefig("../../figures/experimental_data/" + filename)

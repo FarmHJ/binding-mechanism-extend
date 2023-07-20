@@ -12,11 +12,11 @@ class DatasetLibrary(object):
         super(DatasetLibrary, self).__init__()
 
         self._directory = os.path.join(
-            # os.path.dirname(os.path.dirname(os.path.dirname(
-            #     os.path.dirname(os.path.dirname(os.path.dirname(
-            #         __file__)))))),
-            # "home/scratch/220122_exp_data")
-            os.path.dirname(os.path.dirname(__file__)), "exp_data")
+            os.path.dirname(os.path.dirname(os.path.dirname(
+                os.path.dirname(os.path.dirname(os.path.dirname(
+                    __file__)))))),
+            "home/scratch/220122_exp_data")
+            # os.path.dirname(os.path.dirname(__file__)), "exp_data")
 
         self.protocol_list = ["CIPA", "Pharm"]
         self.drug_list = ["cisapride", "dofetilide", "verapamil"]
