@@ -6,7 +6,7 @@ class ModelDetails(object):
     def __init__(self):
         super(ModelDetails, self).__init__()
 
-        self.APmodels = ['Grandi', 'TTP', 'ORd-CiPA', 'Grandi-SD']
+        self.APmodels = ['Ord-CiPA', 'Grandi', 'TTP', 'Tomek-Cl', 'Lei']
         self.current_list = ['IKr', 'IKs', 'Ito', 'IKb', 'IK1', 'INaK', 'INa',
                              'INaL', 'ICaL', 'INaCa', 'INaB', 'ICaB', 'IClCa',
                              'IClB', 'ICaP', 'IKACh', 'IKATP']
