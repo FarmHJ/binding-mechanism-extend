@@ -149,7 +149,9 @@ drug_space_df = pd.read_csv(sample_filepath,
                             skipinitialspace=True)
 
 # drug_list = [drug_list[-2]]
-# print(drug_list)
+drug_list = [drug_list[-1]]
+print(drug_list)
+
 for drug in drug_list:
     print(drug)
     # Get parameter values of each synthetic drug
@@ -171,7 +173,8 @@ for drug in drug_list:
     else:
         ran_values = []
 
-    param_fullrange = [i for i in param_fullrange if i not in ran_values]
+    param_range = [i for i in param_fullrange if i not in ran_values]
+    print(param_range)
 
     # Evaluate the RMSD and MD between APD90s of a synthetic drug with
     # changing Hill coefficient from the ORd-SD model and the ORd-CS model
@@ -179,11 +182,11 @@ for drug in drug_list:
     evaluator = pints.ParallelEvaluator(param_evaluation,
                                         n_workers=n_workers,
                                         args=[param_values])
-    for i in range(int(np.ceil(len(param_fullrange) / n_workers))):
+    for i in range(int(np.ceil(len(param_range) / n_workers))):
         print('Running samples ', n_workers * i, 'to',
               n_workers * (i + 1) - 1)
         big_df = evaluator.evaluate(
-            param_fullrange[i * n_workers: (i + 1) * n_workers])
+            param_range[i * n_workers: (i + 1) * n_workers])
 
         if os.path.exists(data_filepath + filename):
             combined_df = pd.read_csv(data_filepath + filename,
