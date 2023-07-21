@@ -47,7 +47,7 @@ Error_drug = np.array(RMSError_drug) * np.array(MError_drug) / \
 
 # Read simulated data of virtual drugs in the parameter space
 data_dir = root_dir + 'parameter_space_exploration/SA_space/' + \
-    APmodel_name + '_untuned/'
+    APmodel_name + '/'
 file_prefix = 'SA_allparam'
 result_files = [data_dir + f for f in os.listdir(data_dir)
                 if f.startswith(file_prefix)]

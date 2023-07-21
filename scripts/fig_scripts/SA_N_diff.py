@@ -21,7 +21,6 @@ drug_df = pd.read_csv(data_dir + filename,
                       header=[0, 1], index_col=[0],
                       skipinitialspace=True)
 drug_list = drug_df[('drug', 'drug')].values
-drug_list = drug_list[:-1]
 
 # Define directories and variables
 data_dir = '../../simulation_data/parameter_SA/APD90diff_N/' + \
@@ -54,7 +53,6 @@ for drug in drug_list:
     # Calculate the summary statistics of the changes in the RMSD
     delta_RMSD = delta_RMSD[~np.isnan(delta_RMSD)]
     delta_RMSD_boxplot.append(delta_RMSD)
-    print(delta_RMSD_boxplot)
     delta_RMSD_stats = [min(delta_RMSD), max(delta_RMSD), np.mean(delta_RMSD)]
 
     delta_RMSD_ratio_stats = [i / drug_RMSD for i in delta_RMSD_stats]
