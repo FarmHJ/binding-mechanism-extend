@@ -92,7 +92,8 @@ def param_evaluation(param, param_values):
         APD_trapping, APD_conductance, drug_conc_AP = \
             ComparisonController.APD_sim(
                 AP_model, Hill_curve_coefs, drug_conc=drug_conc_AP,
-                EAD=True)
+                IKr_tuning_factor=scaling_factor, EAD=True,
+                abs_tol=1e-8, rel_tol=1e-9)
 
         # Calculate RMSD and MD of simulated APD90 of the two models
         RMSError = ComparisonController.compute_RMSE(APD_trapping,
@@ -129,6 +130,14 @@ def param_evaluation(param, param_values):
     return big_df
 
 
+scaling_df_filepath = '../simulation_data/' + APmodel_name + \
+    '_conductance_scale.csv'
+scaling_df = pd.read_csv(scaling_df_filepath, index_col=[0])
+if APmodel_name == 'Lei':
+    scaling_factor = scaling_df.loc['AP_duration']['conductance scale']
+else:
+    scaling_factor = scaling_df.loc['hERG_peak']['conductance scale']
+
 interest_param_list = []
 for i in drug_list:
     interest_param_list.append(
@@ -149,8 +158,6 @@ drug_space_df = pd.read_csv(sample_filepath,
                             skipinitialspace=True)
 
 # drug_list = [drug_list[-2]]
-drug_list = [drug_list[-1]]
-print(drug_list)
 
 for drug in drug_list:
     print(drug)
