@@ -92,8 +92,8 @@ def param_evaluation(param, param_values):
         APD_trapping, APD_conductance, drug_conc_AP = \
             ComparisonController.APD_sim(
                 AP_model, Hill_curve_coefs, drug_conc=drug_conc_AP,
-                IKr_tuning_factor=scaling_factor, EAD=True,
-                abs_tol=1e-8, rel_tol=1e-9)
+                IKr_tuning_factor=scaling_factor, EAD=True,)
+                # abs_tol=1e-8, rel_tol=1e-9)
 
         # Calculate RMSD and MD of simulated APD90 of the two models
         RMSError = ComparisonController.compute_RMSE(APD_trapping,
