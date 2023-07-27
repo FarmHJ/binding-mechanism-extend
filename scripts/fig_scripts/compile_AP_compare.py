@@ -1,10 +1,8 @@
 # Compares the IKr, AP and APD90 of the SD model and the CS model
-import matplotlib.pyplot as plt
 import myokit
 import numpy as np
 import os
 import pandas as pd
-import sys
 
 import modelling
 
