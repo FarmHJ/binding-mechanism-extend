@@ -46,6 +46,7 @@ for drug in drug_list:
     # Calculate the ratio of the difference in RMSD
     drug_RMSD = drug_df.loc[drug_df[('drug', 'drug')] == drug][
         ('RMSE', 'RMSE')].values
+    print(drug_RMSD)
     delta_RMSD = np.abs(RMSD_arr - drug_RMSD)
     delta_RMSD_ratio = delta_RMSD / drug_RMSD
     df[("RMSD", "deltaRMSD_ratio")] = delta_RMSD_ratio
@@ -104,7 +105,7 @@ fig.text(0.5, 0.9, '(B)', fontsize=11)
 fig_dir = '../../figures/parameter_SA/' + APmodel_name + '/'
 if not os.path.isdir(fig_dir):
     os.makedirs(fig_dir)
-plt.savefig(fig_dir + 'RMSD_N.pdf', bbox_inches='tight')
+plt.savefig(fig_dir + 'RMSD_N_test.pdf', bbox_inches='tight')
 
 # Show mean and standard deviation of the histogram
 overall_stats = pd.DataFrame({'mean': np.mean(arr), 'std': np.std(arr),
