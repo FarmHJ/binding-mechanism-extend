@@ -32,7 +32,7 @@ for APmodel_name in model_name_list:
     # small
     data_dir = root_dir + 'parameter_SA/APD90diff_N/' + APmodel_name + '/'
     overall_stats = pd.read_csv(data_dir + 'overall_stats.csv', index_col=[0])
-    error_range = overall_stats['max'].values[0] * 1.1
+    error_range = overall_stats['max'].values[0] * 1.2
 
     drug_similar_count = np.sum(RMSError_drug < error_range)
     drug_similar_count_arr.append(drug_similar_count)

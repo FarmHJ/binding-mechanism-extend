@@ -66,7 +66,8 @@ for file in result_files:
     df = pd.read_csv(file,
                      header=[0, 1], index_col=[0],
                      skipinitialspace=True)
-    chosen_df = df.loc[df['RMSE']['RMSE'] < error_range]
+    # chosen_df = df.loc[df['RMSE']['RMSE'] < error_range]
+    chosen_df = df.loc[df['ME']['ME'] > 0]
 
     if first_iter:
         combined_df = df
@@ -92,6 +93,7 @@ cmin = min(min(Error_drug), min(Error_space))
 cmax = max(max(Error_drug), max(Error_space))
 # cmin = min(Error_space)
 # cmax = max(Error_space)
+print('min and max:', cmin, cmax)
 
 Vhalf_range = [Vhalf_range[i] for i in range(len(Vhalf_range))
                if i not in nan_ind]
@@ -106,6 +108,8 @@ Vhalf_chosen = combined_chosen_df['param_values']['Vhalf'].values
 Kmax_chosen = combined_chosen_df['param_values']['Kmax'].values
 Ku_chosen = combined_chosen_df['param_values']['Ku'].values
 
+print(type(Vhalf_chosen))
+print(len(Vhalf_chosen))
 # # Read simulated data of virtual drugs in the parameter space around the
 # # surface where the RMSD value is small
 # data_dir = data_dir + '../SA_curve/'
@@ -206,7 +210,7 @@ fig.text(0.5, 0.75, '(B)', fontsize=11)
 
 # Save figure
 # plt.subplots_adjust(hspace=0)
-plt.savefig(fig_dir + 'SA_3D_tuned.png', bbox_inches='tight', pad_inches=0.2)
+plt.savefig(fig_dir + 'SA_3D_positive.png', bbox_inches='tight', pad_inches=0.2)
 
 # #
 # # Plot previous figures at different angles (for supplementary materials)
