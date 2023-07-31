@@ -30,7 +30,7 @@ model_list = ['ORd-CiPA', 'Grandi', 'TTP', 'Tomek-Cl']
 # model_list = ['Tomek', 'Tomek2']
 model_details = modelling.ModelDetails()
 current_list = model_details.current_list
-current_colours = model_details.qNet_current_colours
+current_colours = model_details.current_colours
 
 cmap = matplotlib.cm.get_cmap('tab20')
 plotting_pulse_time = 800
@@ -90,4 +90,4 @@ fig.sharex(["Time (ms)"] * 2, [(0, plotting_pulse_time)] * 2)
 fig.sharey(["Relative contribution"] * 2, [(-1.02, 1.02)] * 2)
 
 # Save figures
-fig.savefig(fig_dir + 'base_APmodels_qNet.pdf')
+fig.savefig(fig_dir + 'base_APmodels.pdf')
