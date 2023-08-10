@@ -235,7 +235,6 @@ class ModelDetails(object):
                 'IKr_path': 'math_model/current_model/ohara-cipa-2017-IKr.mmt',
                 'AP_path': 'math_model/AP_model/ohara-cipa-2017.mmt',
                 'AP_SD_path': 'math_model/AP_model/ohara-cipa-2017.mmt',
-                # 'label': "O'Hara-CiPA (2017)"
                 'label': "CiPAORdv1.0 (2017)"
             },
             'TTP': {
@@ -251,7 +250,7 @@ class ModelDetails(object):
             'Tomek-Cl': {
                 'AP_path': 'math_model/AP_model/Tomek-Cl-2020.mmt',
                 'AP_SD_path': 'math_model/AP_model/Tomek-Cl-2020-IKr-SD.mmt',
-                'label': 'Tomek (2020)'
+                'label': 'Tomek (2019)'
             },
             'Lei': {
                 'IKr_path': 'math_model/current_model/lei2019.mmt',
