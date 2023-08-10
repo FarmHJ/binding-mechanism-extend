@@ -186,6 +186,26 @@ class Simulation(object):
 
         return d2
 
+    def drug_APclamp(self, times, voltages, t_max, repeats,
+                     abs_tol=1e-6, rel_tol=1e-4):
+
+        self.sim = myokit.Simulation(self.model)
+        self.sim.set_fixed_form_protocol(times, voltages)
+        self.sim.reset()
+        # self.sim.set_state(self.initial_state)
+
+        self.sim.set_tolerance(abs_tol=abs_tol, rel_tol=rel_tol)
+
+        for pace in range(repeats):
+            self.sim.run(t_max, log=myokit.LOG_NONE)
+            self.sim.set_time(0)
+        log = self.sim.run(t_max)
+        d2 = log.npview()
+
+        self.sim.reset()
+
+        return d2
+
     def extract_peak(self, signal_log, current_name):
         peaks = []
         pulses = len(signal_log.keys_like(current_name))

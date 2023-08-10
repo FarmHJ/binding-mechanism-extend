@@ -232,9 +232,11 @@ class ModelDetails(object):
                 'label': 'Grandi (2010)'
             },
             'ORd-CiPA': {
+                'IKr_path': 'math_model/current_model/ohara-cipa-2017-IKr.mmt',
                 'AP_path': 'math_model/AP_model/ohara-cipa-2017.mmt',
                 'AP_SD_path': 'math_model/AP_model/ohara-cipa-2017.mmt',
-                'label': "O'Hara-CiPA (2017)"
+                # 'label': "O'Hara-CiPA (2017)"
+                'label': "CiPAORdv1.0 (2017)"
             },
             'TTP': {
                 'AP_path': 'math_model/AP_model/TTP-2006.mmt',
