@@ -43,11 +43,19 @@ color_seq = ['#7e7e7e', '#986464', '#989864', '#986496', '#988364',
 
 panel_cipa = axs[0]
 panel_lei = axs[1]
+
+cipa_states = ['IC1', 'IC2', 'C1', 'C2', 'O', 'IO']
+lei_states = ['y1', 'y2', 'y3', 'y4']
+
 # Plot state occupancies of the hERG channel
-plot.state_occupancy_plot(panel_cipa[1][0], log_all[0],
-                            APmodel, legend=False, color_seq=color_seq)
-plot.state_occupancy_plot(panel_lei[1][0], log_all[1],
-                            APmodel, legend=False, color_seq=color_seq)
+panel_cipa[1][0].stackplot(cipa_log.time(),
+                           *[cipa_log['ikr.' + s] for s in cipa_states],
+                           labels=['ikr.' + s for s in cipa_states],
+                           colors=color_seq[:6], zorder=-10)
+panel_lei[1][0].stackplot(lei_log.time(),
+                          *[lei_log['ikr.' + s] for s in lei_states],
+                          labels=['ikr.' + s for s in lei_states],
+                          colors=color_seq[:4], zorder=-10)
 
 # for i in range(len(log_all)):
 #     for j in range(len(log_all)):
