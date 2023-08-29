@@ -68,7 +68,7 @@ for num, APmodel_name in enumerate(model_list):
     # Plot AP and hERG
     panel = axs[num]
     panel[0][0].plot(base_log.time(), base_log[Vm_key], 'k--',
-                     label='base model')
+                     label='base AP model')
     panel[1][0].plot(base_log.time(), base_log[IKr_key], 'k--')
 
     # Load Grandi-SD model
@@ -76,6 +76,15 @@ for num, APmodel_name in enumerate(model_list):
     APmodel, _, x = myokit.load(APmodel)
     AP_model = modelling.Simulation(APmodel, current_head_key=current_head_key)
     AP_model.protocol = protocol
+
+    log = AP_model.model_simulation(repeats,
+                                    conductance_name='tune.ikr_rescale',
+                                    conductance_value=1,
+                                    abs_tol=abs_tol, rel_tol=rel_tol)
+
+    plot.add_single(panel[0][0], log, Vm_key, color='k',
+                    label=r'$I_\mathrm{Kr}$ replaced')
+    plot.add_single(panel[1][0], log, IKr_key, color='k')
 
     # Load IKr scale
     scaling_df_filepath = '../../simulation_data/' + APmodel_name + \
@@ -90,8 +99,9 @@ for num, APmodel_name in enumerate(model_list):
                                     conductance_value=scaling_factor,
                                     abs_tol=abs_tol, rel_tol=rel_tol)
 
-    plot.add_single(panel[0][0], log, Vm_key, label='modified model')
-    plot.add_single(panel[1][0], log, IKr_key)
+    plot.add_single(panel[0][0], log, Vm_key, color='r',
+                    label=r'$I_\mathrm{Kr}$ replaced $+  I_\mathrm{Kr}$ tuned')
+    plot.add_single(panel[1][0], log, IKr_key, color='r')
     panel[0][0].set_title(model_filenames['label'])
 
     AP_y_bottom, AP_y_top = panel[0][0].get_ylim()
@@ -122,4 +132,4 @@ for i in range(4):
         axs[i][0][0].set_yticklabels([])
         axs[i][1][0].set_yticklabels([])
 
-fig.savefig(fig_dir + 'AP_tune_IKr.svg')
+fig.savefig(fig_dir + 'AP_tune_IKr_test.svg')
