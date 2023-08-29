@@ -39,12 +39,16 @@ p9 = 0.1524 [uS]
     oxmeta: membrane_rapid_delayed_rectifier_potassium_current_conductance
 dot(y1) = -k12 * y1 + k21 * y2 + k41 * y4 - k14 * y1
     in [1]
+# y1 = CI
 dot(y2) = -k14 * y2 + k41 * y3 + k12 * y1 - k21 * y2
     in [1]
+# y2 = I
 dot(y3) = -k21 * y3 + k12 * y4 + k14 * y2 - k41 * y3
     in [1]
+# y3 = O
 y4 = 1 - y1 - y2 - y3
     in [1]
+# y4 = C
 
 [engine]
 time = 0 bind time
