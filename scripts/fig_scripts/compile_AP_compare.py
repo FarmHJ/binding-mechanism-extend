@@ -19,6 +19,7 @@ rel_tol = 1e-8
 
 model_details = modelling.ModelDetails()
 model_list = ['ORd-CiPA', 'Grandi', 'TTP', 'Tomek-Cl', 'Lei']
+model_label = ['ORd-Li', 'Grandi-Li', 'ten Tusscher-Li', 'Tomek-Li', 'ORd-Lei']
 drug_list = ['dofetilide', 'verapamil']
 tuning_method = ['hERG_peak'] * 4 + ['AP_duration']
 
@@ -143,7 +144,7 @@ fig.axs[0][0].set_title(r'APD$_{90}$')
 fig.axs[0][1].set_title('qNet')
 for i in range(2):
     fig.axs[1][i].set_ylabel('RMSD')
-    fig.axs[1][i].set_xticks(x + bar_width / 2, model_list)
+    fig.axs[1][i].set_xticks(x + bar_width / 2, model_label)
 fig.axs[0][0].legend(handlelength=1)
 
 # Add panel letter
