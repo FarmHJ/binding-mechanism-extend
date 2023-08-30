@@ -1,3 +1,7 @@
+# Import version info
+from .version_info import VERSION_INT, VERSION  # noqa
+
+# Import main classes
 from .simulation import Simulation
 
 from . import figures
