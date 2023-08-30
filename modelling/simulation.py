@@ -77,7 +77,7 @@ class Simulation(object):
         t_max = self.protocol.characteristic_time()
 
         concentration = self.model.get(self.current_head_key + '.D')
-        concentration.set_state_value(drug_conc)
+        concentration.set_initial_value(drug_conc)
 
         self.sim = myokit.Simulation(self.model, self.protocol)
         self.sim.reset()
@@ -154,7 +154,7 @@ class Simulation(object):
         t_max = self.protocol.characteristic_time()
 
         concentration = self.model.get(self.current_head_key + '.D')
-        concentration.set_state_value(drug_conc)
+        concentration.set_initial_value(drug_conc)
 
         self.sim = myokit.Simulation(self.model, self.protocol)
         self.sim.reset()
