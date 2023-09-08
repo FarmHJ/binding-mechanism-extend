@@ -61,7 +61,7 @@ Hill_coef = Hill_coef.values.tolist()[0][1:-1]
 # Set AP model
 model_details = modelling.ModelDetails()
 model_filename = model_details.file_names[APmodel_name]
-APmodel = '../' + model_filename['AP_SD_path']
+APmodel = '../' + model_filename['AP_IKr_path']
 
 APmodel, _, x = myokit.load(APmodel)
 model_keys = model_details.current_keys[APmodel_name]

@@ -11,7 +11,7 @@ import modelling
 
 
 # Define drug and protocol
-drug = 'dofetilide'
+drug = 'verapamil'
 protocol_name = 'Milnes'
 pulse_time = 25e3
 protocol = modelling.ProtocolLibrary().Milnes(pulse_time)
@@ -22,7 +22,7 @@ parameter_dir = '../../Lei-SD-fits/Milnes-data-fits/'
 # for fname in glob.glob(parameter_dir +
 #                       'Drug-*-lei-model12-protocol-Milnes-fit-RMSE.txt'):
 drug_params = np.loadtxt(parameter_dir +
-                         'Drug-dofetilide-lei-model12-protocol-Milnes-fit-RMSE.txt',
+                         'Drug-verapamil-lei-model12-protocol-Milnes-fit-RMSE.txt',
                          unpack=True)
 drug_params = np.array(drug_params)
 param_df = pd.DataFrame(drug_params, index=['Kmax', 'Ku', 'EC50', 'N', 'Vhalf']).T
@@ -35,7 +35,7 @@ drug_conc = drug_conc_lib.drug_concentrations[drug]['coarse']
 repeats = 1000
 
 # Define directories to save simulated data
-data_dir = '../simulation_data/kinetics_comparison/ORd-Lei/' + \
+data_dir = '../simulation_data/kinetics_comparison/ORd-Lei/AP_duration_match/' + \
     drug + '/'
 if not os.path.isdir(data_dir):
     os.makedirs(data_dir)
@@ -45,7 +45,7 @@ result_filename = 'Hill_curve_Lei.txt'
 model = '../math_model/current_model/lei2019_SD.mmt'
 model, _, x = myokit.load(model)
 
-model_keys = modelling.SDModelDetails().current_keys['Lei']
+model_keys = modelling.ModelDetails().current_keys['Lei']
 current_key = model_keys['IKr']
 current_head_key = current_key[:current_key.index('.')]
 
@@ -310,14 +310,64 @@ for i in range(len(drug_conc)):
 
     print('done concentration: ' + str(drug_conc[i]))
 
+# Compute qNet
+pulse_time = 2000
+AP_model.protocol = myokit.pacing.blocktrain(pulse_time, 0.5)
+save_signal = 1
+qNet_current_list = [model_keys['ICaL'], model_keys['INaL'], current_key,
+                     model_keys['IKs'], model_keys['IK1'], model_keys['Ito']]
+qNet_current_list = [i for i in qNet_current_list if i is not None]
+control_log = AP_model.conductance_simulation(
+    base_conductance, repeats, timestep=0.01, abs_tol=abs_tol,
+    rel_tol=rel_tol)
+
+qNet_SD_arr = []
+qNet_CS_arr = []
+print('Computing qNet...')
+for i in range(len(drug_conc)):
+    print('simulating concentration: ' + str(drug_conc[i]))
+
+    # Run simulation for the ORd-SD model till steady state
+    log = AP_model.drug_simulation(
+        drug, drug_conc[i], repeats + save_signal, timestep=0.01,
+        log_var=log_var[:2] + qNet_current_list, abs_tol=abs_tol,
+        rel_tol=rel_tol, set_state=control_log)
+
+    inet = 0
+    for c in qNet_current_list:
+        inet += log[c]  # pA/pF
+
+    qNet = np.trapz(inet, x=log.time()) * 1e-3  # pA/pF*s
+    qNet_SD_arr.append(qNet)
+
+    # Run simulation for the ORd-CS model till steady state
+    reduction_scale = Hill_model.simulate(estimates[:2], drug_conc[i])
+    d2 = AP_model.conductance_simulation(
+        base_conductance * reduction_scale, repeats + save_signal,
+        timestep=0.01, log_var=log_var[:2] + qNet_current_list,
+        abs_tol=abs_tol, rel_tol=rel_tol, set_state=control_log)
+
+    inet = 0
+    for c in qNet_current_list:
+        inet += d2[c]  # pA/pF
+
+    qNet = np.trapz(inet, x=d2.time()) * 1e-3  # pA/pF*s
+    qNet_CS_arr.append(qNet)
+
+    print('done concentration: ' + str(drug_conc[i]))
+
 # Compute APD90 with AP behaviour in alternating cycles
-APD_trapping = [max(i) for i in APD_trapping]
-APD_conductance = [max(i) for i in APD_conductance]
+APD_trapping = [float('nan') if np.isnan(i).any() else max(i)
+                for i in APD_trapping]
+APD_conductance = [float('nan') if np.isnan(i).any() else max(i)
+                   for i in APD_conductance]
 
 # Save APD90 data
 APD_trapping_df = pd.DataFrame(np.array(APD_trapping), columns=['APD'])
 APD_trapping_df['drug concentration'] = drug_conc
+APD_trapping_df['qNet'] = qNet_SD_arr
 APD_trapping_df.to_csv(data_dir + 'SD_APD_fine.csv')
 APD_conductance_df = pd.DataFrame(np.array(APD_conductance), columns=['APD'])
 APD_conductance_df['drug concentration'] = drug_conc
+APD_conductance_df['qNet'] = qNet_CS_arr
 APD_conductance_df.to_csv(data_dir + 'CS_APD_fine.csv')

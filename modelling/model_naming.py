@@ -223,39 +223,39 @@ class ModelDetails(object):
         self.file_names = {
             'ORd': {
                 'AP_path': 'math_model/AP_model/ORd-2011.mmt',
-                'AP_SD_path': 'math_model/AP_model/ohara-cipa-2017.mmt',
+                'AP_IKr_path': 'math_model/AP_model/ohara-cipa-2017.mmt',
                 'label': 'ORd (2011)'
             },
             'Grandi': {
                 'AP_path': 'math_model/AP_model/Grd-2010.mmt',
-                'AP_SD_path': 'math_model/AP_model/Grd-2010-IKr-SD.mmt',
+                'AP_IKr_path': 'math_model/AP_model/Grd-2010-IKr-SD.mmt',
                 'label': 'Grandi (2010)'
             },
             'ORd-CiPA': {
                 'IKr_path': 'math_model/current_model/ohara-cipa-2017-IKr.mmt',
                 'AP_path': 'math_model/AP_model/ohara-cipa-2017.mmt',
-                'AP_SD_path': 'math_model/AP_model/ohara-cipa-2017.mmt',
+                'AP_IKr_path': 'math_model/AP_model/ohara-cipa-2017.mmt',
                 'label': "CiPAORdv1.0 (2017)"
             },
             'TTP': {
                 'AP_path': 'math_model/AP_model/TTP-2006.mmt',
-                'AP_SD_path': 'math_model/AP_model/TTP-2006-IKr-SD.mmt',
+                'AP_IKr_path': 'math_model/AP_model/TTP-2006-IKr-SD.mmt',
                 'label': 'ten Tusscher (2006)'
             },
             'Tomek': {
                 'AP_path': 'math_model/AP_model/Tomek-2019.mmt',
-                'AP_SD_path': 'math_model/AP_model/Tomek-2019-IKr-SD.mmt',
+                'AP_IKr_path': 'math_model/AP_model/Tomek-2019-IKr-SD.mmt',
                 'label': 'Tomek (2019)'
             },
             'Tomek-Cl': {
                 'AP_path': 'math_model/AP_model/Tomek-Cl-2020.mmt',
-                'AP_SD_path': 'math_model/AP_model/Tomek-Cl-2020-IKr-SD.mmt',
+                'AP_IKr_path': 'math_model/AP_model/Tomek-Cl-2020-IKr-SD.mmt',
                 'label': 'Tomek (2019)'
             },
             'Lei': {
                 'IKr_path': 'math_model/current_model/lei2019.mmt',
                 'AP_path': 'math_model/AP_model/ohara-cipa-2017.mmt',
-                'AP_SD_path': 'math_model/AP_model/ORd-CiPA-Lei-SD.mmt',
+                'AP_IKr_path': 'math_model/AP_model/ORd-CiPA-Lei-SD.mmt',
                 'label': 'Lei (2019)'
             },
         }
