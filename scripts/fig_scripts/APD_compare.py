@@ -112,9 +112,12 @@ AP_trapping_plot = [e for i, e in enumerate(trapping_AP_log)
 AP_conductance_plot = [e for i, e in enumerate(conductance_AP_log)
                        if i not in chosen_conc_ind]
 
-model_keys = modelling.ModelDetails().current_keys[APmodel_name]
-current_key = model_keys['IKr']
-Vm_key = model_keys['Vm']
+# model_keys = modelling.ModelDetails().current_keys[APmodel_name]
+# current_key = model_keys['IKr']
+# Vm_key = model_keys['Vm']
+
+current_key = 'ikr.IKr'
+Vm_key = 'membrane.V'
 
 SD_labelname = APmodel_name + '-SD model'
 CS_labelname = APmodel_name + '-CS model'

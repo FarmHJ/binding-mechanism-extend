@@ -23,7 +23,7 @@ data_dir = '../../simulation_data/'
 # Set up figure for reversal potential, AP and current contribution
 plot = modelling.figures.FigurePlot()
 fig = modelling.figures.FigureStructure(figsize=(9, 5), gridspec=(2, 2),
-                                        height_ratios=[1] * 2, hspace=0.37,
+                                        height_ratios=[1] * 2, hspace=0.4,
                                         wspace=0.1, plot_in_subgrid=True)
 
 subgridspecs = [(2, 1)] * 4
@@ -41,6 +41,7 @@ plotting_pulse_time = 800
 current_colours = model_details.current_colours
 
 model_list = ['Grandi', 'TTP', 'Tomek-Cl', 'Lei']
+model_label = ['Grandi-Li', 'ten Tusscher-Li', 'Tomek-Li', 'ORd-Lei']
 
 # Figure y-axes limits
 AP_bottom_list = []
@@ -102,7 +103,7 @@ for num, APmodel_name in enumerate(model_list):
     plot.add_single(panel[0][0], log, Vm_key, color='r',
                     label=r'$I_\mathrm{Kr}$ replaced $+  I_\mathrm{Kr}$ tuned')
     plot.add_single(panel[1][0], log, IKr_key, color='r')
-    panel[0][0].set_title(model_filenames['label'])
+    panel[0][0].set_title(model_label[num])  # model_filenames['label'])
 
     AP_y_bottom, AP_y_top = panel[0][0].get_ylim()
     IKr_y_bottom, IKr_y_top = panel[1][0].get_ylim()
@@ -126,8 +127,8 @@ for i in range(4):
     axs[i][0][0].set_ylim(AP_y_min, AP_y_max)
     axs[i][1][0].set_ylim(IKr_y_min, IKr_y_max)
     if i == 0 or i == 2:
-        axs[i][0][0].set_ylabel('AP')
-        axs[i][1][0].set_ylabel(r"$I_\mathrm{Kr}$")
+        axs[i][0][0].set_ylabel('Voltage (mV)')
+        axs[i][1][0].set_ylabel("Current (A/F)")
     else:
         axs[i][0][0].set_yticklabels([])
         axs[i][1][0].set_yticklabels([])
