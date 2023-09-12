@@ -144,7 +144,9 @@ fig.axs[0][0].set_title(r'APD$_{90}$')
 fig.axs[0][1].set_title('qNet')
 for i in range(2):
     fig.axs[1][i].set_ylabel('RMSD')
-    fig.axs[1][i].set_xticks(x + bar_width / 2, model_label)
+    fig.axs[1][i].set_xticks(x + bar_width / 2, model_label,
+                             rotation=30, ha='right')
+    # axs[1].set_xticklabels(axs[1].get_xticks(), rotation=45)
 fig.axs[0][0].legend(handlelength=1)
 
 # Add panel letter
