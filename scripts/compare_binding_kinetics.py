@@ -28,12 +28,13 @@ tuning_method = sys.argv[3]
 # Define the range of drug concentration for a given drug
 drug_conc_lib = modelling.DrugConcentrations()
 drug_conc = drug_conc_lib.drug_concentrations[drug]['coarse']
+drug_conc = [0, 1, 30, 300, 1000]
 repeats = 1000
 
 # Define directories to save simulated data
 data_dir = \
     '../simulation_data/kinetics_comparison/' + APmodel_name + '/' + \
-    tuning_method + '_match/' + drug + '/'
+    tuning_method + '_match/' + drug + '_old/'
 if not os.path.isdir(data_dir):
     os.makedirs(data_dir)
 
@@ -61,7 +62,7 @@ Hill_coef = Hill_coef.values.tolist()[0][1:-1]
 # Set AP model
 model_details = modelling.ModelDetails()
 model_filename = model_details.file_names[APmodel_name]
-APmodel = '../' + model_filename['AP_IKr_path']
+APmodel = '../math_model/' + model_filename['AP_IKr_path']
 
 APmodel, _, x = myokit.load(APmodel)
 model_keys = model_details.current_keys[APmodel_name]

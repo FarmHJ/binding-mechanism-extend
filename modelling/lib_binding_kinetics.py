@@ -26,7 +26,9 @@ class BindingParameters(object):
                                'cisapride', 'verapamil', 'ranolazine',
                                'quinidine', 'sotalol', 'chlorpromazine',
                                'ondansetron', 'diltiazem', 'mexiletine']
-        
+        self.channels = ['IKr', 'INaL', 'ICaL', 'INa', 'Ito', 'IK1', 'IKs']
+        self.SD_param_names = ['Kmax', 'Ku', 'halfmax', 'n', 'Vhalf']
+
         self.binding_parameters = {
             'dofetilide': {
                 'Kmax': 1e8,
@@ -409,7 +411,7 @@ class BindingParameters(object):
 
     def load_SD_parameters(self, drug, ikr_model='Li'):
         if drug not in self.drug_compounds:
-            NameError("Please choose a drug compound within the \
+            NameError("Choose a drug compound within the \
                       list in `drug_compounds`")
 
         param_file = os.path.join(modelling.PARAM_DIR, ikr_model + '-SD.csv')
@@ -417,6 +419,97 @@ class BindingParameters(object):
         # see if can reduce the loading of csv file everytime
 
         return self.binding_params.loc[[drug]]
+
+    def load_Hill_eq(self, drug, ikr_model='Li', channel=None):
+        if drug not in self.drug_compounds:
+            NameError("Choose a drug compound within the \
+                      list in `drug_compounds`")
+
+        param_file = os.path.join(modelling.PARAM_DIR, ikr_model + '-Hill.csv')
+        self.Hill = pd.read_csv(param_file, index_col=0)
+        # see if can reduce the loading of csv file everytime
+
+        if channel is None:
+            return self.Hill.loc[[drug]]
+        else:
+            if channel not in self.channels:
+                NameError("Choose an ion channel within the \
+                          list in `channels`")
+            return self.Hill.loc[[drug]][channel]
+
+# SD_Parameters
+drug_names = ['dofetilide', 'bepridil', 'terfenadine',
+                  'cisapride', 'verapamil', 'ranolazine',
+                  'quinidine', 'sotalol', 'chlorpromazine',
+                  'ondansetron', 'diltiazem', 'mexiletine']
+channels = ['IKr', 'INaL', 'ICaL', 'INa', 'Ito', 'IK1', 'IKs']
+SD_param_names = ['Kmax', 'Ku', 'halfmax', 'n', 'Vhalf']
+
+drug_concentrations = {
+    'dofetilide': {
+        'coarse': [0, 0.1, 1, 10, 30, 100, 300, 500, 1000],
+        'fine': 10.0**np.linspace(-1, 3, 20),
+        'lit_default': [1, 3, 10, 30]
+    },
+    'verapamil': {
+        'coarse': [0, 0.1, 1, 30, 300, 1000, 10000, 1e5],
+        'fine': 10.0**np.linspace(-1, 5, 20),
+        'lit_default': [30, 100, 300, 1000]
+    },
+    'bepridil': {
+        'coarse': [0, 0.1, 1, 30, 100, 300, 1000, 10000],
+        'fine': 10.0**np.linspace(-1, 5, 20),
+        'lit_default': [10, 30, 100, 300]
+    },
+    'terfenadine': {
+        'coarse': [0, 0.1, 1, 10, 30, 100, 300, 500, 1000, 10000],
+        'fine': 10.0**np.linspace(-1, 5, 20),
+        'lit_default': [3, 10, 30, 100]
+    },
+    'cisapride': {
+        'coarse': [0, 0.1, 1, 10, 30, 100, 300, 500, 1000, 3000],
+        'fine': 10.0**np.linspace(-1, 3, 20),
+        'lit_default': [1, 10, 100, 300]
+    },
+    'ranolazine': {
+        'coarse': [0, 1, 30, 300, 500, 1000, 10000, 1e5, 1e6],
+        'fine': 10.0**np.linspace(1, 5.5, 20),
+        'lit_default': [1000, 1e4, 3e4, 1e5]
+    },
+    'quinidine': {
+        'coarse': [0, 1, 30, 300, 500, 1000, 3000, 10000, 1e5],
+        'fine': 10.0**np.linspace(-1, 5, 20),
+        'lit_default': [100, 300, 1000, 10000]
+    },
+    'sotalol': {
+        'coarse': [0, 1, 30, 100, 300, 1000, 10000, 3e4, 1e5, 3e5,
+                   1e6, 1e7],
+        'fine': 10.0**np.linspace(-1, 7, 20),
+        'lit_default': [1e4, 3e4, 1e5, 3e5]
+    },
+    'chlorpromazine': {
+        'coarse': [0, 1, 30, 300, 500, 1000, 3000, 10000, 1e5],
+        'fine': 10.0**np.linspace(-1, 4.5, 20),
+        'lit_default': [100, 300, 1000, 3000]
+    },
+    'ondansetron': {
+        'coarse': [0, 1, 30, 300, 500, 1000, 3000, 10000, 1e5, 3e5],
+        'fine': 10.0**np.linspace(-1, 5.5, 20),
+        'lit_default': [300, 1000, 3000, 1e4]
+    },
+    'diltiazem': {
+        'coarse': [0, 1, 30, 100, 300, 1000, 3000, 10000, 3e4, 1e5,
+                   1e6, 1e7],
+        'fine': 10.0**np.linspace(-1, 6, 20),
+        'lit_default': [3000, 1e4, 3e4, 1e5]
+    },
+    'mexiletine': {
+        'coarse': [0, 1, 30, 100, 300, 1000, 10000, 3e4, 1e5, 1e6,
+                   1e7],
+        'fine': 10.0**np.linspace(-1, 7, 20),
+        'lit_default': [1e4, 3e4, 1e5, 3e5]
+    },
+}
 
 
 class DrugConcentrations(object):

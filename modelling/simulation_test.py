@@ -56,7 +56,8 @@ class ModelSimController(object):
     To control the simulations of models
     """
 
-    def __init__(self, APmodel_name, ikr_modified=True, period=1000):
+    def __init__(self, APmodel_name, ikr_modified=True, cycle_length=1000,
+                 protocol_offset=50):
         super(ModelSimController, self).__init__()
 
         # Load model
@@ -68,18 +69,21 @@ class ModelSimController(object):
         self.sim = myokit.Simulation(self.model)
         self.sim.set_tolerance(abs_tol=modelling.ABS_TOL,
                                rel_tol=modelling.REL_TOL)
-        self.period = period
-        protocol = myokit.pacing.blocktrain(period=self.period, duration=0.5,
-                                            offset=50, level=1)
+        self._cycle_length = cycle_length
+        self.protocol_offset = protocol_offset
+        protocol = myokit.pacing.blocktrain(period=self._cycle_length,
+                                            duration=0.5,
+                                            offset=self.protocol_offset,
+                                            level=1)
         self.sim.set_protocol(protocol)
         del(protocol)
 
         self.initial_state = self.sim.state()
 
         model_current_keys = modelling.model_naming.model_current_keys
-        current_keys = model_current_keys[APmodel_name]
-        self.ikr_key = current_keys['IKr']
-        self.Vm_key = current_keys['Vm']
+        self.current_keys = model_current_keys[APmodel_name]
+        self.ikr_key = self.current_keys['IKr']
+        self.Vm_key = self.current_keys['Vm']
         self.ikr_key_head = self.ikr_key[:self.ikr_key.index('.')]
         self.ikr_component = self.model.get(self.ikr_key_head)
 
@@ -98,10 +102,17 @@ class ModelSimController(object):
 
         self._parameters.update(param_dict)
 
-    def set_conductance(self, ikr_conductance):
-        self._conductance = float(ikr_conductance)
-        param_dict = {self.ikr_key_head + '.gKr': self._conductance}
+    def set_CS_parameter(self, ikr_conductance_scale):
+        self._conductance_scale = float(ikr_conductance_scale)
+        param_dict = {self.ikr_key_head + '.gKr':
+                      self.model.get(self.ikr_component.var('gKr')).eval()
+                      * self._conductance_scale}
         self._parameters.update(param_dict)
+
+    # def set_conductance(self, ikr_conductance):
+    #     self._conductance = float(ikr_conductance)
+    #     param_dict = {self.ikr_key_head + '.gKr': self._conductance}
+    #     self._parameters.update(param_dict)
 
     def set_ikr_rescale(self, ikr_rescale):
         self._ikr_tune = float(ikr_rescale)
@@ -109,23 +120,29 @@ class ModelSimController(object):
         self._parameters.update(param_dict)
 
     def reset_parameters(self):
-        param_dict = {
-            self.ikr_key_head + "Vhalf":
-                self.model.get(self.ikr_component.var('Vhalf')).eval(),
-            self.ikr_key_head + "Kmax":
-                self.model.get(self.ikr_component.var('Kmax')).eval(),
-            self.ikr_key_head + "Ku":
-                self.model.get(self.ikr_component.var('Ku')).eval(),
-            self.ikr_key_head + "n":
-                self.model.get(self.ikr_component.var('n')).eval(),
-            self.ikr_key_head + "halfmax":
-                self.model.get(self.ikr_component.var('halfmax')).eval(),
-            self.ikr_key_head + "Kt":
-                self.model.get(self.ikr_component.var('Kt')).eval(),
-            self.ikr_key_head + "gKr":
-                self.model.get(self.ikr_component.var('gKr')).eval(),
-            'tune.ikr_rescale': 1}
+        param_dict = {}
+        for k in modelling.BindingParameters().SD_param_names + ['Kt', 'gKr']:
+            param_dict[self.ikr_key_head + '.' + k] = \
+                self.model.get(self.ikr_component.var(k)).eval()
+
         self._parameters.update(param_dict)
+        # param_dict = {
+        #     self.ikr_key_head + "Vhalf":
+        #         self.model.get(self.ikr_component.var('Vhalf')).eval(),
+        #     self.ikr_key_head + "Kmax":
+        #         self.model.get(self.ikr_component.var('Kmax')).eval(),
+        #     self.ikr_key_head + "Ku":
+        #         self.model.get(self.ikr_component.var('Ku')).eval(),
+        #     self.ikr_key_head + "n":
+        #         self.model.get(self.ikr_component.var('n')).eval(),
+        #     self.ikr_key_head + "halfmax":
+        #         self.model.get(self.ikr_component.var('halfmax')).eval(),
+        #     self.ikr_key_head + "Kt":
+        #         self.model.get(self.ikr_component.var('Kt')).eval(),
+        #     self.ikr_key_head + "gKr":
+        #         self.model.get(self.ikr_component.var('gKr')).eval(),
+        #     : 1}
+        # self._parameters.update(param_dict)
         del(param_dict)
 
     def get_parameters(self):
@@ -161,42 +178,49 @@ class ModelSimController(object):
         self.sim.reset()
         self.sim.set_state(self.initial_state)
 
-        self.sim.pre(paces * self.period)
+        self.sim.pre(paces * self._cycle_length)
         self.initial_state = self.sim.state()
 
     def simulate(self, prepace=1000, save_signal=1, timestep=0.1,
                  log_var=None, reset=True):
 
         self._set_parameters(self._parameters)
+        self.prepace = prepace
 
         self.sim.set_time(0)
         if reset:
             self.sim.reset()
             self.sim.set_state(self.initial_state)
 
-        self.sim.pre(self.period * prepace)
-        log = self.sim.run(self.period * save_signal, log=log_var,
+        self.sim.pre(self._cycle_length * self.prepace)
+        log = self.sim.run(self._cycle_length * save_signal, log=log_var,
                            log_interval=timestep)
         log = log.npview()
         if save_signal > 1:
-            log = log.fold(self.period)
+            log = log.fold(self._cycle_length)
 
         return log
 
-    def APD90(self, log, offset, protocol_duration):
+    def APD90(self, log):
         """
         Compute APD90
         """
         time_log = log.time()
-        Vm_log = log[self.Vm_key]
         timestep = (max(time_log) - min(time_log)) / len(time_log)
-        pulse_num = round(len(Vm_log) / len(time_log))
+
+        Vm_key_list = log.keys_like(self.Vm_key)
+        pulse_num = len(Vm_key_list)
+
+        Vm_signal = []
+        for i in range(pulse_num):
+            Vm_signal += list(log[Vm_key_list[i]])
 
         APD90s = []
         for i in range(pulse_num):
-            AP_Vm = Vm_log[
-                round(i * protocol_duration / timestep):
-                round((i + 1) * (protocol_duration + offset) / timestep)]
+            AP_Vm = Vm_signal[
+                round(i * self._cycle_length / timestep):
+                round((i + 1) * (self._cycle_length + self.protocol_offset) /
+                      timestep)]
             APamp = max(AP_Vm) - min(AP_Vm)
             APD90_v = min(AP_Vm) + 0.1 * APamp
 
@@ -204,7 +228,8 @@ class ModelSimController(object):
                                        time_log + max(time_log) + timestep))
 
             min_APD = int(5 / timestep)
-            offset_index = int(offset / timestep)
+            offset_index = int(self.protocol_offset / timestep)
+            # offset index can be estimated from log
 
             start_time = time_log[offset_index]
             end_time = None
@@ -225,6 +250,40 @@ class ModelSimController(object):
             APD90s.append(APD90_value)
 
         return APD90s
+
+    def qNet(self, log):
+        """
+        Compute qNet
+        """
+        time_log = log.time()
+        timestep = (max(time_log) - min(time_log)) / len(time_log)
+
+        # Make sure requirements to compute qNet are satisfied
+        if np.abs(timestep - 0.01) > 1e-8:
+            print('Warning: Time step should be 0.01ms instead of ' \
+                  f'{timestep}ms.')
+        if np.abs(time_log[-1] - time_log[0] - 2000) > 1e-8:
+            print('Warning: qNet should be calculated with time length ' \
+                  f'2000ms instead of {time_log[-1] - time_log[0]}ms.')
+        if np.abs(self._cycle_length - 2000) > 1e-8:
+            print(f'The pacing cycle length is set to {self._cycle_length}ms.')
+            print('Warning: qNet should be calculated at 0.5Hz (cl=2000).')
+        if self.prepace != 1000:
+            print(f'The number of prepaces is set to {self.prepace}.')
+            print('Warning: Dutta et al. 2017 used 1000 prepace.')
+
+        qNet_current = ['ICaL', 'INaL', 'IKr', 'IKs', 'IK1', 'Ito']
+        missing_current_keys = [i for i in qNet_current if self.current_keys[i] is None]
+        if missing_current_keys:
+            print('There are missing currents')
+            # Rephrase
+        qNet_current_keys = [self.current_keys[i] for i in qNet_current if self.current_keys[i] is not None]
+        inet = 0
+        for c in qNet_current_keys:
+            inet += log[c]
+            # Assuming the data log has only one period
+
+        return np.trapz(inet, x=log.time()) * 1e-3  # pA/pF*ms -> pA/pF*s
 
     def extract_peak(self, signal_log, current_name=None):
         peaks = []
