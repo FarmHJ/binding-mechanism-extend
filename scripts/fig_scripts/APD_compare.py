@@ -211,4 +211,4 @@ fig.fig.text(0.1, 0.455, '(B)', fontsize=11)
 # fig.fig.text(0.49, 0.905, '(B)', fontsize=11)
 fig.fig.text(0.53, 0.455, '(C)', fontsize=11)
 
-fig.savefig(fig_dir + "model_compare.pdf")
+fig.savefig(fig_dir + "model_compare.svg", format='svg')

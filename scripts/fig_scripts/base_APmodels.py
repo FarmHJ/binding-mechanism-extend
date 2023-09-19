@@ -20,7 +20,11 @@ fig_dir = '../../figures/background/'
 
 # Set up figure for reversal potential, AP and current contribution
 plot = modelling.figures.FigurePlot()
-fig = modelling.figures.FigureStructure(figsize=(10, 5),
+# fig = modelling.figures.FigureStructure(figsize=(10, 5),
+#                                         gridspec=(2, 2),
+#                                         height_ratios=[1] * 2,
+#                                         hspace=0.3, wspace=0.1)
+fig = modelling.figures.FigureStructure(figsize=(7, 3.5),
                                         gridspec=(2, 2),
                                         height_ratios=[1] * 2,
                                         hspace=0.3, wspace=0.1)
@@ -30,7 +34,7 @@ model_list = ['ORd-CiPA', 'Grandi', 'TTP', 'Tomek-Cl']
 # model_list = ['Tomek', 'Tomek2']
 model_details = modelling.ModelDetails()
 current_list = model_details.current_list
-current_colours = model_details.current_colours
+current_colours = model_details.IKr_current_colours
 
 # cmap = matplotlib.cm.get_cmap('tab20')
 cmap = matplotlib.colormaps['tab20']
@@ -46,7 +50,7 @@ for num, APmodel_name in enumerate(model_list):
 
     # Load model
     model_filenames = model_details.file_names[APmodel_name]
-    APmodel = '../../' + model_filenames['AP_SD_path']
+    APmodel = '../../' + model_filenames['AP_IKr_path']
     model_title = model_filenames['label']
 
     APmodel, _, x = myokit.load(APmodel)
@@ -91,4 +95,4 @@ fig.sharex(["Time (ms)"] * 2, [(0, plotting_pulse_time)] * 2)
 fig.sharey(["Relative contribution"] * 2, [(-1.02, 1.02)] * 2)
 
 # Save figures
-fig.savefig(fig_dir + 'base_APmodels.pdf')
+fig.savefig(fig_dir + 'AP-IKr_models.svg', format='svg')

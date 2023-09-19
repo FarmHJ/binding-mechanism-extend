@@ -200,6 +200,26 @@ class ModelDetails(object):
             'IKATP': 19,
         })
 
+        self.IKr_current_colours = dict({
+            'IKr': 6,
+            'IKs': 15,
+            'Ito': 15,
+            'IKb': 15,
+            'IK1': 15,
+            'INaK': 15,
+            'INa': 15,
+            'INaL': 15,
+            'ICaL': 15,
+            'INaCa': 15,
+            'INaB': 15,
+            'ICaB': 15,
+            'IClCa': 15,
+            'IClB': 15,
+            'ICaP': 15,
+            'IKACh': 15,
+            'IKATP': 15,
+        })
+
         self.current_names = {
             'IKr': 'IKr',
             'IKs': 'IKs',
