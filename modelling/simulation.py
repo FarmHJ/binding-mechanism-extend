@@ -4,6 +4,19 @@ import numpy as np
 import modelling
 
 
+# def tune_ikr(AP_IKr, tuning_metric, protocol=None):
+#     """
+#     Tune the magnitude of IKr according to the chosen metric
+#     """
+#     model_sim = modelling.Simulation(AP_IKr, base_constant=None)
+
+#     if protocol is None:
+#         protocol = myokit.pacing.blocktrain(1000, 0.5, offset=50)
+#     model_sim.protocol = protocol
+
+#     log = model_sim.model_simulation(1000, abs_tol=ABS_TOL, rel_tol=REL_TOL)
+#     APD = model_sim.APD90_update(log[Vm_key], )
+
 class Simulation(object):
     """
     To create a class to control the simulations of models.
