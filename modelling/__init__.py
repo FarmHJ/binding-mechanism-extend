@@ -1,6 +1,8 @@
 # Import version info
 from .version_info import VERSION_INT, VERSION  # noqa
 
+from .constants import *
+
 # Import main classes
 from .simulation import Simulation
 
@@ -16,8 +18,6 @@ from .lib_binding_kinetics import (
     DrugConcentrations
 )
 
-from .kinetics_comparison import KineticsComparison
-
 from .model_comparison import ModelComparison
 
 from .Hill_model import (
@@ -26,10 +26,9 @@ from .Hill_model import (
 )
 
 from .dataset_library import (
-    DatasetLibrary,
     ProtocolLibrary
 )
 
-from .data_QC import (
-    QualityControl
+from .simulation_test import (
+    ModelSimController
 )

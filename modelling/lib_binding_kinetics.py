@@ -6,6 +6,8 @@
 # 2017 Feb;10(2):e004628. doi: 10.1161/CIRCEP.116.004628.
 
 import numpy as np
+import os
+import pandas as pd
 
 import modelling
 
@@ -24,6 +26,7 @@ class BindingParameters(object):
                                'cisapride', 'verapamil', 'ranolazine',
                                'quinidine', 'sotalol', 'chlorpromazine',
                                'ondansetron', 'diltiazem', 'mexiletine']
+        
         self.binding_parameters = {
             'dofetilide': {
                 'Kmax': 1e8,
@@ -403,6 +406,17 @@ class BindingParameters(object):
                 'IKs': {
                     'Hill_coef': 0,
                     'IC50': 0}, }, }
+
+    def load_SD_parameters(self, drug, ikr_model='Li'):
+        if drug not in self.drug_compounds:
+            NameError("Please choose a drug compound within the \
+                      list in `drug_compounds`")
+
+        param_file = os.path.join(modelling.PARAM_DIR, ikr_model + '-SD.csv')
+        self.binding_params = pd.read_csv(param_file, index_col=0)
+        # see if can reduce the loading of csv file everytime
+
+        return self.binding_params.loc[[drug]]
 
 
 class DrugConcentrations(object):
