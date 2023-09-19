@@ -11,7 +11,7 @@ import modelling
 
 
 # Define drug and protocol
-drug = 'verapamil'
+drug = 'dofetilide'
 protocol_name = 'Milnes'
 pulse_time = 25e3
 protocol = modelling.ProtocolLibrary().Milnes(pulse_time)
@@ -22,7 +22,7 @@ parameter_dir = '../../Lei-SD-fits/Milnes-data-fits/'
 # for fname in glob.glob(parameter_dir +
 #                       'Drug-*-lei-model12-protocol-Milnes-fit-RMSE.txt'):
 drug_params = np.loadtxt(parameter_dir +
-                         'Drug-verapamil-lei-model12-protocol-Milnes-fit-RMSE.txt',
+                         'Drug-dofetilide-lei-model12-protocol-Milnes-fit-RMSE.txt',
                          unpack=True)
 drug_params = np.array(drug_params)
 param_df = pd.DataFrame(drug_params, index=['Kmax', 'Ku', 'EC50', 'N', 'Vhalf']).T

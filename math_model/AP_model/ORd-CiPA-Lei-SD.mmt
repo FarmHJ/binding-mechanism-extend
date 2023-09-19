@@ -561,12 +561,11 @@ Vhalf = 1
 Kmax = 0
 halfmax = 1
     in [1]
-switch = 1
 dot(CI) = -k12 * CI + k21 * I + k41 * C - k14 * CI
     in [1]
-dot(I) = -k14 * I + k41 * O + k12 * CI - k21 * I - Ku * Emax * I + switch * k41 / k14 * Ibound
+dot(I) = -k14 * I + k41 * O + k12 * CI - k21 * I - Ku * Emax * I + Ku * k41 / k14 * Ibound
     in [1]
-dot(Ibound) = - switch * k41 / k14 * Ibound + Ku * Emax * I - Kt * Ibound + Kt * trapping_fn * Cbound
+dot(Ibound) = - Ku * k41 / k14 * Ibound + Ku * Emax * I - Kt * Ibound + Kt * trapping_fn * Cbound
     in [1]
 dot(O) = -k21 * O + k12 * C + k14 * I - k41 * O - Ku * Emax * O + Ku * Obound
     in [1]
