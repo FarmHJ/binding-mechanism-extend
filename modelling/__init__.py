@@ -10,12 +10,12 @@ from . import figures
 
 from .model_naming import (
     ModelDetails,
-    SDModelDetails
+    # SDModelDetails
 )
 
-from .lib_binding_kinetics import (
+from .SD_details import (
     BindingParameters,
-    DrugConcentrations
+    # DrugConcentrations
 )
 
 from .model_comparison import ModelComparison

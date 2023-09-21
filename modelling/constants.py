@@ -15,6 +15,10 @@ PARAM_DIR = os.path.join(MAIN_DIR, 'parameters')
 
 # Define model directory
 MODEL_DIR = os.path.join(MAIN_DIR, 'math_model')
+
+# Define figures directory
+FIG_DIR = os.path.join(MAIN_DIR, 'figures')
+
 del(os, inspect, frame)
 
 ABS_TOL = 1e-7

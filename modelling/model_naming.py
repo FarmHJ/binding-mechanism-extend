@@ -6,10 +6,10 @@ class ModelDetails(object):
     def __init__(self):
         super(ModelDetails, self).__init__()
 
-        self.APmodels = ['Ord-CiPA', 'Grandi', 'TTP', 'Tomek-Cl', 'Lei']
-        self.current_list = ['IKr', 'IKs', 'Ito', 'IKb', 'IK1', 'INaK', 'INa',
-                             'INaL', 'ICaL', 'INaCa', 'INaB', 'ICaB', 'IClCa',
-                             'IClB', 'ICaP', 'IKACh', 'IKATP']
+        # self.APmodels = ['Ord-CiPA', 'Grandi', 'TTP', 'Tomek-Cl', 'Lei']
+        # self.current_list = ['IKr', 'IKs', 'Ito', 'IKb', 'IK1', 'INaK', 'INa',
+        #                      'INaL', 'ICaL', 'INaCa', 'INaB', 'ICaB', 'IClCa',
+        #                      'IClB', 'ICaP', 'IKACh', 'IKATP']
         self.current_keys = {
             'ORd': {
                 'Ito': 'Ito.Ito',
@@ -160,45 +160,45 @@ class ModelDetails(object):
             },
         }
 
-        self.current_colours = dict({
-            'IKr': 0,
-            'IKs': 1,
-            'Ito': 2,
-            'IKb': 3,
-            'IK1': 4,
-            'INaK': 5,
-            'INa': 16,
-            'INaL': 17,
-            'ICaL': 10,
-            'INaCa': 12,
-            'INaB': 14,
-            'ICaB': 15,
-            'IClCa': 6,
-            'IClB': 7,
-            'ICaP': 13,
-            'IKACh': 18,
-            'IKATP': 19,
-        })
+        # self.current_colours = dict({
+        #     'IKr': 0,
+        #     'IKs': 1,
+        #     'Ito': 2,
+        #     'IKb': 3,
+        #     'IK1': 4,
+        #     'INaK': 5,
+        #     'INa': 16,
+        #     'INaL': 17,
+        #     'ICaL': 10,
+        #     'INaCa': 12,
+        #     'INaB': 14,
+        #     'ICaB': 15,
+        #     'IClCa': 6,
+        #     'IClB': 7,
+        #     'ICaP': 13,
+        #     'IKACh': 18,
+        #     'IKATP': 19,
+        # })
 
-        self.qNet_current_colours = dict({
-            'IKr': 0,
-            'IKs': 0,
-            'Ito': 0,
-            'IKb': 19,
-            'IK1': 0,
-            'INaK': 19,
-            'INa': 19,
-            'INaL': 0,
-            'ICaL': 0,
-            'INaCa': 19,
-            'INaB': 19,
-            'ICaB': 19,
-            'IClCa': 19,
-            'IClB': 19,
-            'ICaP': 19,
-            'IKACh': 19,
-            'IKATP': 19,
-        })
+        # self.qNet_current_colours = dict({
+        #     'IKr': 0,
+        #     'IKs': 0,
+        #     'Ito': 0,
+        #     'IKb': 19,
+        #     'IK1': 0,
+        #     'INaK': 19,
+        #     'INa': 19,
+        #     'INaL': 0,
+        #     'ICaL': 0,
+        #     'INaCa': 19,
+        #     'INaB': 19,
+        #     'ICaB': 19,
+        #     'IClCa': 19,
+        #     'IClB': 19,
+        #     'ICaP': 19,
+        #     'IKACh': 19,
+        #     'IKATP': 19,
+        # })
 
         self.IKr_current_colours = dict({
             'IKr': 6,
@@ -220,25 +220,25 @@ class ModelDetails(object):
             'IKATP': 15,
         })
 
-        self.current_names = {
-            'IKr': 'IKr',
-            'IKs': 'IKs',
-            'Ito': 'Ito (+Isus)',
-            'IKb': 'IKb (IbK)',
-            'IK1': 'IK1',
-            'INaK': 'INaK',
-            'INa': 'INa',
-            'INaL': 'INaL',
-            'ICaL': 'ICaL',
-            'INaCa': 'INaCa (INCX)',
-            'INaB': 'INa,B',
-            'ICaB': 'ICa,B',
-            'IClCa': 'IClCa',
-            'IClB': 'ICl,B',
-            'ICaP': 'ICa,P (IpCa)',
-            'IKACh': 'IK,ACh',
-            'IKATP': 'IK,ATP',
-        }
+        # self.current_names = {
+        #     'IKr': 'IKr',
+        #     'IKs': 'IKs',
+        #     'Ito': 'Ito (+Isus)',
+        #     'IKb': 'IKb (IbK)',
+        #     'IK1': 'IK1',
+        #     'INaK': 'INaK',
+        #     'INa': 'INa',
+        #     'INaL': 'INaL',
+        #     'ICaL': 'ICaL',
+        #     'INaCa': 'INaCa (INCX)',
+        #     'INaB': 'INa,B',
+        #     'ICaB': 'ICa,B',
+        #     'IClCa': 'IClCa',
+        #     'IClB': 'ICl,B',
+        #     'ICaP': 'ICa,P (IpCa)',
+        #     'IKACh': 'IK,ACh',
+        #     'IKATP': 'IK,ATP',
+        # }
 
         self.file_names = {
             'ORd': {
@@ -281,29 +281,87 @@ class ModelDetails(object):
         }
 
 
-class SDModelDetails(object):
-    """
-    To create a library on constant and variable namings of the SD model
-    """
+# class SDModelDetails(object):
+#     """
+#     To create a library on constant and variable namings of the SD model
+#     """
 
-    def __init__(self):
-        super(SDModelDetails, self).__init__()
+#     def __init__(self):
+#         super(SDModelDetails, self).__init__()
 
-        self.param_names = ['Vhalf', 'Kmax', 'Ku', 'N', 'EC50']
+#         self.param_names = ['Vhalf', 'Kmax', 'Ku', 'N', 'EC50']
 
-        self.current_keys = {
-            'Lei': {
-                'IKr': 'ikr.IKr',
-                'time': 'engine.time',
-                'Vm': 'membrane.V',
-            }}
+#         self.current_keys = {
+#             'Lei': {
+#                 'IKr': 'ikr.IKr',
+#                 'time': 'engine.time',
+#                 'Vm': 'membrane.V',
+#             }}
 
 
 APmodel_list = ['ORd-Li', 'Grandi', 'TTP', 'Tomek-Cl', 'ORd-Lei']
+
+AP_file_names = {
+    'ORd': {
+        'AP': 'ORd-2011.mmt',
+        'label': "ORd (2011)"
+    },
+    'Grandi': {
+        'AP': 'Grd-2010.mmt',
+        'AP_IKr': 'Grd-2010-Li-SD.mmt',
+        'label': 'Grandi (2010)'
+    },
+    'ORd-Li': {
+        'AP': 'ORd-2011.mmt',
+        'AP_IKr': 'ohara-cipa-2017.mmt',
+        'label': "CiPAORdv1.0 (2017)"
+    },
+    'TTP': {
+        'AP': 'TTP-2006.mmt',
+        'AP_IKr': 'TTP-2006-Li-SD.mmt',
+        'label': 'ten Tusscher (2006)'
+    },
+    'Tomek': {
+        'AP': 'Tomek-2019.mmt',
+        'AP_IKr': 'Tomek-2019-Li-SD.mmt',
+        'label': 'Tomek (2019)'
+    },
+    'Tomek-Cl': {
+        'AP': 'Tomek-Cl-2020.mmt',
+        'AP_IKr': 'Tomek-Cl-2020-Li-SD.mmt',
+        'label': 'Tomek (2019)'
+    },
+    'ORd-Lei': {
+        'AP': 'ORd-2011.mmt',
+        'AP_IKr': 'ORd-2011-Lei-SD.mmt',
+        'label': 'Lei (2019)'
+    }}
+
 current_list = ['IKr', 'IKs', 'Ito', 'IKb', 'IK1', 'INaK', 'INa',
                 'INaL', 'ICaL', 'INaCa', 'INaB', 'ICaB', 'IClCa',
                 'IClB', 'ICaP', 'IKACh', 'IKATP']
 model_current_keys = {
+    'ORd': {
+        'Ito': 'Ito.Ito',
+        'IKb': 'IKb.IKb',
+        'IKs': 'IKs.IKs',
+        'IKr': 'IKr.IKr',
+        'ICaP': 'IpCa.IpCa',
+        'IK1': 'IK1.IK1',
+        'INaK': 'INaK.INaK',
+        'ICaL': 'ICaL.ICaL_total',
+        'INaL': 'INaL.INaL',
+        'INaCa': 'INaCa_i.INaCa_total',
+        'ICaB': 'ICab.ICab',
+        'INaB': 'INab.INab',
+        'INa': 'INa.INa',
+        'IClCa': None,
+        'IClB': None,
+        'IKACh': None,
+        'IKATP': None,
+        'time': 'environment.time',
+        'Vm': 'membrane.v'
+    },
     'ORd-Li': {
         'Ito': 'ito.Ito',
         'IKb': 'ikb.IKb',
