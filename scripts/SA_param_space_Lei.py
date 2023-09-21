@@ -47,7 +47,7 @@ repeats = 1000
 APD_points = 20
 
 # Get name of parameters
-param_names = modelling.SDModelDetails().param_names
+param_names = modelling.SD_details.SD_param_names
 
 # Define parameter space
 Vhalf_fullrange = np.linspace(-200, 0, 20)
