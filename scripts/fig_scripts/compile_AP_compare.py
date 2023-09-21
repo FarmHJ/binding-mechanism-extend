@@ -18,7 +18,7 @@ abs_tol = 1e-7
 rel_tol = 1e-8
 
 model_details = modelling.ModelDetails()
-model_list = ['ORd-CiPA', 'Grandi', 'TTP', 'Tomek-Cl', 'Lei']
+model_list = ['ORd-CiPA', 'Grandi', 'TTP', 'Tomek-Cl', 'ORd-Lei']
 model_label = ['ORd-Li', 'Grandi-Li', 'ten Tusscher-Li', 'Tomek-Li', 'ORd-Lei']
 drug_list = ['dofetilide', 'verapamil']
 tuning_method = ['hERG_peak'] * 4 + ['AP_duration']

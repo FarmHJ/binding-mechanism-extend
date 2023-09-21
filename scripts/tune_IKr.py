@@ -1,168 +1,158 @@
 # Introduces the idea of trapping and justifies the use of the Milnes protocol
+import argparse
 import matplotlib
-import myokit
 import myokit.lib.plots as mp
 import numpy as np
 import os
 import pandas as pd
 from scipy.optimize import minimize
-import sys
 
 import modelling
 
 # Define AP model
-APmodel_name = sys.argv[1]
+parser = argparse.ArgumentParser(
+    description="Tuning of IKr for AP-Li model")
+parser.add_argument("APmodel", help="Name of AP model")
+parser.add_argument('--method', default='all',
+                    help='Method to tune the IKr: '
+                    'hERG_peak, hERG_flux, AP_duration')
+parser.add_argument('--plot', action='store_true', help='Plot figures',
+                    default=True)
+parser.add_argument('-x', '--cache', action='store_true', help='Use cache',
+                    default=False)
+args = parser.parse_args()
 
-# Define protocol
-pulse_time = 1000
-protocol_offset = 50
-protocol = myokit.pacing.blocktrain(pulse_time, 0.5, offset=protocol_offset)
+APmodel_name = args.APmodel
 
-# Define constants
-repeats = 1000
-abs_tol = 1e-7
-rel_tol = 1e-8
-
-fig_dir = '../figures/kinetics_comparison/' + APmodel_name + '/'
+fig_dir = os.path.join(modelling.FIG_DIR, APmodel_name)
 if not os.path.isdir(fig_dir):
     os.makedirs(fig_dir)
-data_dir = '../simulation_data/'
+result_file = os.path.join(modelling.RESULT_DIR,
+                           APmodel_name + '_conductance_scale_test.csv')
 
 # Set up figure for reversal potential, AP and current contribution
-plot = modelling.figures.FigurePlot()
-fig = modelling.figures.FigureStructure(figsize=(9, 5), gridspec=(2, 4),
-                                        height_ratios=[1] * 2, hspace=0.3,
-                                        wspace=0.1, plot_in_subgrid=True)
+if args.plot:
+    plot = modelling.figures.FigurePlot()
+    fig = modelling.figures.FigureStructure(figsize=(9, 5), gridspec=(2, 4),
+                                            height_ratios=[1] * 2, hspace=0.3,
+                                            wspace=0.1, plot_in_subgrid=True)
 
-subgridspecs = [(2, 1)] * 4 + [(1, 1)] * 4
-subgs = []
-for i in range(8):
-    subgs.append(fig.gs[i].subgridspec(*subgridspecs[i], hspace=0.1))
-axs = [[[fig.fig.add_subplot(subgs[k][i, j]) for j in range(
-    subgridspecs[k][1])] for i in range(subgridspecs[k][0])] for k in
-    range(len(subgs))]
+    subgridspecs = [(2, 1)] * 4 + [(1, 1)] * 4
+    subgs = []
+    for i in range(8):
+        subgs.append(fig.gs[i].subgridspec(*subgridspecs[i], hspace=0.1))
+    axs = [[[fig.fig.add_subplot(subgs[k][i, j]) for j in range(
+        subgridspecs[k][1])] for i in range(subgridspecs[k][0])] for k in
+        range(len(subgs))]
 
-# Figure parameters
-cmap = matplotlib.cm.get_cmap('tab20')
-model_details = modelling.ModelDetails()
-current_list = model_details.current_list
-model_keys = model_details.current_keys[APmodel_name]
-plotting_pulse_time = 800
-current_colours = model_details.current_colours
+    cmap = matplotlib.cm.get_cmap('tab20')
+
+    # Figure parameters
+    current_list = modelling.model_naming.current_list
+    model_keys = modelling.model_naming.model_current_keys[APmodel_name]
+    current_colours = modelling.model_naming.contribution_current_colours
+    plotting_pulse_time = 800
 
 time_key = model_keys['time']
 Vm_key = model_keys['Vm']
 IKr_key = model_keys['IKr']
-current_head_key = IKr_key[:IKr_key.index('.')]
+
+ikr_scale_df = pd.DataFrame()
 
 #######################
 #
-# Grandi model
+# AP model
 #
 #######################
-# Load Grandi (2010) model
-# if APmodel_name == 'Grandi':
-#     APmodel = '../math_model/AP_model/Grd-2010.mmt'
-#     model_title = 'Grandi (2010)'
-# elif APmodel_name == 'TTP':
-#     APmodel = '../math_model/AP_model/TTP-2006.mmt'
-#     model_title = 'ten Tusscher (2006)'
-# elif APmodel_name == 'Lei':
-#     APmodel = '../math_model/AP_model/ohara-cipa-2017.mmt'
-#     model_title = 'ORd-CiPA'
-# elif APmodel_name
-model_filenames = model_details.file_names[APmodel_name]
-APmodel = '../' + model_filenames['AP_path']
-model_title = model_filenames['label']
-APmodel, _, x = myokit.load(APmodel)
-AP_model = modelling.Simulation(APmodel, base_constant=None)
-AP_model.protocol = protocol
+model_title = modelling.model_naming.AP_file_names[APmodel_name]['label']
+APsim = modelling.ModelSimController(APmodel_name, ikr_modified=False)
 
-log = AP_model.model_simulation(1000, abs_tol=abs_tol, rel_tol=rel_tol)
-Grandi_APD = AP_model.APD90(log[Vm_key], protocol_offset,
-                            0.1)
-Grandi_flux = np.trapz(log[IKr_key], x=log.time())
+log = APsim.simulate()
+base_apd90 = APsim.APD90(log)
+base_ikr_flux = np.trapz(log[IKr_key], x=log.time())
 
 # Plot AP and hERG
-Grd_AP_panel = axs[0]
-plot.add_single(Grd_AP_panel[0][0], log, Vm_key)
-plot.add_single(Grd_AP_panel[1][0], log, IKr_key)
-Grd_AP_panel[0][0].set_title(model_title)
-Grd_AP_panel[0][0].set_ylabel("AP")
-Grd_AP_panel[1][0].set_ylabel(r"$I_\mathrm{Kr}$")
-Grd_AP_panel[0][0].text(370, 0, 'APD90: ' + '{:.1f}'.format(Grandi_APD),
+if args.plot:
+    AP_panel = axs[0]
+    plot.add_single(AP_panel[0][0], log, Vm_key)
+    plot.add_single(AP_panel[1][0], log, IKr_key)
+
+    AP_panel[0][0].set_title(model_title)
+    AP_panel[0][0].set_ylabel("AP")
+    AP_panel[1][0].set_ylabel(r"$I_\mathrm{Kr}$")
+    AP_panel[0][0].text(370, 0, 'APD90: ' + '{:.1f}'.format(base_apd90),
                         fontsize=8, ha='left')
-AP_y_bottom1, AP_y_top1 = Grd_AP_panel[0][0].get_ylim()
-IKr_y_bottom1, IKr_y_top1 = Grd_AP_panel[1][0].get_ylim()
-Grd_AP_panel[1][0].text(450, (IKr_y_top1 - IKr_y_bottom1) / 2, 'scale: 1',
+    AP_y_bottom1, AP_y_top1 = AP_panel[0][0].get_ylim()
+    IKr_y_bottom1, IKr_y_top1 = AP_panel[1][0].get_ylim()
+    AP_panel[1][0].text(450, (IKr_y_top1 - IKr_y_bottom1) / 2, 'scale: 1',
                         fontsize=8, ha='left')
-fig.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
-           axs=Grd_AP_panel, subgridspec=subgridspecs[0])
+    fig.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
+               axs=AP_panel, subgridspec=subgridspecs[0])
 
-# Plot current contribution
-none_key_list = [i for i in model_keys.keys() if model_keys[i] is None]
-for i in none_key_list:
-    del(model_keys[i])
-del(model_keys['time'])
-del(model_keys['Vm'])
+    # Plot current contribution
+    none_key_list = [i for i in model_keys.keys() if model_keys[i] is None]
+    for i in none_key_list:
+        del(model_keys[i])
 
-colours = [cmap(current_colours[x]) for x in model_keys.keys()]
-currents = list(model_keys.values())
+    plot_model_keys = [x for x in model_keys.keys() if x not in ['time', 'Vm']]
+    colours = [cmap(current_colours[x]) for x in plot_model_keys]
+    currents = [model_keys[x] for x in plot_model_keys]
 
-Grd_current_panel = axs[4]
-Grd_current_panel[0][0].set_xlabel("Time (ms)")
-Grd_current_panel[0][0].set_xlim(0, plotting_pulse_time)
-Grd_current_panel[0][0].set_ylabel("Relative contribution")
-Grd_current_panel[0][0].set_ylim(-1.02, 1.02)
-mp.cumulative_current(log, currents, Grd_current_panel[0][0], colors=colours,
-                      normalise=True)
-Grd_current_panel[0][0].set_rasterization_zorder(2)
+    current_panel = axs[4]
+    mp.cumulative_current(log, currents, current_panel[0][0], colors=colours,
+                          normalise=True)
+    current_panel[0][0].set_rasterization_zorder(2)
 
 #######################
 #
-# Grandi-SD model
+# AP-Li model
 #
 #######################
 # Tuning method 1: scale conductance to have same peak of hERG current
-# Load Grandi-SD model
-APmodel = '../' + model_filenames['AP_SD_path']
-APmodel, _, x = myokit.load(APmodel)
-AP_model = modelling.Simulation(APmodel, current_head_key=current_head_key)
-AP_model.protocol = protocol
+# Load AP-Li model
+APsim = modelling.ModelSimController(APmodel_name)
 
-log1 = AP_model.model_simulation(1000, abs_tol=abs_tol, rel_tol=rel_tol)
-SD_IKr_peak = max(log1[IKr_key])
-peak_IKr_scale = max(log[IKr_key]) / SD_IKr_peak
-log_tune1 = AP_model.model_simulation(1000,
-                                      conductance_name='tune.ikr_rescale',
-                                      conductance_value=peak_IKr_scale,
-                                      abs_tol=abs_tol, rel_tol=rel_tol)
-Grd_SD_APD = AP_model.APD90(log_tune1[Vm_key], protocol_offset, 0.1)
+if not args.cache:
+    # Get the IKr scaling factor by matching the peak
+    log1 = APsim.simulate()
+    SD_IKr_peak = max(log1[IKr_key])
+    del(log1)
+    peak_IKr_scale = max(log[IKr_key]) / SD_IKr_peak
+    print('hERG_peak: ', peak_IKr_scale)
 
-# Plot AP and hERG
-Grd_SD_AP_panel = axs[1]
-plot.add_single(Grd_SD_AP_panel[0][0], log_tune1, Vm_key)
-plot.add_single(Grd_SD_AP_panel[1][0], log_tune1, IKr_key)
-Grd_SD_AP_panel[0][0].text(370, 0, 'APD90: ' + '{:.1f}'.format(Grd_SD_APD),
-                           fontsize=8, ha='left')
-AP_y_bottom2, AP_y_top2 = Grd_SD_AP_panel[0][0].get_ylim()
-IKr_y_bottom2, IKr_y_top2 = Grd_SD_AP_panel[1][0].get_ylim()
-Grd_SD_AP_panel[1][0].text(450, (IKr_y_top2 - IKr_y_bottom2) / 2,
-                           'scale: ' + '{:.2f}'.format(peak_IKr_scale),
-                           fontsize=8, ha='left')
-Grd_SD_AP_panel[0][0].set_title(APmodel_name + r"-SD" "\n" r"$I_\mathrm{Kr}$ peak")
-fig.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
-           axs=Grd_SD_AP_panel, subgridspec=subgridspecs[1])
+    ikr_scale_df['hERG_peak'] = peak_IKr_scale
+else:
+    ikr_scale_df = pd.read_csv(result_file, index_col=[0],
+                               skipinitialspace=True)
+    peak_IKr_scale = ikr_scale_df.loc['hERG_peak'].values[0]
 
-# Plot current contribution
-Grd_SD_current_panel = axs[5]
-Grd_SD_current_panel[0][0].set_xlabel("Time (ms)")
-Grd_SD_current_panel[0][0].set_xlim(0, plotting_pulse_time)
-Grd_SD_current_panel[0][0].set_yticklabels([])
-Grd_SD_current_panel[0][0].set_ylim(-1.02, 1.02)
-mp.cumulative_current(log_tune1, currents, Grd_SD_current_panel[0][0],
-                      colors=colours, normalise=True)
-Grd_SD_current_panel[0][0].set_rasterization_zorder(2)
+APsim.set_ikr_rescale(peak_IKr_scale)
+log_tuned = APsim.simulate()
+apd90 = APsim.APD90(log_tuned)
+
+if args.plot:
+    # Plot AP and hERG
+    AP_panel = axs[1]
+    plot.add_single(AP_panel[0][0], log_tuned, Vm_key)
+    plot.add_single(AP_panel[1][0], log_tuned, IKr_key)
+
+    AP_panel[0][0].text(370, 0, 'APD90: ' + '{:.1f}'.format(apd90),
+                        fontsize=8, ha='left')
+    AP_y_bottom2, AP_y_top2 = AP_panel[0][0].get_ylim()
+    IKr_y_bottom2, IKr_y_top2 = AP_panel[1][0].get_ylim()
+    AP_panel[1][0].text(450, (IKr_y_top2 - IKr_y_bottom2) / 2,
+                        'scale: ' + '{:.2f}'.format(peak_IKr_scale),
+                        fontsize=8, ha='left')
+    AP_panel[0][0].set_title(APmodel_name +
+                             r"-SD" "\n" r"$I_\mathrm{Kr}$ peak")
+    fig.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
+               axs=AP_panel, subgridspec=subgridspecs[1])
+
+    # Plot current contribution
+    current_panel = axs[5]
+    mp.cumulative_current(log_tuned, currents, current_panel[0][0],
+                          colors=colours, normalise=True)
+    current_panel[0][0].set_rasterization_zorder(2)
 
 #######################
 # Tuning method 2: scale conductance to have same APD90
@@ -170,50 +160,57 @@ Grd_SD_current_panel[0][0].set_rasterization_zorder(2)
 
 
 def APD_problem(conductance_scale):
-    log = AP_model.model_simulation(1000, conductance_name='tune.ikr_rescale',
-                                    conductance_value=conductance_scale,
-                                    abs_tol=1e-7, rel_tol=1e-8)
-    APD = AP_model.APD90(log[Vm_key], protocol_offset, 0.1)
+    APsim.set_ikr_rescale(conductance_scale)
+    log = APsim.simulate(log_var=[time_key, Vm_key])
 
-    error = np.sqrt(np.power(APD - Grandi_APD, 2))
+    apd90 = APsim.APD90(log)
+
+    error = np.sqrt(np.power(apd90 - base_apd90, 2))
 
     return error
 
 
-initial_guess = peak_IKr_scale
-res = minimize(APD_problem, initial_guess, method='nelder-mead',
-               options={'disp': True})
-APD_IKr_scale = res.x[0]
-log_tune2 = AP_model.model_simulation(1000,
-                                      conductance_name='tune.ikr_rescale',
-                                      conductance_value=APD_IKr_scale,
-                                      abs_tol=abs_tol, rel_tol=rel_tol)
-Grd_SD_APD = AP_model.APD90(log_tune2[Vm_key], protocol_offset, 0.1)
+if not args.cache:
+    # Get the IKr scaling factor by matching the APD
+    initial_guess = peak_IKr_scale
 
-# Plot AP and hERG
-Grd_SD_AP_panel = axs[2]
-plot.add_single(Grd_SD_AP_panel[0][0], log_tune2, Vm_key)
-plot.add_single(Grd_SD_AP_panel[1][0], log_tune2, IKr_key)
-Grd_SD_AP_panel[0][0].text(370, 0, 'APD90: ' + '{:.1f}'.format(Grd_SD_APD),
-                           fontsize=8, ha='left')
-AP_y_bottom3, AP_y_top3 = Grd_SD_AP_panel[0][0].get_ylim()
-IKr_y_bottom3, IKr_y_top3 = Grd_SD_AP_panel[1][0].get_ylim()
-Grd_SD_AP_panel[1][0].text(450, (IKr_y_top3 - IKr_y_bottom3) / 2,
-                           'scale: ' + '{:.2f}'.format(APD_IKr_scale),
-                           fontsize=8, ha='left')
-Grd_SD_AP_panel[0][0].set_title(APmodel_name + "-SD\nAPD")
-fig.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
-           axs=Grd_SD_AP_panel, subgridspec=subgridspecs[2])
+    res = minimize(APD_problem, initial_guess, method='nelder-mead',
+                   options={'disp': True})
+    conductance_scale = res.x[0]
+    print('AP_duration: ', conductance_scale)
 
-# Plot current contribution
-Grd_SD_current_panel = axs[6]
-Grd_SD_current_panel[0][0].set_xlabel("Time (ms)")
-Grd_SD_current_panel[0][0].set_xlim(0, plotting_pulse_time)
-Grd_SD_current_panel[0][0].set_yticklabels([])
-Grd_SD_current_panel[0][0].set_ylim(-1.02, 1.02)
-mp.cumulative_current(log_tune2, currents, Grd_SD_current_panel[0][0],
-                      colors=colours, normalise=True)
-Grd_SD_current_panel[0][0].set_rasterization_zorder(2)
+    ikr_scale_df['AP_duration'] = conductance_scale
+else:
+    ikr_scale_df = pd.read_csv(result_file, index_col=[0],
+                               skipinitialspace=True)
+    conductance_scale = ikr_scale_df.loc['AP_duration'].values[0]
+
+APsim.set_ikr_rescale(conductance_scale)
+log_tuned = APsim.simulate()
+apd90 = APsim.APD90(log_tuned)
+
+if args.plot:
+    # Plot AP and hERG
+    AP_panel = axs[2]
+    plot.add_single(AP_panel[0][0], log_tuned, Vm_key)
+    plot.add_single(AP_panel[1][0], log_tuned, IKr_key)
+
+    AP_panel[0][0].text(370, 0, 'APD90: ' + '{:.1f}'.format(apd90),
+                        fontsize=8, ha='left')
+    AP_y_bottom3, AP_y_top3 = AP_panel[0][0].get_ylim()
+    IKr_y_bottom3, IKr_y_top3 = AP_panel[1][0].get_ylim()
+    AP_panel[1][0].text(450, (IKr_y_top3 - IKr_y_bottom3) / 2,
+                        'scale: ' + '{:.2f}'.format(conductance_scale),
+                        fontsize=8, ha='left')
+    AP_panel[0][0].set_title(APmodel_name + "-SD\nAPD")
+    fig.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
+               axs=AP_panel, subgridspec=subgridspecs[2])
+
+    # Plot current contribution
+    current_panel = axs[6]
+    mp.cumulative_current(log_tuned, currents, current_panel[0][0],
+                          colors=colours, normalise=True)
+    current_panel[0][0].set_rasterization_zorder(2)
 
 #######################
 # Tuning method 3: scale conductance to have same hERG current flux
@@ -221,71 +218,91 @@ Grd_SD_current_panel[0][0].set_rasterization_zorder(2)
 
 
 def flux_problem(conductance_scale):
-    log = AP_model.model_simulation(1000, conductance_name='tune.ikr_rescale',
-                                    conductance_value=conductance_scale,
-                                    abs_tol=1e-7, rel_tol=1e-8)
+    APsim.set_ikr_rescale(conductance_scale)
+    log = APsim.simulate(log_var=[time_key, IKr_key])
+
     flux = np.trapz(log[IKr_key], x=log.time())
 
-    error = np.sqrt(np.power(flux - Grandi_flux, 2))
+    error = np.sqrt(np.power(flux - base_ikr_flux, 2))
 
     return error
 
 
-initial_guess = peak_IKr_scale
-res = minimize(flux_problem, initial_guess, method='nelder-mead',
-               options={'disp': True})
-flux_IKr_scale = res.x[0]
-log_tune3 = AP_model.model_simulation(1000,
-                                      conductance_name='tune.ikr_rescale',
-                                      conductance_value=flux_IKr_scale,
-                                      abs_tol=abs_tol, rel_tol=rel_tol)
-Grd_SD_APD = AP_model.APD90(log_tune3[Vm_key],
-                            protocol_offset, 0.1)
+if not args.cache:
+    # Get the IKr scaling factor by matching the flux of IKr
+    initial_guess = peak_IKr_scale
+    res = minimize(flux_problem, initial_guess, method='nelder-mead',
+                   options={'disp': True})
+    conductance_scale = res.x[0]
+    print('hERG_flux: ', conductance_scale)
 
-# Plot AP and hERG
-Grd_SD_AP_panel = axs[3]
-plot.add_single(Grd_SD_AP_panel[0][0], log_tune3, Vm_key)
-plot.add_single(Grd_SD_AP_panel[1][0], log_tune3, IKr_key)
-Grd_SD_AP_panel[0][0].text(370, 0, 'APD90: ' + '{:.1f}'.format(Grd_SD_APD),
-                           fontsize=8, ha='left')
-AP_y_bottom4, AP_y_top4 = Grd_SD_AP_panel[0][0].get_ylim()
-IKr_y_bottom4, IKr_y_top4 = Grd_SD_AP_panel[1][0].get_ylim()
-Grd_SD_AP_panel[1][0].text(450, (IKr_y_top4 - IKr_y_bottom4) / 2,
-                           'scale: ' + '{:.2f}'.format(flux_IKr_scale),
-                           fontsize=8, ha='left')
-Grd_SD_AP_panel[0][0].set_title(APmodel_name + r"-SD" "\n" r"$I_\mathrm{Kr}$ flux")
-fig.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
-           axs=Grd_SD_AP_panel, subgridspec=subgridspecs[3])
+    ikr_scale_df['hERG_flux'] = conductance_scale
+else:
+    ikr_scale_df = pd.read_csv(result_file, index_col=[0],
+                               skipinitialspace=True)
+    conductance_scale = ikr_scale_df.loc['AP_duration'].values[0]
 
-# Plot current contribution
-Grd_SD_current_panel = axs[7]
-Grd_SD_current_panel[0][0].set_xlabel("Time (ms)")
-Grd_SD_current_panel[0][0].set_xlim(0, plotting_pulse_time)
-Grd_SD_current_panel[0][0].set_yticklabels([])
-Grd_SD_current_panel[0][0].set_ylim(-1.02, 1.02)
-mp.cumulative_current(log_tune3, currents, Grd_SD_current_panel[0][0],
-                      colors=colours, normalise=True)
-Grd_SD_current_panel[0][0].set_rasterization_zorder(2)
+APsim.set_ikr_rescale(conductance_scale)
+log_tuned = APsim.simulate()
+apd90 = APsim(log_tuned)
 
+if args.plot:
+    # Plot AP and hERG
+    AP_panel = axs[3]
+    plot.add_single(AP_panel[0][0], log_tuned, Vm_key)
+    plot.add_single(AP_panel[1][0], log_tuned, IKr_key)
+    AP_panel[0][0].text(370, 0, 'APD90: ' + '{:.1f}'.format(apd90),
+                        fontsize=8, ha='left')
+    AP_y_bottom4, AP_y_top4 = AP_panel[0][0].get_ylim()
+    IKr_y_bottom4, IKr_y_top4 = AP_panel[1][0].get_ylim()
+    AP_panel[1][0].text(450, (IKr_y_top4 - IKr_y_bottom4) / 2,
+                        'scale: ' + '{:.2f}'.format(conductance_scale),
+                        fontsize=8, ha='left')
+    AP_panel[0][0].set_title(APmodel_name +
+                             r"-SD" "\n" r"$I_\mathrm{Kr}$ flux")
+    fig.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
+               axs=AP_panel, subgridspec=subgridspecs[3])
+
+    # Plot current contribution
+    current_panel = axs[7]
+    mp.cumulative_current(log_tuned, currents, current_panel[0][0],
+                          colors=colours, normalise=True)
+    current_panel[0][0].set_rasterization_zorder(2)
+
+#######################
+# Tuning method 4: math APDs at different pacing rates
+#######################
+
+#######################
 # Adjust figures
-AP_y_min = min(AP_y_bottom1, AP_y_bottom2, AP_y_bottom3, AP_y_bottom4)
-AP_y_max = max(AP_y_top1, AP_y_top2, AP_y_top3, AP_y_top4)
-IKr_y_min = min(IKr_y_bottom1, IKr_y_bottom2, IKr_y_bottom3, IKr_y_bottom4)
-IKr_y_max = max(IKr_y_top1, IKr_y_top2, IKr_y_top3, IKr_y_top4)
-for i in range(4):
-    axs[i][0][0].set_ylim(AP_y_min, AP_y_max)
-    axs[i][1][0].set_ylim(IKr_y_min, IKr_y_max)
-    if i == 0:
-        axs[i][0][0].set_ylabel('AP')
-        axs[i][1][0].set_ylabel(r"$I_\mathrm{Kr}$")
-    else:
-        axs[i][0][0].set_yticklabels([])
-        axs[i][1][0].set_yticklabels([])
+#######################
+if args.plot:
+    AP_y_min = min(AP_y_bottom1, AP_y_bottom2, AP_y_bottom3, AP_y_bottom4)
+    AP_y_max = max(AP_y_top1, AP_y_top2, AP_y_top3, AP_y_top4)
+    IKr_y_min = min(IKr_y_bottom1, IKr_y_bottom2, IKr_y_bottom3, IKr_y_bottom4)
+    IKr_y_max = max(IKr_y_top1, IKr_y_top2, IKr_y_top3, IKr_y_top4)
+    for i in range(4):
 
-# Save figures
-fig.savefig(fig_dir + 'IKr_tuning.pdf')
+        # Current panels
+        axs[i + 4][0][0].set_xlabel("Time (ms)")
+        axs[i + 4][0][0].set_xlim(0, plotting_pulse_time)
+        axs[i + 4][0][0].set_yticklabels([])
+        axs[i + 4][0][0].set_ylim(-1.02, 1.02)
 
-conductance_scale_df = pd.DataFrame(
-    {'conductance scale': [peak_IKr_scale, APD_IKr_scale, flux_IKr_scale]},
-    index=['hERG_peak', 'AP_duration', 'hERG_flux'])
-conductance_scale_df.to_csv(data_dir + APmodel_name + '_conductance_scale.csv')
+        axs[i][0][0].set_ylim(AP_y_min, AP_y_max)
+        axs[i][1][0].set_ylim(IKr_y_min, IKr_y_max)
+        if i == 0:
+            axs[i][0][0].set_ylabel('AP')
+            axs[i][1][0].set_ylabel(r"$I_\mathrm{Kr}$")
+        else:
+            axs[i][0][0].set_yticklabels([])
+            axs[i][1][0].set_yticklabels([])
+
+    # Save figures
+    fig.savefig(os.path.join(modelling.FIG_DIR, 'checking_figures', 'IKr_tuning.pdf'))
+
+# conductance_scale_df = pd.DataFrame(
+#     {'conductance scale': [peak_IKr_scale, APD_IKr_scale, flux_IKr_scale]},
+#     index=['hERG_peak', 'AP_duration', 'hERG_flux'])
+if not args.cache:
+    ikr_scale_df.to_csv(result_file)

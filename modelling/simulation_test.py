@@ -6,49 +6,18 @@ import modelling
 
 APmodel_dir = os.path.join(modelling.MAIN_DIR, 'math_model', 'AP_model')
 
-AP_file_names = {
-    'Grandi': {
-        'AP': 'Grd-2010.mmt',
-        'AP_IKr': 'Grd-2010-Li-SD.mmt',
-        'label': 'Grandi (2010)'
-    },
-    'ORd-Li': {
-        'AP': 'ORd-2011.mmt',
-        'AP_IKr': 'ohara-cipa-2017.mmt',
-        'label': "CiPAORdv1.0 (2017)"
-    },
-    'TTP': {
-        'AP': 'TTP-2006.mmt',
-        'AP_IKr': 'TTP-2006-Li-SD.mmt',
-        'label': 'ten Tusscher (2006)'
-    },
-    'Tomek': {
-        'AP': 'Tomek-2019.mmt',
-        'AP_IKr': 'Tomek-2019-Li-SD.mmt',
-        'label': 'Tomek (2019)'
-    },
-    'Tomek-Cl': {
-        'AP': 'Tomek-Cl-2020.mmt',
-        'AP_IKr': 'Tomek-Cl-2020-Li-SD.mmt',
-        'label': 'Tomek (2019)'
-    },
-    'ORd-Lei': {
-        'AP': 'ORd-2011.mmt',
-        'AP_IKr': 'ORd-2011-Lei-SD.mmt',
-        'label': 'Lei (2019)'
-    },}
-
 
 def APmodel_mmt(model, ikr_modified=True):
     """
     Take model name and returns mmt file directory
     """
+    AP_filenames = modelling.model_naming.AP_file_names
     # If original model is requested
     if ikr_modified:
         file_key = 'AP_IKr'
     else:
         file_key = 'AP'
-    return os.path.join(APmodel_dir, AP_file_names[model][file_key])
+    return os.path.join(APmodel_dir, AP_filenames[model][file_key])
 
 
 class ModelSimController(object):
@@ -109,11 +78,6 @@ class ModelSimController(object):
                       * self._conductance_scale}
         self._parameters.update(param_dict)
 
-    # def set_conductance(self, ikr_conductance):
-    #     self._conductance = float(ikr_conductance)
-    #     param_dict = {self.ikr_key_head + '.gKr': self._conductance}
-    #     self._parameters.update(param_dict)
-
     def set_ikr_rescale(self, ikr_rescale):
         self._ikr_tune = float(ikr_rescale)
         param_dict = {'tune.ikr_rescale': self._ikr_tune}
@@ -121,28 +85,11 @@ class ModelSimController(object):
 
     def reset_parameters(self):
         param_dict = {}
-        for k in modelling.BindingParameters().SD_param_names + ['Kt', 'gKr']:
+        for k in modelling.SD_details.SD_param_names + ['Kt', 'gKr']:
             param_dict[self.ikr_key_head + '.' + k] = \
                 self.model.get(self.ikr_component.var(k)).eval()
 
         self._parameters.update(param_dict)
-        # param_dict = {
-        #     self.ikr_key_head + "Vhalf":
-        #         self.model.get(self.ikr_component.var('Vhalf')).eval(),
-        #     self.ikr_key_head + "Kmax":
-        #         self.model.get(self.ikr_component.var('Kmax')).eval(),
-        #     self.ikr_key_head + "Ku":
-        #         self.model.get(self.ikr_component.var('Ku')).eval(),
-        #     self.ikr_key_head + "n":
-        #         self.model.get(self.ikr_component.var('n')).eval(),
-        #     self.ikr_key_head + "halfmax":
-        #         self.model.get(self.ikr_component.var('halfmax')).eval(),
-        #     self.ikr_key_head + "Kt":
-        #         self.model.get(self.ikr_component.var('Kt')).eval(),
-        #     self.ikr_key_head + "gKr":
-        #         self.model.get(self.ikr_component.var('gKr')).eval(),
-        #     : 1}
-        # self._parameters.update(param_dict)
         del(param_dict)
 
     def get_parameters(self):
@@ -194,8 +141,7 @@ class ModelSimController(object):
 
         self.sim.pre(self._cycle_length * self.prepace)
         log = self.sim.run(self._cycle_length * save_signal, log=log_var,
-                           log_interval=timestep)
-        log = log.npview()
+                           log_interval=timestep).npview()
         if save_signal > 1:
             log = log.fold(self._cycle_length)
 
@@ -208,7 +154,8 @@ class ModelSimController(object):
         time_log = log.time()
         timestep = (max(time_log) - min(time_log)) / len(time_log)
 
-        Vm_key_list = log.keys_like(self.Vm_key)
+        Vm_key_list = [x for x in log.keys() if x.endswith(str(self.Vm_key))]
+        Vm_key_list.sort()
         pulse_num = len(Vm_key_list)
 
         Vm_signal = []
@@ -249,7 +196,10 @@ class ModelSimController(object):
 
             APD90s.append(APD90_value)
 
-        return APD90s
+        if len(APD90s) == 1:
+            return APD90s[0]
+        else:
+            return APD90s
 
     def qNet(self, log):
         """
@@ -262,7 +212,7 @@ class ModelSimController(object):
         if np.abs(timestep - 0.01) > 1e-8:
             print('Warning: Time step should be 0.01ms instead of ' \
                   f'{timestep}ms.')
-        if np.abs(time_log[-1] - time_log[0] - 2000) > 1e-8:
+        if np.abs(time_log[-1] - time_log[0] - 1999.99) > 1e-8:
             print('Warning: qNet should be calculated with time length ' \
                   f'2000ms instead of {time_log[-1] - time_log[0]}ms.')
         if np.abs(self._cycle_length - 2000) > 1e-8:
@@ -273,11 +223,13 @@ class ModelSimController(object):
             print('Warning: Dutta et al. 2017 used 1000 prepace.')
 
         qNet_current = ['ICaL', 'INaL', 'IKr', 'IKs', 'IK1', 'Ito']
-        missing_current_keys = [i for i in qNet_current if self.current_keys[i] is None]
+        missing_current_keys = [i for i in qNet_current
+                                if self.current_keys[i] is None]
         if missing_current_keys:
             print('There are missing currents')
             # Rephrase
-        qNet_current_keys = [self.current_keys[i] for i in qNet_current if self.current_keys[i] is not None]
+        qNet_current_keys = [self.current_keys[i] for i in qNet_current
+                             if self.current_keys[i] is not None]
         inet = 0
         for c in qNet_current_keys:
             inet += log[c]
