@@ -36,8 +36,8 @@ ICaL.jca                 = 1
 ICaL.ffp                 = 1
 ICaL.fcafp               = 1
 ICaL.nca                 = 0
-ikr.xrf                  = 0
-ikr.xrs                  = 0
+IKr.xrf                  = 0
+IKr.xrs                  = 0
 IKs.xs1                  = 0
 IKs.xs2                  = 0
 IK1.xk1                  = 1
@@ -190,7 +190,7 @@ IKb = GKb * xkb * (membrane.v - reversal_potentials.EK)
 xkb = 1 / (1 + exp(-(membrane.v - 14.48 [mV]) / 18.34 [mV]))
     in [1]
 
-[ikr]
+[IKr]
 Axrf = 1 / (1 + exp((membrane.v + 54.81 [mV]) / 38.21 [mV]))
     in [1]
 Axrs = 1 - Axrf
@@ -763,7 +763,7 @@ cmdnmax_b = 0.05 [mM]
     in [mM]
 csqnmax = 10 [mM]
     in [mM]
-dot(ki) = -(Ito.Ito + ikr.IKr + IKs.IKs + IK1.IK1 + IKb.IKb + membrane.Istim - 2 * INaK.INaK) * cm * cell_geometry.Acap / (physical_constants.F * cell_geometry.vmyo) + diff.JdiffK * cell_geometry.vss / cell_geometry.vmyo
+dot(ki) = -(Ito.Ito + IKr.IKr + IKs.IKs + IK1.IK1 + IKb.IKb + membrane.Istim - 2 * INaK.INaK) * cm * cell_geometry.Acap / (physical_constants.F * cell_geometry.vmyo) + diff.JdiffK * cell_geometry.vss / cell_geometry.vmyo
     in [mM]
 kmcmdn = 0.00238 [mM]
     in [mM]
@@ -789,7 +789,7 @@ duration = 0.5 [ms]
     in [ms]
 stimStart = 50 [ms]
     in [ms]
-dot(v) = -(INa.INa + INaL.INaL + Ito.Ito + ICaL.ICaL + ICaL.ICaNa + ICaL.ICaK + ikr.IKr + IKs.IKs + IK1.IK1 + INaCa_i.INaCa_i + INaCa_i.INaCa_ss + INaK.INaK + INab.INab + IKb.IKb + IpCa.IpCa + ICab.ICab + Istim)
+dot(v) = -(INa.INa + INaL.INaL + Ito.Ito + ICaL.ICaL + ICaL.ICaNa + ICaL.ICaK + IKr.IKr + IKs.IKs + IK1.IK1 + INaCa_i.INaCa_i + INaCa_i.INaCa_ss + INaK.INaK + INab.INab + IKb.IKb + IpCa.IpCa + ICab.ICab + Istim)
     in [mV]
 vffrt = v * physical_constants.F * physical_constants.F / (physical_constants.R * physical_constants.T)
     in [C/mol]

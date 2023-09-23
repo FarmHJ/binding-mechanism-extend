@@ -20,7 +20,7 @@ if not os.path.exists(data_filepath):
     os.makedirs(data_filepath)
 
 # Model directory
-current_model_filepath = '../math_model/current_model/lei2019-SD.mmt'
+current_model_filepath = '../math_model/IKr_model/lei2019-SD.mmt'
 AP_model_filepath = '../math_model/AP_model/ORd-2011-Lei-SD.mmt'
 
 # Load current model and set Milnes' protocol
@@ -55,7 +55,7 @@ Kmax_fullrange = 10**np.linspace(0, 8, 20)
 Ku_fullrange = 10**np.linspace(-5, 1, 20)
 
 starting_param_df = pd.DataFrame([1] * 5, index=param_names).T
-model_keys = modelling.ModelDetails().current_keys['Lei']
+model_keys = modelling.model_naming.model_current_keys['ORd-Lei']
 var_key = [model_keys['time'], model_keys['Vm']]
 ComparisonController = modelling.ModelComparison(starting_param_df,
                                                  var_key=var_key)
@@ -132,7 +132,7 @@ def param_evaluation(param_values):
 
 
 # Load IKr tuning factor
-scaling_df_filepath = '../simulation_data/Lei_conductance_scale.csv'
+scaling_df_filepath = '../simulation_data/ORd-Lei_conductance_scale.csv'
 scaling_df = pd.read_csv(scaling_df_filepath, index_col=[0])
 scaling_factor = scaling_df.loc['AP_duration']['conductance scale']
 

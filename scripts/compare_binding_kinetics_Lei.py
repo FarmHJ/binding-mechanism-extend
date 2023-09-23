@@ -1,5 +1,15 @@
-# Check that the Hill curve from the Lei model is the same as from the Li model
+# Compare the AP, APD90 and qNet between the ORd-Lei-SD models and the ORd-Lei-CS models
+# for a given drug at a chosen IKr tuning method
+# Output:
+# AP
+# 1. 2 pulses of action potential simulated from both models (steady state).
+# 2. APD90 of both pulses for both models (steady state).
+# APD
+# 1. APD90 for both models at various drug concentration.
+# qNet
+# 1. qNet for both models at various drug concentration.
 
+import argparse
 import matplotlib
 import myokit
 import numpy as np
@@ -9,53 +19,68 @@ import pints
 
 import modelling
 
+# Define AP model, drug and tuning method
+parser = argparse.ArgumentParser(
+    description="Comparison between ORd-Lei-SD model and the ORd-Lei-CS model"
+    " for a given drug")
+parser.add_argument("drug", help="Drug")
+parser.add_argument("tuning_method", default="AP_duration",
+                    choices=['hERG_peak', 'hERG_flux', 'AP_duration'],
+                    help="Method used to tune IKr")
+parser.add_argument("-m", "--mode", default="APD-qNet", type=str,
+                    help="Type of output: AP, APD, qNet APD-qNet")
+args = parser.parse_args()
+
+drug = args.drug
 
 # Define drug and protocol
-drug = 'dofetilide'
 protocol_name = 'Milnes'
 pulse_time = 25e3
-protocol = modelling.ProtocolLibrary().Milnes(pulse_time)
+Milnes_protocol = modelling.ProtocolLibrary().Milnes(pulse_time)
 
 parameter_name = ['ikr.kmax', 'ikr.ku', 'ikr.halfmax', 'ikr.hill', 'ikr.vhalf']
 parameter_dir = '../../Lei-SD-fits/Milnes-data-fits/'
+param_dir = os.path.join(modelling.MAIN_DIR, '..', 'Lei-SD-fits',
+                         'Milnes-data-fits')
+print(param_dir)
 
 # for fname in glob.glob(parameter_dir +
 #                       'Drug-*-lei-model12-protocol-Milnes-fit-RMSE.txt'):
-drug_params = np.loadtxt(parameter_dir +
-                         'Drug-dofetilide-lei-model12-protocol-Milnes-fit-RMSE.txt',
-                         unpack=True)
+param_file = 'Drug-' + drug + '-lei-model12-protocol-Milnes-fit-RMSE.txt'
+drug_params = np.loadtxt(os.path.join(param_dir, param_file), unpack=True)
 drug_params = np.array(drug_params)
-param_df = pd.DataFrame(drug_params, index=['Kmax', 'Ku', 'EC50', 'N', 'Vhalf']).T
+param_df = pd.DataFrame(drug_params,
+                        index=['Kmax', 'Ku', 'EC50', 'N', 'Vhalf']).T
 param_df['Vhalf'] = -1 * param_df['Vhalf']
 print(param_df)
 
 # Define the range of drug concentration for a given drug
-drug_conc_lib = modelling.DrugConcentrations()
-drug_conc = drug_conc_lib.drug_concentrations[drug]['coarse']
-repeats = 1000
+drug_conc = modelling.SD_details.drug_concentrations[drug]['coarse']
 
 # Define directories to save simulated data
-data_dir = '../simulation_data/kinetics_comparison/ORd-Lei/AP_duration_match/' + \
-    drug + '/'
+data_dir = os.path.join(modelling.RESULT_DIR, 'kinetics_comparison',
+                        'ORd-Lei', args.tuning_method + '_match', drug + '_new')
 if not os.path.isdir(data_dir):
     os.makedirs(data_dir)
 result_filename = 'Hill_curve_Lei.txt'
 
 # Load IKr model
-model = '../math_model/current_model/lei2019_SD.mmt'
-model, _, x = myokit.load(model)
+# model = '../math_model/current_model/lei2019_SD.mmt'
+# model, _, x = myokit.load(model)
 
-model_keys = modelling.ModelDetails().current_keys['Lei']
-current_key = model_keys['IKr']
-current_head_key = current_key[:current_key.index('.')]
+# model_keys = modelling.ModelDetails().current_keys['Lei']
+# current_key = model_keys['IKr']
+# current_head_key = current_key[:current_key.index('.')]
 
-current_model = modelling.Simulation(model, current_head_key=current_head_key)
-current_model.protocol = protocol
+# current_model = modelling.Simulation(model, current_head_key=current_head_key)
+# current_model.protocol = protocol
+IKr_sim = modelling.ModelSimController('Lei')
+IKr_sim.sim.set_protocol(Milnes_protocol)
 
-# Define tolerance value
-abs_tol = 1e-7
-rel_tol = 1e-8
-log_var = [model_keys['time'], model_keys['Vm'], current_key]
+# # Define tolerance value
+# abs_tol = 1e-7
+# rel_tol = 1e-8
+# log_var = [model_keys['time'], model_keys['Vm'], current_key]
 
 # Simulate IKr of the SD model for a range of drug concentrations
 # Extract the peak of IKr

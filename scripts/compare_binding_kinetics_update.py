@@ -1,5 +1,5 @@
-# Compare the AP, APD90 and qNet between the AP-Li-SD models and the AP-Li-CS models
-# for a given drug at a chosen IKr tuning method
+# Compare the AP, APD90 and qNet between the AP-Li-SD models and
+# the AP-Li-CS models for a given drug at a chosen IKr tuning method
 # Output:
 # AP
 # 1. 2 pulses of action potential simulated from both models (steady state).
@@ -22,7 +22,9 @@ parser = argparse.ArgumentParser(
     description="Comparison between AP-Li-SD model and the AP-Li-CS model")
 parser.add_argument("APmodel", help="Name of AP model")
 parser.add_argument("drug", help="Drug")
-parser.add_argument("tuning_method", help="Method used to tune IKr")
+parser.add_argument("tuning_method",
+                    choices=['hERG_peak', 'hERG_flux', 'AP_duration'],
+                    help="Method used to tune IKr")
 parser.add_argument("-m", "--mode", default="APD-qNet", type=str,
                     help="Type of output: AP, APD, qNet APD-qNet")
 args = parser.parse_args()
@@ -71,10 +73,6 @@ else:
 #     repeats_SD = 1000
 #     repeats_CS = 1000
 
-time_key = model_keys['time']
-Vm_key = model_keys['Vm']
-log_var = [time_key, Vm_key, current_key]
-
 HillModel = modelling.HillModel()
 
 # Simulate AP of the AP-SD model and the AP-CS model
@@ -87,7 +85,7 @@ if MODE in ["AP", "APD", "APD-qNet"]:
         print('simulating concentration: ' + str(drug_conc[i]))
         APsim.set_SD_parameters(drug)
         APsim.set_conc(drug_conc[i])
-        log = APsim.simulate(save_signal=save_signal, log_var=log_var)
+        log = APsim.simulate(save_signal=save_signal)
         if MODE == "AP":
             log.save_csv(os.path.join(data_dir,
                                       'SD_AP_' + str(drug_conc[i]) + '.csv'))
@@ -98,7 +96,7 @@ if MODE in ["AP", "APD", "APD-qNet"]:
         reduction_scale = HillModel.simulate(Hill_coef, drug_conc[i])
         APsim.set_conc(0)
         APsim.set_CS_parameter(reduction_scale)
-        log = APsim.simulate(save_signal=save_signal, log_var=log_var)
+        log = APsim.simulate(save_signal=save_signal)
         APsim.set_CS_parameter(1)
         if MODE == "AP":
             log.save_csv(os.path.join(data_dir,
@@ -131,6 +129,7 @@ if MODE in ["AP", "APD", "APD-qNet"]:
 # Compute qNet
 if MODE in ["qNet", "APD-qNet"]:
     pulse_time = 2000
+    base_log_key = [APsim.time_key, APsim.Vm_key]
     qNet_current_list = [model_keys['ICaL'], model_keys['INaL'], current_key,
                          model_keys['IKs'], model_keys['IK1'],
                          model_keys['Ito']]
@@ -153,7 +152,7 @@ if MODE in ["qNet", "APD-qNet"]:
         APsim.set_SD_parameters(drug)
         APsim.set_conc(drug_conc[i])
         log = APsim.simulate(timestep=0.01,
-                             log_var=log_var[:2] + qNet_current_list)
+                             log_var=base_log_key + qNet_current_list)
 
         qNet = APsim.qNet(log)
         qNet_SD_arr.append(qNet)
@@ -163,7 +162,7 @@ if MODE in ["qNet", "APD-qNet"]:
         APsim.set_conc(0)
         APsim.set_CS_parameter(reduction_scale)
         log = APsim.simulate(timestep=0.01,
-                             log_var=log_var[:2] + qNet_current_list)
+                             log_var=base_log_key + qNet_current_list)
         APsim.set_CS_parameter(1)
 
         qNet = APsim.qNet(log)

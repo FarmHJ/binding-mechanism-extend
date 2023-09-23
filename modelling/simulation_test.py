@@ -4,13 +4,12 @@ import os
 
 import modelling
 
-APmodel_dir = os.path.join(modelling.MAIN_DIR, 'math_model', 'AP_model')
-
 
 def APmodel_mmt(model, ikr_modified=True):
     """
     Take model name and returns mmt file directory
     """
+    APmodel_dir = os.path.join(modelling.MAIN_DIR, 'math_model', 'AP_model')
     AP_filenames = modelling.model_naming.AP_file_names
     # If original model is requested
     if ikr_modified:
@@ -20,18 +19,32 @@ def APmodel_mmt(model, ikr_modified=True):
     return os.path.join(APmodel_dir, AP_filenames[model][file_key])
 
 
+def IKrmodel_mmt(model):
+    """
+    Take model name and returns mmt file directory
+    """
+    IKrmodel_dir = os.path.join(modelling.MAIN_DIR, 'math_model', 'IKr_model')
+    filenames = modelling.model_naming.IKr_file_names
+
+    return os.path.join(IKrmodel_dir, filenames[model]['IKr-SD'])
+
+
 class ModelSimController(object):
     """
     To control the simulations of models
     """
 
-    def __init__(self, APmodel_name, ikr_modified=True, cycle_length=1000,
+    def __init__(self, model_name, ikr_modified=True, cycle_length=1000,
                  protocol_offset=50):
         super(ModelSimController, self).__init__()
 
         # Load model
-        self.model = myokit.load_model(APmodel_mmt(APmodel_name,
-                                                   ikr_modified=ikr_modified))
+        if model_name in ['Lei', 'Li']:
+            self.model = myokit.load_model(IKrmodel_mmt(model_name))
+        else:
+            self.model = myokit.load_model(
+                APmodel_mmt(model_name, ikr_modified=ikr_modified))
+
         # parameters
         self._parameters = {}
 
@@ -49,8 +62,14 @@ class ModelSimController(object):
 
         self.initial_state = self.sim.state()
 
+        if model_name.startswith('ORd') and not ikr_modified:
+            model_name = 'ORd'
+        elif model_name in ['Lei', 'Li']:
+            model_name = 'ORd-' + model_name
+
         model_current_keys = modelling.model_naming.model_current_keys
-        self.current_keys = model_current_keys[APmodel_name]
+        self.current_keys = model_current_keys[model_name]
+        self.time_key = self.current_keys['time']
         self.ikr_key = self.current_keys['IKr']
         self.Vm_key = self.current_keys['Vm']
         self.ikr_key_head = self.ikr_key[:self.ikr_key.index('.')]
@@ -138,6 +157,9 @@ class ModelSimController(object):
         if reset:
             self.sim.reset()
             self.sim.set_state(self.initial_state)
+
+        if log_var is None:
+            log_var = [self.time_key, self.Vm_key, self.ikr_key]
 
         self.sim.pre(self._cycle_length * self.prepace)
         log = self.sim.run(self._cycle_length * save_signal, log=log_var,
