@@ -10,155 +10,155 @@ class ModelDetails(object):
         # self.current_list = ['IKr', 'IKs', 'Ito', 'IKb', 'IK1', 'INaK', 'INa',
         #                      'INaL', 'ICaL', 'INaCa', 'INaB', 'ICaB', 'IClCa',
         #                      'IClB', 'ICaP', 'IKACh', 'IKATP']
-        self.current_keys = {
-            'ORd': {
-                'Ito': 'Ito.Ito',
-                'IKb': 'IKb.IKb',
-                'IKs': 'IKs.IKs',
-                'IKr': 'IKr.IKr',
-                'ICaP': 'IpCa.IpCa',
-                'IK1': 'IK1.IK1',
-                'INaK': 'INaK.INaK',
-                'ICaL': 'ICaL.ICaL_total',
-                'INaL': 'INaL.INaL',
-                'INaCa': 'INaCa_i.INaCa_total',
-                'ICaB': 'ICab.ICab',
-                'INaB': 'INab.INab',
-                'INa': 'INa.INa',
-                'IClCa': None,
-                'IClB': None,
-                'IKACh': None,
-                'IKATP': None,
-                'time': 'environment.time',
-                'Vm': 'membrane.v'
-            },
-            'Grandi': {
-                'IClB': 'I_ClCa.I_Clbk',
-                'IClCa': 'I_ClCa.I_ClCa',
-                'Ito': 'I_to.I_to',
-                'IKb': 'I_Kp.I_kp',  # same as plateau potassium current?
-                'IKs': 'I_Ks.I_ks',
-                'IKr': 'I_Kr.I_kr',
-                'ICaP': 'I_PCa.I_pca',
-                'IK1': 'I_Ki.I_ki',
-                'INaK': 'I_NaK.I_nak',
-                'ICaL': 'I_Ca.I_Catot',
-                'INaCa': 'I_NCX.I_ncx',
-                'ICaB': 'I_CaBK.I_cabk',
-                'INaB': 'I_NaBK.I_nabk',
-                'INa': 'I_Na.I_Na',
-                'INaL': None,
-                'IKACh': None,
-                'IKATP': None,
-                'time': 'environment.time',
-                'Vm': 'membrane_potential.V_m',
-            },
-            'ORd-CiPA': {
-                'Ito': 'ito.Ito',
-                'IKb': 'ikb.IKb',
-                'IKs': 'iks.IKs',
-                'IKr': 'ikr.IKr',
-                'ICaP': 'ipca.IpCa',
-                'IK1': 'ik1.IK1',
-                'INaK': 'inak.INaK',
-                'ICaL': 'ical.ICaL_total',
-                'INaL': 'inal.INaL',
-                'INaCa': 'inaca.INaCa_total',
-                'ICaB': 'icab.ICab',
-                'INaB': 'inab.INab',
-                'INa': 'ina.INa',
-                'IClCa': None,
-                'IClB': None,
-                'IKACh': None,
-                'IKATP': None,
-                'time': 'engine.time',
-                'Vm': 'membrane.V'
-            },
-            'TTP': {
-                'Ito': 'transient_outward_current.i_to',
-                'IKb': 'potassium_pump_current.i_p_K',
-                'IKs': 'slow_time_dependent_potassium_current.i_Ks',
-                'IKr': 'rapid_time_dependent_potassium_current.i_Kr',
-                'IK1': 'inward_rectifier_potassium_current.i_K1',
-                'INaCa': 'sodium_calcium_exchanger_current.i_NaCa',
-                'INaK': 'sodium_potassium_pump_current.i_NaK',
-                'ICaP': 'calcium_pump_current.i_p_Ca',
-                'ICaL': 'L_type_Ca_current.i_CaL',
-                'ICaB': 'calcium_background_current.i_b_Ca',
-                'INaB': 'sodium_background_current.i_b_Na',
-                'INa': 'fast_sodium_current.i_Na',
-                'INaL': None,
-                'IClCa': None,
-                'IClB': None,
-                'IKACh': None,
-                'IKATP': None,
-                'time': 'environment.time',
-                'Vm': 'membrane.V'
-            },
-            'Tomek': {
-                'IClB': 'ICl.IClb',
-                'IClCa': 'ICl.IClCa',
-                'Ito': 'Ito.Ito',
-                'IKb': 'IKb.IKb',
-                'IKs': 'IKs.IKs',
-                'IKr': 'IKr.IKr',
-                'ICaP': 'IpCa.IpCa',
-                'IK1': 'IK1.IK1',
-                'INaK': 'INaK.INaK',
-                'ICaL': 'ICaL.ICaL',
-                'INaL': 'INaL.INaL',
-                'INaCa': 'INaCa.INaCa_total',
-                'ICaB': 'ICab.ICab',
-                'INaB': 'INab.INab',
-                'INa': 'INa.INa',
-                'IKACh': None,
-                'IKATP': None,
-                'time': 'environment.time',
-                'Vm': 'membrane.v'
-            },
-            'Tomek-Cl': {
-                'IClB': 'ICl.IClb',
-                'IClCa': 'ICl.IClCa',
-                'Ito': 'Ito.Ito',
-                'IKb': 'IKb.IKb',
-                'IKs': 'IKs.IKs',
-                'IKr': 'IKr.IKr',
-                'ICaP': 'IpCa.IpCa',
-                'IK1': 'IK1.IK1',
-                'INaK': 'INaK.INaK',
-                'ICaL': 'ICaL.ICaL',
-                'INaL': 'INaL.INaL',
-                'INaCa': 'INaCa.INaCa_total',
-                'ICaB': 'ICab.ICab',
-                'INaB': 'INab.INab',
-                'INa': 'INa.INa',
-                'IKACh': None,
-                'IKATP': None,
-                'time': 'environment.time',
-                'Vm': 'membrane.v'
-            },
-            'Lei': {
-                'Ito': 'ito.Ito',
-                'IKb': 'ikb.IKb',
-                'IKs': 'iks.IKs',
-                'IKr': 'ikr.IKr',
-                'ICaP': 'ipca.IpCa',
-                'IK1': 'ik1.IK1',
-                'INaK': 'inak.INaK',
-                'ICaL': 'ical.ICaL_total',
-                'INaL': 'inal.INaL',
-                'INaCa': 'inaca.INaCa_total',
-                'ICaB': 'icab.ICab',
-                'INaB': 'inab.INab',
-                'INa': 'ina.INa',
-                'IClCa': None,
-                'IClB': None,
-                'IKACh': None,
-                'IKATP': None,
-                'time': 'engine.time',
-                'Vm': 'membrane.V'
-            },
-        }
+        # self.current_keys = {
+        #     'ORd': {
+        #         'Ito': 'Ito.Ito',
+        #         'IKb': 'IKb.IKb',
+        #         'IKs': 'IKs.IKs',
+        #         'IKr': 'IKr.IKr',
+        #         'ICaP': 'IpCa.IpCa',
+        #         'IK1': 'IK1.IK1',
+        #         'INaK': 'INaK.INaK',
+        #         'ICaL': 'ICaL.ICaL_total',
+        #         'INaL': 'INaL.INaL',
+        #         'INaCa': 'INaCa_i.INaCa_total',
+        #         'ICaB': 'ICab.ICab',
+        #         'INaB': 'INab.INab',
+        #         'INa': 'INa.INa',
+        #         'IClCa': None,
+        #         'IClB': None,
+        #         'IKACh': None,
+        #         'IKATP': None,
+        #         'time': 'environment.time',
+        #         'Vm': 'membrane.v'
+        #     },
+        #     'Grandi': {
+        #         'IClB': 'I_ClCa.I_Clbk',
+        #         'IClCa': 'I_ClCa.I_ClCa',
+        #         'Ito': 'I_to.I_to',
+        #         'IKb': 'I_Kp.I_kp',  # same as plateau potassium current?
+        #         'IKs': 'I_Ks.I_ks',
+        #         'IKr': 'I_Kr.I_kr',
+        #         'ICaP': 'I_PCa.I_pca',
+        #         'IK1': 'I_Ki.I_ki',
+        #         'INaK': 'I_NaK.I_nak',
+        #         'ICaL': 'I_Ca.I_Catot',
+        #         'INaCa': 'I_NCX.I_ncx',
+        #         'ICaB': 'I_CaBK.I_cabk',
+        #         'INaB': 'I_NaBK.I_nabk',
+        #         'INa': 'I_Na.I_Na',
+        #         'INaL': None,
+        #         'IKACh': None,
+        #         'IKATP': None,
+        #         'time': 'environment.time',
+        #         'Vm': 'membrane_potential.V_m',
+        #     },
+        #     'ORd-CiPA': {
+        #         'Ito': 'ito.Ito',
+        #         'IKb': 'ikb.IKb',
+        #         'IKs': 'iks.IKs',
+        #         'IKr': 'ikr.IKr',
+        #         'ICaP': 'ipca.IpCa',
+        #         'IK1': 'ik1.IK1',
+        #         'INaK': 'inak.INaK',
+        #         'ICaL': 'ical.ICaL_total',
+        #         'INaL': 'inal.INaL',
+        #         'INaCa': 'inaca.INaCa_total',
+        #         'ICaB': 'icab.ICab',
+        #         'INaB': 'inab.INab',
+        #         'INa': 'ina.INa',
+        #         'IClCa': None,
+        #         'IClB': None,
+        #         'IKACh': None,
+        #         'IKATP': None,
+        #         'time': 'engine.time',
+        #         'Vm': 'membrane.V'
+        #     },
+        #     'TTP': {
+        #         'Ito': 'transient_outward_current.i_to',
+        #         'IKb': 'potassium_pump_current.i_p_K',
+        #         'IKs': 'slow_time_dependent_potassium_current.i_Ks',
+        #         'IKr': 'rapid_time_dependent_potassium_current.i_Kr',
+        #         'IK1': 'inward_rectifier_potassium_current.i_K1',
+        #         'INaCa': 'sodium_calcium_exchanger_current.i_NaCa',
+        #         'INaK': 'sodium_potassium_pump_current.i_NaK',
+        #         'ICaP': 'calcium_pump_current.i_p_Ca',
+        #         'ICaL': 'L_type_Ca_current.i_CaL',
+        #         'ICaB': 'calcium_background_current.i_b_Ca',
+        #         'INaB': 'sodium_background_current.i_b_Na',
+        #         'INa': 'fast_sodium_current.i_Na',
+        #         'INaL': None,
+        #         'IClCa': None,
+        #         'IClB': None,
+        #         'IKACh': None,
+        #         'IKATP': None,
+        #         'time': 'environment.time',
+        #         'Vm': 'membrane.V'
+        #     },
+        #     'Tomek': {
+        #         'IClB': 'ICl.IClb',
+        #         'IClCa': 'ICl.IClCa',
+        #         'Ito': 'Ito.Ito',
+        #         'IKb': 'IKb.IKb',
+        #         'IKs': 'IKs.IKs',
+        #         'IKr': 'IKr.IKr',
+        #         'ICaP': 'IpCa.IpCa',
+        #         'IK1': 'IK1.IK1',
+        #         'INaK': 'INaK.INaK',
+        #         'ICaL': 'ICaL.ICaL',
+        #         'INaL': 'INaL.INaL',
+        #         'INaCa': 'INaCa.INaCa_total',
+        #         'ICaB': 'ICab.ICab',
+        #         'INaB': 'INab.INab',
+        #         'INa': 'INa.INa',
+        #         'IKACh': None,
+        #         'IKATP': None,
+        #         'time': 'environment.time',
+        #         'Vm': 'membrane.v'
+        #     },
+        #     'Tomek-Cl': {
+        #         'IClB': 'ICl.IClb',
+        #         'IClCa': 'ICl.IClCa',
+        #         'Ito': 'Ito.Ito',
+        #         'IKb': 'IKb.IKb',
+        #         'IKs': 'IKs.IKs',
+        #         'IKr': 'IKr.IKr',
+        #         'ICaP': 'IpCa.IpCa',
+        #         'IK1': 'IK1.IK1',
+        #         'INaK': 'INaK.INaK',
+        #         'ICaL': 'ICaL.ICaL',
+        #         'INaL': 'INaL.INaL',
+        #         'INaCa': 'INaCa.INaCa_total',
+        #         'ICaB': 'ICab.ICab',
+        #         'INaB': 'INab.INab',
+        #         'INa': 'INa.INa',
+        #         'IKACh': None,
+        #         'IKATP': None,
+        #         'time': 'environment.time',
+        #         'Vm': 'membrane.v'
+        #     },
+        #     'Lei': {
+        #         'Ito': 'ito.Ito',
+        #         'IKb': 'ikb.IKb',
+        #         'IKs': 'iks.IKs',
+        #         'IKr': 'ikr.IKr',
+        #         'ICaP': 'ipca.IpCa',
+        #         'IK1': 'ik1.IK1',
+        #         'INaK': 'inak.INaK',
+        #         'ICaL': 'ical.ICaL_total',
+        #         'INaL': 'inal.INaL',
+        #         'INaCa': 'inaca.INaCa_total',
+        #         'ICaB': 'icab.ICab',
+        #         'INaB': 'inab.INab',
+        #         'INa': 'ina.INa',
+        #         'IClCa': None,
+        #         'IClB': None,
+        #         'IKACh': None,
+        #         'IKATP': None,
+        #         'time': 'engine.time',
+        #         'Vm': 'membrane.V'
+        #     },
+        # }
 
         # self.current_colours = dict({
         #     'IKr': 0,
@@ -240,45 +240,45 @@ class ModelDetails(object):
         #     'IKATP': 'IK,ATP',
         # }
 
-        self.file_names = {
-            'ORd': {
-                'AP_path': 'AP_model/ORd-2011.mmt',
-                'AP_IKr_path': 'AP_model/ohara-cipa-2017.mmt',
-                'label': 'ORd (2011)'
-            },
-            'Grandi': {
-                'AP_path': 'AP_model/Grd-2010.mmt',
-                'AP_IKr_path': 'AP_model/Grd-2010-Li-SD.mmt',
-                'label': 'Grandi (2010)'
-            },
-            'ORd-CiPA': {
-                'IKr_path': 'current_model/ohara-cipa-2017-IKr.mmt',
-                'AP_path': 'AP_model/ohara-cipa-2017.mmt',
-                'AP_IKr_path': 'AP_model/ohara-cipa-2017.mmt',
-                'label': "CiPAORdv1.0 (2017)"
-            },
-            'TTP': {
-                'AP_path': 'AP_model/TTP-2006.mmt',
-                'AP_IKr_path': 'AP_model/TTP-2006-IKr-SD.mmt',
-                'label': 'ten Tusscher (2006)'
-            },
-            'Tomek': {
-                'AP_path': 'AP_model/Tomek-2019.mmt',
-                'AP_IKr_path': 'AP_model/Tomek-2019-IKr-SD.mmt',
-                'label': 'Tomek (2019)'
-            },
-            'Tomek-Cl': {
-                'AP_path': 'AP_model/Tomek-Cl-2020.mmt',
-                'AP_IKr_path': 'AP_model/Tomek-Cl-2020-IKr-SD.mmt',
-                'label': 'Tomek (2019)'
-            },
-            'Lei': {
-                'IKr_path': 'current_model/lei2019.mmt',
-                'AP_path': 'AP_model/ohara-cipa-2017.mmt',
-                'AP_IKr_path': 'AP_model/ORd-CiPA-Lei-SD.mmt',
-                'label': 'Lei (2019)'
-            },
-        }
+        # self.file_names = {
+        #     'ORd': {
+        #         'AP_path': 'AP_model/ORd-2011.mmt',
+        #         'AP_IKr_path': 'AP_model/ohara-cipa-2017.mmt',
+        #         'label': 'ORd (2011)'
+        #     },
+        #     'Grandi': {
+        #         'AP_path': 'AP_model/Grd-2010.mmt',
+        #         'AP_IKr_path': 'AP_model/Grd-2010-Li-SD.mmt',
+        #         'label': 'Grandi (2010)'
+        #     },
+        #     'ORd-CiPA': {
+        #         'IKr_path': 'current_model/ohara-cipa-2017-IKr.mmt',
+        #         'AP_path': 'AP_model/ohara-cipa-2017.mmt',
+        #         'AP_IKr_path': 'AP_model/ohara-cipa-2017.mmt',
+        #         'label': "CiPAORdv1.0 (2017)"
+        #     },
+        #     'TTP': {
+        #         'AP_path': 'AP_model/TTP-2006.mmt',
+        #         'AP_IKr_path': 'AP_model/TTP-2006-IKr-SD.mmt',
+        #         'label': 'ten Tusscher (2006)'
+        #     },
+        #     'Tomek': {
+        #         'AP_path': 'AP_model/Tomek-2019.mmt',
+        #         'AP_IKr_path': 'AP_model/Tomek-2019-IKr-SD.mmt',
+        #         'label': 'Tomek (2019)'
+        #     },
+        #     'Tomek-Cl': {
+        #         'AP_path': 'AP_model/Tomek-Cl-2020.mmt',
+        #         'AP_IKr_path': 'AP_model/Tomek-Cl-2020-IKr-SD.mmt',
+        #         'label': 'Tomek (2019)'
+        #     },
+        #     'Lei': {
+        #         'IKr_path': 'current_model/lei2019.mmt',
+        #         'AP_path': 'AP_model/ohara-cipa-2017.mmt',
+        #         'AP_IKr_path': 'AP_model/ORd-CiPA-Lei-SD.mmt',
+        #         'label': 'Lei (2019)'
+        #     },
+        # }
 
 
 # class SDModelDetails(object):
@@ -335,6 +335,16 @@ AP_file_names = {
         'AP': 'ORd-2011.mmt',
         'AP_IKr': 'ORd-2011-Lei-SD.mmt',
         'label': 'Lei (2019)'
+    }}
+
+IKr_file_names = {
+    'Li': {
+        'IKr-SD': 'li2016-SD.mmt',
+        'label': "Li-SD"
+    },
+    'Lei': {
+        'IKr-SD': 'lei2019-SD.mmt',
+        'label': 'Lei-SD'
     }}
 
 current_list = ['IKr', 'IKs', 'Ito', 'IKb', 'IK1', 'INaK', 'INa',
@@ -528,6 +538,26 @@ qNet_current_colours = dict({
     'ICaP': 19,
     'IKACh': 19,
     'IKATP': 19,
+})
+
+IKr_current_colours = dict({
+    'IKr': 6,
+    'IKs': 15,
+    'Ito': 15,
+    'IKb': 15,
+    'IK1': 15,
+    'INaK': 15,
+    'INa': 15,
+    'INaL': 15,
+    'ICaL': 15,
+    'INaCa': 15,
+    'INaB': 15,
+    'ICaB': 15,
+    'IClCa': 15,
+    'IClB': 15,
+    'ICaP': 15,
+    'IKACh': 15,
+    'IKATP': 15,
 })
 
 current_labels = {
