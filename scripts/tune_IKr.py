@@ -28,7 +28,7 @@ fig_dir = os.path.join(modelling.FIG_DIR, 'kinetics_comparison', APmodel_name)
 if not os.path.isdir(fig_dir):
     os.makedirs(fig_dir)
 result_file = os.path.join(modelling.RESULT_DIR,
-                           APmodel_name + '_conductance_scale.csv')
+                           APmodel_name + '_conductance_scale_test.csv')
 
 # Set up figure for reversal potential, AP and current contribution
 if plot_bool:
@@ -67,7 +67,7 @@ ikr_scale_dict = {}
 model_title = modelling.model_naming.AP_file_names[APmodel_name]['label']
 APsim = modelling.ModelSimController(APmodel_name, ikr_modified=False)
 
-log = APsim.simulate()
+log = APsim.simulate(log_var='all')
 base_apd90 = APsim.APD90(log)
 base_ikr_flux = np.trapz(log[IKr_key], x=log.time())
 peak_IKr_scale = 1
@@ -126,10 +126,10 @@ if tune_method in ['all', 'hERG_peak']:
         peak_IKr_scale = max(log[IKr_key]) / SD_IKr_peak
         print('hERG_peak: ', peak_IKr_scale)
 
-        ikr_scale_dict.update({'hERG_peak': peak_IKr_scale})        
+        ikr_scale_dict.update({'hERG_peak': peak_IKr_scale})
 
     APsim.set_ikr_rescale(peak_IKr_scale)
-    log_tuned = APsim.simulate()
+    log_tuned = APsim.simulate(log_var='all')
     apd90 = APsim.APD90(log_tuned)
 
     if plot_bool:
@@ -173,6 +173,7 @@ def APD_problem(conductance_scale):
 
 
 if tune_method in ['all', 'AP_duration']:
+    print(base_apd90)
     if args.cache:
         ikr_scale_df = pd.read_csv(result_file, index_col=[0],
                                    skipinitialspace=True)
@@ -189,7 +190,7 @@ if tune_method in ['all', 'AP_duration']:
         ikr_scale_dict.update({'AP_duration': conductance_scale})
 
     APsim.set_ikr_rescale(conductance_scale)
-    log_tuned = APsim.simulate()
+    log_tuned = APsim.simulate(log_var='all')
     apd90 = APsim.APD90(log_tuned)
 
     if plot_bool:
@@ -247,7 +248,7 @@ if tune_method in ['all', 'hERG_flux']:
         ikr_scale_dict.update({'hERG_flux': conductance_scale})
 
     APsim.set_ikr_rescale(conductance_scale)
-    log_tuned = APsim.simulate()
+    log_tuned = APsim.simulate(log_var='all')
     apd90 = APsim.APD90(log_tuned)
 
     if plot_bool:

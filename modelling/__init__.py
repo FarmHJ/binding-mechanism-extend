@@ -2,21 +2,14 @@
 from .version_info import VERSION_INT, VERSION  # noqa
 
 from .constants import *
+from .model_naming import *
 
 # Import main classes
-from .simulation import Simulation
+from .SD_details import (
+    BindingParameters
+)
 
 from . import figures
-
-from .model_naming import (
-    ModelDetails,
-    # SDModelDetails
-)
-
-from .SD_details import (
-    BindingParameters,
-    # DrugConcentrations
-)
 
 from .model_comparison import ModelComparison
 
@@ -25,10 +18,6 @@ from .Hill_model import (
     HillModelOpt
 )
 
-from .dataset_library import (
-    ProtocolLibrary
-)
-
-from .simulation_test import (
+from .simulation import (
     ModelSimController
 )
