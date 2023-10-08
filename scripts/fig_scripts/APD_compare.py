@@ -77,7 +77,6 @@ conc_label = [r"$10^{:d}$".format(int(np.log10(float(i)))) if float(i) >= 1e3
 
 # Initiate constants and variables
 labels = [i + ' nM' for i in conc_label]
-cmap = matplotlib.cm.get_cmap('viridis')
 
 # Load action potential and APD data
 trapping_AP_log = []
@@ -124,15 +123,13 @@ CS_labelname = APmodel_name + '-CS model'
 
 # Plot AP and IKr at various drug concentrations
 plot.add_multiple_continuous(panel2[0][0], AP_trapping_plot,
-                             Vm_key, cmap=cmap,
-                             labels=labels)
+                             Vm_key, labels=labels)
 plot.add_multiple_continuous(panel2[1][0], AP_trapping_plot,
-                             current_key, cmap=cmap, labels=labels)
+                             current_key, labels=labels)
 plot.add_multiple_continuous(panel2[0][1], AP_conductance_plot,
-                             Vm_key, cmap=cmap,
-                             labels=labels)
+                             Vm_key, labels=labels)
 plot.add_multiple_continuous(panel2[1][1], AP_conductance_plot,
-                             current_key, cmap=cmap, labels=labels)
+                             current_key, labels=labels)
 panel2[0][0].set_title(SD_labelname)
 panel2[0][1].set_title(CS_labelname)
 panel2[1][1].legend(handlelength=0.9, ncol=2, columnspacing=0.9,

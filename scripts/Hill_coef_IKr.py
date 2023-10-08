@@ -102,7 +102,6 @@ if args.plot:
                                             width_ratios=[2.5, 1.2],
                                             plot_in_subgrid=True)
     plot = modelling.figures.FigurePlot()
-    cmap = matplotlib.cm.get_cmap('viridis')
 
     subgridspecs = [(1, 2), (1, 1)]
     subgs = []
@@ -136,9 +135,9 @@ if args.plot:
     # Plot Ikr
     panel1 = axs[0]
     plot.add_multiple(panel1[0][0], SD_hERG_log, IKr_sim.ikr_key,
-                      labels=conc_label, color=cmap)
+                      labels=conc_label)
     plot.add_multiple(panel1[0][1], CS_hERG_log, IKr_sim.ikr_key,
-                      labels=conc_label, color=cmap)
+                      labels=conc_label)
 
     # Adjust figure details
     panel1[0][1].legend(handlelength=0.9, ncol=2, columnspacing=0.9)
