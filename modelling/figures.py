@@ -123,34 +123,27 @@ class FigurePlot(object):
     """
     def __init__(self):
         super(FigurePlot, self).__init__()
+        self.cmap = matplotlib.cm.get_cmap('viridis')
 
     def add_single(self, ax, log, key, color=None, label=None, alpha=None):
 
         ax.plot(log.time(), log[key], color=color, label=label, alpha=alpha)
 
-    def add_multiple(self, ax, log, key,
-                     labels=None, color=None):
+    def add_multiple(self, ax, log, key, labels=None):
         """
         Plot overlapping signals
         """
-        if color is not None:
-            norm = matplotlib.colors.Normalize(0, len(log) - 1)
 
-        if labels is not None and color is not None:
-            for i in range(len(log)):
-                ax.plot(log[i].time(), log[i][key],
-                        label=str(labels[i]), color=color(norm(i)), zorder=-10)
-        elif color is not None:
-            for i in range(len(log)):
-                ax.plot(log[i].time(), log[i][key], color=color(norm(i)),
-                        zorder=-10)
-        elif labels is not None:
-            for i in range(len(log)):
-                ax.plot(log[i].time(), log[i][key], label=str(labels[i]),
-                        zorder=-10)
+        norm = matplotlib.colors.Normalize(0, len(log) - 1)
+
+        if labels is not None:
+            label_list = [str(i) for i in labels]
         else:
-            for i in range(len(log)):
-                ax.plot(log[i].time(), log[i][key], zorder=-10)
+            label_list = [None] * len(log)
+
+        for i in range(len(log)):
+            ax.plot(log[i].time(), log[i][key], color=self.cmap(norm(i)),
+                    label=label_list[i], zorder=-10)
 
     def add_continuous(self, ax, log, key, start_pulse=0, end_pulse=None,
                        label='', color='k'):
@@ -165,40 +158,22 @@ class FigurePlot(object):
                     label=label, color=color, zorder=-10)
 
     def add_multiple_continuous(self, ax, log, key, start_pulse=0,
-                                end_pulse=None, labels=None, cmap=None,
-                                starting_pos=0):
+                                end_pulse=None, labels=None, starting_pos=0):
 
         if end_pulse is None:
             num_keys = [x for x in log[0].keys() if x.endswith(key)]
             end_pulse = len(num_keys)
 
-        if cmap is not None:
-            norm = matplotlib.colors.Normalize(0, len(log) - 1)
+        norm = matplotlib.colors.Normalize(0, len(log) - 1)
 
-        if labels is not None and cmap is not None:
-            for pulse in range(end_pulse - start_pulse):
-                for i in range(len(log)):
-                    ax.plot(np.array(log[i].time()) +
-                            (pulse + starting_pos) * max(log[i].time()),
-                            log[i][key, pulse], label=str(labels[i]),
-                            color=cmap(norm(i)), zorder=-10)
-        elif cmap is not None:
-            for pulse in range(end_pulse - start_pulse):
-                for i in range(len(log)):
-                    ax.plot(np.array(log[i].time()) +
-                            (pulse + starting_pos) * max(log[i].time()),
-                            log[i][key, pulse], color=cmap(norm(i)),
-                            zorder=-10)
-        elif labels is not None:
-            for pulse in range(end_pulse - start_pulse):
-                for i in range(len(log)):
-                    ax.plot(log[i].time() +
-                            (pulse + starting_pos) * max(log[i].time()),
-                            log[i][key, pulse], label=str(labels[i]),
-                            zorder=-10)
+        if labels is not None:
+            label_list = [str(i) for i in labels]
         else:
-            for pulse in range(end_pulse - start_pulse):
-                for i in range(len(log)):
-                    ax.plot(log[i].time() +
-                            (pulse + starting_pos) * max(log[i].time()),
-                            log[i][key, pulse], zorder=-10)
+            label_list = [None] * len(log)
+
+        for pulse in range(end_pulse - start_pulse):
+            for i in range(len(log)):
+                ax.plot(np.array(log[i].time()) +
+                        (pulse + starting_pos) * max(log[i].time()),
+                        log[i][key, pulse], label=label_list[i],
+                        color=self.cmap(norm(i)), zorder=-10)
