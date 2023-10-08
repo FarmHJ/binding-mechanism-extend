@@ -42,15 +42,10 @@ if not os.path.isdir(data_dir):
 
 # Get the Hill coef for Li-CS model
 # Update according to file format
-Hill_coef_dir = os.path.join(modelling.RESULT_DIR, 'kinetics_comparison',
-                             'Hill_curves', drug)
 if APmodel_name == 'ORd-Lei':
-    Hill_fname = 'Lei_Hill.csv'
+    Hill_coef = modelling.BindingParameters.load_Hill_eq(drug, ikr_model='Lei')
 else:
-    Hill_fname = 'Li_Hill.csv'
-Hill_coef_df = pd.read_csv(os.path.join(Hill_coef_dir, Hill_fname),
-                           index_col=[0], skipinitialspace=True)
-Hill_coef = Hill_coef_df.T.values.tolist()[0]
+    Hill_coef = modelling.BindingParameters.load_Hill_eq(drug)
 
 # Set AP model
 model_keys = modelling.model_naming.model_current_keys[APmodel_name]
@@ -58,11 +53,7 @@ current_key = model_keys['IKr']
 APsim = modelling.ModelSimController(APmodel_name)
 
 # Scale conductance value
-# scale_df = pd.read_csv(os.path.join(modelling.RESULT_DIR, APmodel_name +
-#                        '_conductance_scale.csv'),
-#                        index_col=[0], skipinitialspace=True)
-# conductance_scale = scale_df.loc[ikr_tuning].values[0]
-APsim.set_ikr_rescale(ikr_tuning)
+APsim.set_ikr_rescale_method(ikr_tuning)
 
 # Define the range of drug concentration for a given drug
 if MODE == 'AP':
