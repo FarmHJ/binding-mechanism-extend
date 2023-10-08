@@ -10,16 +10,11 @@ if not os.path.isdir(fig_dir):
 # Set up figure for reversal potential, AP and current contribution
 plot = modelling.figures.FigurePlot()
 fig = modelling.figures.FigureStructure(figsize=(9, 5), gridspec=(2, 2),
-                                        height_ratios=[1] * 2, hspace=0.4,
-                                        wspace=0.1, plot_in_subgrid=True)
+                                        hspace=0.4, wspace=0.1,
+                                        plot_in_subgrid=True)
 
 subgridspecs = [(2, 1)] * 4
-subgs = []
-for i in range(4):
-    subgs.append(fig.gs[i].subgridspec(*subgridspecs[i], hspace=0.1))
-axs = [[[fig.fig.add_subplot(subgs[k][i, j]) for j in range(
-    subgridspecs[k][1])] for i in range(subgridspecs[k][0])] for k in
-    range(len(subgs))]
+fig.subgrid(subgridspecs, hspace=0.1)
 
 # Figure parameters
 current_list = modelling.model_naming.current_list
@@ -45,21 +40,21 @@ for num, APmodel_name in enumerate(model_list):
     base_log = APsim.simulate()
 
     # Plot AP and hERG
-    panel = axs[num]
+    panel = fig.axs[num]
     panel[0][0].plot(base_log.time(), base_log[APsim.Vm_key], 'k--',
                      label='base AP model')
     panel[1][0].plot(base_log.time(), base_log[APsim.ikr_key], 'k--')
 
     # Load AP-IKr model
     APsim = modelling.ModelSimController(APmodel_name)
-    log = APsim.simulate()
+    log = APsim.simulate(prepace=5)
 
     panel[0][0].plot(log.time(), log[APsim.Vm_key], 'k',
                      label=r'$I_\mathrm{Kr}$ replaced')
     panel[1][0].plot(log.time(), log[APsim.ikr_key], 'k')
 
     APsim.set_ikr_rescale_method('AP_duration')
-    log = APsim.simulate()
+    log = APsim.simulate(prepace=5)
 
     panel[0][0].plot(log.time(), log[APsim.Vm_key], 'r',
                      label=r'$I_\mathrm{Kr}$ replaced '
@@ -84,16 +79,16 @@ AP_y_max = max(AP_top_list)
 IKr_y_min = min(IKr_bottom_list)
 IKr_y_max = max(IKr_top_list)
 
-axs[0][0][0].legend()
+fig.axs[0][0][0].legend()
 for i in range(4):
-    axs[i][0][0].set_ylim(AP_y_min, AP_y_max)
-    axs[i][1][0].set_ylim(IKr_y_min, IKr_y_max)
+    fig.axs[i][0][0].set_ylim(AP_y_min, AP_y_max)
+    fig.axs[i][1][0].set_ylim(IKr_y_min, IKr_y_max)
     if i == 0 or i == 2:
-        axs[i][0][0].set_ylabel('Voltage (mV)')
-        axs[i][1][0].set_ylabel("Current (A/F)")
+        fig.axs[i][0][0].set_ylabel('Voltage (mV)')
+        fig.axs[i][1][0].set_ylabel("Current (A/F)")
     else:
-        axs[i][0][0].set_yticklabels([])
-        axs[i][1][0].set_yticklabels([])
+        fig.axs[i][0][0].set_yticklabels([])
+        fig.axs[i][1][0].set_yticklabels([])
 
 fig.savefig(os.path.join(fig_dir, 'AP_tune_IKr_test.svg'))
 

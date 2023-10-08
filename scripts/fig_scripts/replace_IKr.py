@@ -37,13 +37,7 @@ if plot_mode in ['all', 'AP_hERG']:
         hspace=0.35, wspace=0.1, plot_in_subgrid=True)
 
     subgridspecs = [(2, 1)] * 8
-    subgs = []
-    for i in range(8):
-        subgs.append(fig_AP.gs[i].subgridspec(*subgridspecs[i], wspace=0.1,
-                                              hspace=0.1))
-    axs_AP = [[[fig_AP.fig.add_subplot(subgs[k][i, j]) for j in range(
-        subgridspecs[k][1])] for i in range(subgridspecs[k][0])] for
-        k in range(len(subgs))]
+    fig_AP.subgrid(subgridspecs, wspace=0.1, hspace=0.1)
 
 # Figure parameters
 cmap = matplotlib.cm.get_cmap('tab20')
@@ -79,7 +73,7 @@ for n, model in enumerate(base_models):
 
     if plot_mode in ['all', 'AP_hERG']:
         # Plot AP and hERG
-        SD_panel = axs_AP[n]
+        SD_panel = fig_AP.axs[n]
         plot.add_single(SD_panel[0][0], log, APsim.Vm_key)
         plot.add_single(SD_panel[1][0], log, APsim.ikr_key)
         SD_panel[0][0].set_title(title)
@@ -135,7 +129,7 @@ for n, model in enumerate(modified_models):
 
     if plot_mode in ['all', 'AP_hERG']:
         # Plot AP and hERG
-        SD_panel = axs_AP[n + 4]
+        SD_panel = fig_AP.axs[n + 4]
         plot.add_single(SD_panel[0][0], log, APsim.Vm_key)
         plot.add_single(SD_panel[1][0], log, APsim.ikr_key)
         SD_panel[0][0].set_title(title)
@@ -176,14 +170,14 @@ if plot_mode in ['all', 'reversal_potential']:
 
 if plot_mode in ['all', 'AP_hERG']:
     for i in range(6):
-        axs_AP[i][1][0].set_ylim(ikr_y_lb, ikr_y_ub)
-        axs_AP[i][0][0].set_ylim(AP_y_lb, AP_y_ub)
+        fig_AP.axs[i][1][0].set_ylim(ikr_y_lb, ikr_y_ub)
+        fig_AP.axs[i][0][0].set_ylim(AP_y_lb, AP_y_ub)
         if i == 0 or i == 3:
-            axs_AP[i][0][0].set_ylabel('AP')
-            axs_AP[i][1][0].set_ylabel(r"$I_\mathrm{Kr}$")
+            fig_AP.axs[i][0][0].set_ylabel('AP')
+            fig_AP.axs[i][1][0].set_ylabel(r"$I_\mathrm{Kr}$")
         else:
-            axs_AP[i][0][0].set_yticklabels([])
-            axs_AP[i][1][0].set_yticklabels([])
+            fig_AP.axs[i][0][0].set_yticklabels([])
+            fig_AP.axs[i][1][0].set_yticklabels([])
 
     fig_AP.savefig(os.path.join(fig_dir, 'AP_hERG.pdf'))
 

@@ -9,8 +9,7 @@ class FigureStructure(object):
     Create structure of a figure with several reference structure
     """
     def __init__(self, figsize=(5, 4), gridspec=(1, 1),
-                 height_ratios=None, hspace=0.1, wspace=None,
-                 width_ratios=None, plot_in_subgrid=False):
+                 plot_in_subgrid=False, **hwspecs):
         super(FigureStructure, self).__init__()
 
         plt.rcParams.update({'font.size': 8})
@@ -18,22 +17,18 @@ class FigureStructure(object):
         self.fig = plt.figure(figsize=figsize)
         self.gridspec = gridspec
 
-        if height_ratios is None:
-            height_ratios = [1] + [2] * (self.gridspec[0] - 1)
-
         self.gs = self.fig.add_gridspec(*self.gridspec,
-                                        height_ratios=height_ratios,
-                                        width_ratios=width_ratios,
-                                        hspace=hspace, wspace=wspace)
+                                        **hwspecs)
         if not plot_in_subgrid:
             self.axs = [[self.fig.add_subplot(self.gs[i, j]) for j in range(
                 self.gridspec[1])] for i in range(self.gridspec[0])]
 
-    def subgrid(self, subgridspecs):
+    def subgrid(self, subgridspecs, **hwspecs):
 
         subgs = []
         for i in range(self.gridspec[0] * self.gridspec[1]):
-            subgs.append(self.gs[i].subgridspec(*subgridspecs[i]))
+            subgs.append(self.gs[i].subgridspec(*subgridspecs[i],
+                                                **hwspecs))
 
         self.axs = [[[self.fig.add_subplot(subgs[k][i, j]) for j in range(
             subgridspecs[k][1])] for i in range(subgridspecs[k][0])] for k in
@@ -207,51 +202,3 @@ class FigurePlot(object):
                     ax.plot(log[i].time() +
                             (pulse + starting_pos) * max(log[i].time()),
                             log[i][key, pulse], zorder=-10)
-
-    def state_occupancy_plot(self, ax, signal_log, model, pulse=None,
-                             legend=True, legend_names=None, color_seq=None):
-
-        if pulse is None:
-            ax.stackplot(signal_log.time(),
-                         *[signal_log[s] for s in model.states()
-                         if str(s.parent()) == 'ikr' and s.name() != 'D'],
-                         labels=[s.name() for s in model.states()
-                         if str(s.parent()) == 'ikr' and s.name() != 'D'],
-                         colors=color_seq, zorder=-10)
-        else:
-            ax.stackplot(signal_log.time(),
-                         *[signal_log[s, pulse] for s in model.states()
-                         if str(s.parent()) == 'ikr' and s.name() != 'D'],
-                         labels=[s.name() for s in model.states()
-                         if str(s.parent()) == 'ikr' and s.name() != 'D'],
-                         colors=color_seq, zorder=-10)
-
-        ax.set_xlabel('Time (ms)')
-
-        label_list = []
-        for t in ax.get_legend_handles_labels():
-            label_list.append(t)
-
-        if legend_names is None:
-            new_list = label_list[1]
-            new_list = ['O*' if x == 'Obound' else x for x in new_list]
-            new_list = ['C*' if x == 'Cbound' else x for x in new_list]
-            new_list = ['IO*' if x == 'IObound' else x for x in new_list]
-        else:
-            new_list = legend_names
-
-        if legend:
-            ax.legend(ncol=5, handles=label_list[0], labels=new_list,
-                      loc="lower right", handlelength=1, columnspacing=1,
-                      labelspacing=0.3)
-        ax.set_ylim(bottom=0, top=1)
-        ax.set_rasterization_zorder(0)
-
-    def add_overlapping_pulses(self, ax, log, key, start_pulse,
-                               end_pulse=None):
-        if end_pulse is None:
-            num_keys = [x for x in log.keys() if x.endswith(key)]
-            end_pulse = len(num_keys)
-
-        for pulse in range(end_pulse - start_pulse):
-            ax.plot(log.time(), log[key, start_pulse + pulse], zorder=-10)
