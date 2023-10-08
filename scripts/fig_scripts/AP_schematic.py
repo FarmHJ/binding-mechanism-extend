@@ -1,12 +1,14 @@
 import matplotlib.pyplot as plt
 import myokit
+import os
 
+import modelling
 
-data_dir = '../../simulation_data/background/'
-fig_dir = '../../figures/background/'
+data_dir = os.path.join(modelling.RESULT_DIR, 'background')
+fig_dir = os.path.join(modelling.FIG_DIR, 'background')
 
 # Load AP signal
-AP_log = myokit.DataLog.load_csv(data_dir + 'APclamp.csv')
+AP_log = myokit.DataLog.load_csv(os.path.join(data_dir, 'APclamp.csv'))
 
 fig = plt.figure(figsize=(3, 3))
 ax = fig.add_subplot(111)
@@ -17,4 +19,4 @@ ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 ax.set_xticks([])
 ax.set_yticks([])
-plt.savefig(fig_dir + 'AP.svg', format='svg')
+plt.savefig(os.path.join(fig_dir, 'AP.svg'), format='svg')

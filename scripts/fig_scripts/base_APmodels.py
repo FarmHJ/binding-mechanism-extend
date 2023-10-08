@@ -1,22 +1,11 @@
 # Introduces the idea of trapping and justifies the use of the Milnes protocol
 import matplotlib
-import myokit
 import myokit.lib.plots as mp
-import pandas as pd
+import os
 
 import modelling
 
-# Define protocol
-pulse_time = 1000
-protocol_offset = 50
-protocol = myokit.pacing.blocktrain(pulse_time, 0.5, offset=protocol_offset)
-
-# Define constants
-repeats = 1000
-abs_tol = 1e-7
-rel_tol = 1e-8
-
-fig_dir = '../../figures/background/'
+fig_dir = os.path.join(modelling.FIG_DIR, 'background')
 
 # Set up figure for reversal potential, AP and current contribution
 plot = modelling.figures.FigurePlot()
@@ -30,13 +19,12 @@ fig = modelling.figures.FigureStructure(figsize=(7, 3.5),
                                         hspace=0.3, wspace=0.1)
 
 # Figure parameters
-model_list = ['ORd-CiPA', 'Grandi', 'TTP', 'Tomek-Cl']
-# model_list = ['Tomek', 'Tomek2']
-model_details = modelling.ModelDetails()
+model_details = modelling.model_naming
+model_list = model_details.APmodel_list[:4]
+# model_list = ['Tomek', 'Tomek-Cl']
 current_list = model_details.current_list
 current_colours = model_details.IKr_current_colours
 
-# cmap = matplotlib.cm.get_cmap('tab20')
 cmap = matplotlib.colormaps['tab20']
 plotting_pulse_time = 800
 
@@ -46,27 +34,17 @@ for num, APmodel_name in enumerate(model_list):
                      model_current_keys[i] is None]
     none_key_list.extend(['time', 'Vm'])
     for i in none_key_list:
-        del(model_current_keys[i])
+        del model_current_keys[i]
 
-    # Load model
-    model_filenames = model_details.file_names[APmodel_name]
-    APmodel = '../../' + model_filenames['AP_IKr_path']
-    model_title = model_filenames['label']
+    model_title = model_details.AP_file_names[APmodel_name]['label']
 
-    APmodel, _, x = myokit.load(APmodel)
-    AP_model = modelling.Simulation(APmodel, base_constant=None)
-    AP_model.protocol = protocol
+    APsim = modelling.ModelSimController(APmodel_name)
 
-    if APmodel_name != 'ORd-CiPA':
-        # Scale conductance value - method 1
-        scale_df = pd.read_csv('../../simulation_data/' + APmodel_name +
-                               '_conductance_scale.csv',
-                               index_col=[0], skipinitialspace=True)
-        conductance_scale = scale_df.loc['hERG_peak'].values[0]
-        AP_model.model.set_value('tune.ikr_rescale', conductance_scale)
+    if APmodel_name != 'ORd-Li':
+        APsim.set_ikr_rescale_method('hERG_peak')
 
     # Simulate AP
-    log = AP_model.model_simulation(repeats, abs_tol=abs_tol, rel_tol=rel_tol)
+    log = APsim.simulate(log_var='all')
 
     # Plot current contribution
     colours = [cmap(current_colours[x]) for x in model_current_keys.keys()]
@@ -86,9 +64,9 @@ legend_panel = fig.axs[1][1]
 lines = []
 for current, i in current_colours.items():
     lines.append(matplotlib.lines.Line2D([0], [0], color=cmap(i), lw=5))
-del(current_colours['IKACh'])
-del(current_colours['IKATP'])
-labels = [modelling.ModelDetails().current_names[x] for x in current_colours]
+del current_colours['IKACh']
+del current_colours['IKATP']
+labels = [model_details.current_labels[x] for x in current_colours]
 legend_panel.legend(lines, labels, loc=(1.04, 0.45), ncol=1, handlelength=1)
 
 fig.sharex(["Time (ms)"] * 2, [(0, plotting_pulse_time)] * 2)

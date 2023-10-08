@@ -1,6 +1,4 @@
-import myokit
 import os
-import pandas as pd
 
 import modelling
 
@@ -60,16 +58,7 @@ for num, APmodel_name in enumerate(model_list):
                      label=r'$I_\mathrm{Kr}$ replaced')
     panel[1][0].plot(log.time(), log[APsim.ikr_key], 'k')
 
-    # Load IKr scale
-    scaling_file = os.path.join(modelling.RESULT_DIR,
-                                APmodel_name + '_conductance_scale.csv')
-    scaling_df = pd.read_csv(scaling_file, index_col=[0])
-    # if APmodel_name == 'Lei':
-    #     scaling_factor = scaling_df.loc['AP_duration']['conductance scale']
-    # else:
-    #     scaling_factor = scaling_df.loc['hERG_peak']['conductance scale']
-    scaling_factor = scaling_df.loc['AP_duration']['conductance scale']
-    APsim.set_ikr_rescale(scaling_factor)
+    APsim.set_ikr_rescale_method('AP_duration')
     log = APsim.simulate()
 
     panel[0][0].plot(log.time(), log[APsim.Vm_key], 'r',
@@ -111,7 +100,7 @@ fig.savefig(os.path.join(fig_dir, 'AP_tune_IKr_test.svg'))
 #########################################
 # IKr magnitude comparison
 #########################################
-model_list = ['ORd-Li', 'Grandi', 'TTP', 'Tomek-Cl']
+model_list = modelling.model_naming.APmodel_list[:4]
 model_label = ['ORd-Li', 'Grandi-Li', 'ten Tusscher-Li', 'Tomek-Li']
 
 # Set up figure for reversal potential, AP and current contribution
@@ -129,14 +118,8 @@ for num, APmodel_name in enumerate(model_list):
     APsim = modelling.ModelSimController(APmodel_name)
 
     # Load IKr scale
-    if APmodel_name == 'ORd-Li':
-        scaling_factor = 1
-    else:
-        scaling_file = os.path.join(modelling.RESULT_DIR,
-                                    APmodel_name + '_conductance_scale.csv')
-        scaling_df = pd.read_csv(scaling_file, index_col=[0])
-        scaling_factor = scaling_df.loc['hERG_peak']['conductance scale']
-    APsim.set_ikr_rescale(scaling_factor)
+    if APmodel_name != 'ORd-Li':
+        APsim.set_ikr_rescale_method('hERG_peak')
     log = APsim.simulate()
 
     for i in range(4):
