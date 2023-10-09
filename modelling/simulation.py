@@ -67,11 +67,15 @@ class ModelSimController(object):
                                                 offset=self.protocol_offset,
                                                 level=1)
             self.sim.set_protocol(protocol)
-        del(protocol)
+        del protocol
 
         self.initial_state = self.sim.state()
 
-        if model_name.startswith('ORd') and not ikr_modified:
+        # if model_name.startswith('ORd') and not ikr_modified:
+        #     model_name = 'ORd'
+        if model_name == 'ORd-Lei' and not ikr_modified:
+            model_name = 'ORd-Li'
+        elif model_name == 'ORd-Li' and not ikr_modified:
             model_name = 'ORd'
         elif model_name in ['Lei', 'Li']:
             model_name = 'ORd-' + model_name

@@ -14,8 +14,7 @@ import modelling
 
 # df = pd.DataFrame.from_dict(binding_params).T
 
-# dir = '../../parameters/'
-# df.to_csv(dir + 'Li-SD.csv')
+# df.to_csv(os.path.join(modelling.PARAM_DIR, 'Li-SD.csv'))
 
 ######################################################
 # Hill coefficients from Li et al. (2017) to csv file
@@ -94,8 +93,9 @@ import modelling
 ###########################################################
 for drug in ['dofetilide', 'verapamil']:
     Hill_coef_dir = os.path.join(modelling.RESULT_DIR, 'kinetics_comparison',
-                                'Hill_curves', drug)
+                                 'Hill_curves', drug)
     Hill_coef_df = pd.read_csv(os.path.join(Hill_coef_dir, 'Hill_curves.csv'),
                                index_col=[0], skipinitialspace=True).T
-    Hill_coef_df.to_csv(os.path.join(modelling.RESULT_DIR, 'kinetics_comparison',
-                                     'Hill_curves', drug, 'Lei_Hill.csv'))
+    Hill_coef_df.to_csv(os.path.join(modelling.RESULT_DIR,
+                                     'kinetics_comparison', 'Hill_curves',
+                                     drug, 'Lei_Hill.csv'))

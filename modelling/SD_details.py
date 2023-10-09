@@ -148,6 +148,7 @@ drug_concentrations = {
     },
 }
 
+
 def Milnes(t_max):
     protocol = myokit.Protocol()
     protocol.schedule(-80, 0, 800, period=t_max)

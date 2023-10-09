@@ -26,7 +26,7 @@ parser.add_argument("--ikr_tuning", default='hERG_peak',
                     choices=['hERG_peak', 'hERG_flux', 'AP_duration'],
                     help="Method used to tune IKr")
 parser.add_argument("-m", "--mode", default="APD-qNet", type=str,
-                    help="Type of output: AP, APD, qNet APD-qNet")
+                    help="Type of output: AP, APD, qNet, APD-qNet")
 args = parser.parse_args()
 
 APmodel_name = args.APmodel
@@ -36,16 +36,17 @@ MODE = args.mode
 
 # Define directories to save simulated data
 data_dir = os.path.join(modelling.RESULT_DIR, 'kinetics_comparison',
-                        APmodel_name, ikr_tuning + '_match', drug + '_new')
+                        APmodel_name, ikr_tuning + '_match', drug)
 if not os.path.isdir(data_dir):
     os.makedirs(data_dir)
 
 # Get the Hill coef for Li-CS model
 # Update according to file format
 if APmodel_name == 'ORd-Lei':
-    Hill_coef = modelling.BindingParameters.load_Hill_eq(drug, ikr_model='Lei')
+    Hill_coef = modelling.BindingParameters().load_Hill_eq(drug,
+                                                           ikr_model='Lei')
 else:
-    Hill_coef = modelling.BindingParameters.load_Hill_eq(drug)
+    Hill_coef = modelling.BindingParameters().load_Hill_eq(drug)
 
 # Set AP model
 model_keys = modelling.model_naming.model_current_keys[APmodel_name]

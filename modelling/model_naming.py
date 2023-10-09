@@ -47,7 +47,8 @@ AP_file_names = {
         'label': 'Tomek (2019)'
     },
     'ORd-Lei': {
-        'AP': 'ORd-2011.mmt',
+        'AP': 'ohara-cipa-2017.mmt',
+        # 'AP': 'ORd-2011.mmt',
         'AP_IKr': 'ORd-2011-Lei-SD.mmt',
         'label': 'Lei (2019)'
     }}
@@ -65,6 +66,7 @@ IKr_file_names = {
 current_list = ['IKr', 'IKs', 'Ito', 'IKb', 'IK1', 'INaK', 'INa',
                 'INaL', 'ICaL', 'INaCa', 'INaB', 'ICaB', 'IClCa',
                 'IClB', 'ICaP', 'IKACh', 'IKATP']
+qNet_current_list = ['ICaL', 'INaL', 'IKr', 'IKs', 'IK1', 'Ito']
 model_current_keys = {
     'ORd': {
         'Ito': 'Ito.Ito',
