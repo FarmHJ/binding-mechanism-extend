@@ -1,26 +1,33 @@
 # Compares the IKr, AP and APD90 of the SD model and the CS model
+import argparse
+import glob
 import matplotlib
 import myokit
 import numpy as np
 import os
 import pandas as pd
-import sys
 
 import modelling
 
-# Define AP model, drug and tuning
-APmodel_name = sys.argv[1]
-drug = sys.argv[2]
-protocol_name = 'Milnes'
-tuning_method = sys.argv[3]
+# Define AP model, drug and tuning method
+parser = argparse.ArgumentParser(
+    description="Comparison between AP-IKr-SD model and the AP-IKr-CS model")
+parser.add_argument("APmodel", help="Name of AP model")
+parser.add_argument("drug", help="Drug")
+parser.add_argument("--ikr_tuning", default='hERG_peak',
+                    choices=['hERG_peak', 'hERG_flux', 'AP_duration'],
+                    help="Method used to tune IKr")
+args = parser.parse_args()
+
+APmodel_name = args.APmodel
+drug = args.drug
+ikr_tuning = args.ikr_tuning
 
 # Define directories to read data and save plotted figures
-data_dir = \
-    '../../simulation_data/kinetics_comparison/' + APmodel_name + '/' + \
-    tuning_method + '_match/' + drug + '/'
-fig_dir = \
-    '../../figures/kinetics_comparison/' + APmodel_name + '/' + \
-    tuning_method + '_match/' + drug + '/'
+data_dir = os.path.join(modelling.RESULT_DIR, 'kinetics_comparison',
+                        APmodel_name, ikr_tuning + '_match', drug)
+fig_dir = os.path.join(modelling.FIG_DIR, 'kinetics_comparison',
+                       APmodel_name, ikr_tuning + '_match', drug)
 if not os.path.isdir(fig_dir):
     os.makedirs(fig_dir)
 
@@ -50,21 +57,17 @@ axs = [[[fig.fig.add_subplot(subgs[k][i, j]) for j in range(
 panel2 = axs[0]
 
 # Read files name of action potential data
-SD_data_files = [f for f in os.listdir(data_dir) if
-                 f.startswith('SD_AP_') and not
-                 f.startswith('SD_AP_tran')]
-CS_data_files = [f for f in os.listdir(data_dir) if
-                 f.startswith('CS_AP_') and not
-                 f.startswith('CS_AP_tran')]
+SD_data_files = glob.glob(os.path.join(data_dir, 'SD_AP_*.csv'))
+CS_data_files = glob.glob(os.path.join(data_dir, 'CS_AP_*.csv'))
 conc_label_SD = [fname[6:-4] for fname in SD_data_files]
 drug_conc_SD = [float(fname[6:-4]) for fname in SD_data_files]
 conc_label_CS = [fname[6:-4] for fname in CS_data_files]
 drug_conc_CS = [float(fname[6:-4]) for fname in CS_data_files]
 
 # Sort in increasing order of drug concentration
-sort_ind = [i[0] for i in sorted(enumerate(drug_conc_SD), key=lambda x:x[1])]
+sort_ind = [i[0] for i in sorted(enumerate(drug_conc_SD), key=lambda x: x[1])]
 sort_ind_CS = [i[0] for i in
-               sorted(enumerate(drug_conc_CS), key=lambda x:x[1])]
+               sorted(enumerate(drug_conc_CS), key=lambda x: x[1])]
 drug_conc = sorted(drug_conc_SD)
 trapping_data_files = [SD_data_files[i] for i in sort_ind]
 conductance_data_files = [CS_data_files[i] for i in sort_ind_CS]
@@ -74,19 +77,18 @@ conc_label = [r"$10^{:d}$".format(int(np.log10(float(i)))) if float(i) >= 1e3
 
 # Initiate constants and variables
 labels = [i + ' nM' for i in conc_label]
-cmap = matplotlib.cm.get_cmap('viridis')
 
 # Load action potential and APD data
 trapping_AP_log = []
 conductance_AP_log = []
 for i in range(len(trapping_data_files)):
     trapping_AP_log.append(myokit.DataLog.load_csv(
-        data_dir + trapping_data_files[i]))
+        os.path.join(data_dir, trapping_data_files[i])))
     conductance_AP_log.append(myokit.DataLog.load_csv(
-        data_dir + conductance_data_files[i]))
+        os.path.join(data_dir, conductance_data_files[i])))
 
-APD_trapping = pd.read_csv(data_dir + 'SD_APD_pulses2.csv')
-APD_conductance = pd.read_csv(data_dir + 'CS_APD_pulses2.csv')
+APD_trapping = pd.read_csv(os.path.join(data_dir, 'SD_APD_pulses2.csv'))
+APD_conductance = pd.read_csv(os.path.join(data_dir, 'CS_APD_pulses2.csv'))
 
 APD_trapping = [max(APD_trapping.loc[i].values.tolist()[1:-1]) for i in
                 range(APD_trapping.shape[0])]
@@ -112,27 +114,22 @@ AP_trapping_plot = [e for i, e in enumerate(trapping_AP_log)
 AP_conductance_plot = [e for i, e in enumerate(conductance_AP_log)
                        if i not in chosen_conc_ind]
 
-# model_keys = modelling.ModelDetails().current_keys[APmodel_name]
-# current_key = model_keys['IKr']
-# Vm_key = model_keys['Vm']
-
-current_key = 'ikr.IKr'
-Vm_key = 'membrane.V'
+model_keys = modelling.model_naming.model_current_keys[APmodel_name]
+current_key = model_keys['IKr']
+Vm_key = model_keys['Vm']
 
 SD_labelname = APmodel_name + '-SD model'
 CS_labelname = APmodel_name + '-CS model'
 
 # Plot AP and IKr at various drug concentrations
 plot.add_multiple_continuous(panel2[0][0], AP_trapping_plot,
-                             Vm_key, cmap=cmap,
-                             labels=labels)
+                             Vm_key, labels=labels)
 plot.add_multiple_continuous(panel2[1][0], AP_trapping_plot,
-                             current_key, cmap=cmap, labels=labels)
+                             current_key, labels=labels)
 plot.add_multiple_continuous(panel2[0][1], AP_conductance_plot,
-                             Vm_key, cmap=cmap,
-                             labels=labels)
+                             Vm_key, labels=labels)
 plot.add_multiple_continuous(panel2[1][1], AP_conductance_plot,
-                             current_key, cmap=cmap, labels=labels)
+                             current_key, labels=labels)
 panel2[0][0].set_title(SD_labelname)
 panel2[0][1].set_title(CS_labelname)
 panel2[1][1].legend(handlelength=0.9, ncol=2, columnspacing=0.9,
@@ -150,8 +147,8 @@ fig.sharey(['Voltage (mV)', 'Current (A/F)'],
 panel3 = axs[1]
 
 # Load APD data
-APD_trapping_df = pd.read_csv(data_dir + 'SD_APD_fine.csv')
-APD_conductance_df = pd.read_csv(data_dir + 'CS_APD_fine.csv')
+APD_trapping_df = pd.read_csv(os.path.join(data_dir, 'SD_APD_fine.csv'))
+APD_conductance_df = pd.read_csv(os.path.join(data_dir, 'CS_APD_fine.csv'))
 
 # Identify EAD-like behaviour
 drug_conc = APD_trapping_df['drug concentration'].values.tolist()

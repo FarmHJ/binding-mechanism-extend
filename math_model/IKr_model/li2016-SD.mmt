@@ -45,7 +45,7 @@ ikr.IO            =  5.67622999999999969e-5
 ikr.IObound       =  0
 ikr.Obound        =  0
 ikr.Cbound        =  0
-ikr.D             =  0
+# ikr.D             =  0
 
 #
 # Simulator variables
@@ -230,7 +230,8 @@ n = 1
 Kmax = 0
 dot(C1) = -(A1 * exp(B1 * V) * C1 * exp((Temp - 20) * log(q1) / 10) - A2 * exp(B2 * V) * C2 * exp((Temp - 20) * log(q2) / 10)) - (A51 * exp(B51 * V) * C1 * exp((Temp - 20) * log(q51) / 10) - A61 * exp(B61 * V) * IC1 * exp((Temp - 20) * log(q61) / 10))
 dot(C2) = A1 * exp(B1 * V) * C1 * exp((Temp - 20) * log(q1) / 10) - A2 * exp(B2 * V) * C2 * exp((Temp - 20) * log(q2) / 10) - (A31 * exp(B31 * V) * C2 * exp((Temp - 20) * log(q31) / 10) - A41 * exp(B41 * V) * O * exp((Temp - 20) * log(q41) / 10)) - (A52 * exp(B52 * V) * C2 * exp((Temp - 20) * log(q52) / 10) - A62 * exp(B62 * V) * IC2 * exp((Temp - 20) * log(q62) / 10))
-dot(D) = 0 [1/ms]
+# dot(D) = 0 [1/ms]
+D = 0 [nM]
 dot(IC1) = -(A11 * exp(B11 * V) * IC1 * exp((Temp - 20) * log(q11) / 10) - A21 * exp(B21 * V) * IC2 * exp((Temp - 20) * log(q21) / 10)) + A51 * exp(B51 * V) * C1 * exp((Temp - 20) * log(q51) / 10) - A61 * exp(B61 * V) * IC1 * exp((Temp - 20) * log(q61) / 10)
 dot(IC2) = A11 * exp(B11 * V) * IC1 * exp((Temp - 20) * log(q11) / 10) - A21 * exp(B21 * V) * IC2 * exp((Temp - 20) * log(q21) / 10) - (A3 * exp(B3 * V) * IC2 * exp((Temp - 20) * log(q3) / 10) - A4 * exp(B4 * V) * IO * exp((Temp - 20) * log(q4) / 10)) + A52 * exp(B52 * V) * C2 * exp((Temp - 20) * log(q52) / 10) - A62 * exp(B62 * V) * IC2 * exp((Temp - 20) * log(q62) / 10)
 dot(IO) = A3 * exp(B3 * V) * IC2 * exp((Temp - 20) * log(q3) / 10) - A4 * exp(B4 * V) * IO * exp((Temp - 20) * log(q4) / 10) + A53 * exp(B53 * V) * O * exp((Temp - 20) * log(q53) / 10) - A63 * exp(B63 * V) * IO * exp((Temp - 20) * log(q63) / 10) - (Kmax * Ku * exp(n * log(D)) / (exp(n * log(D)) + halfmax) * IO - Ku * A53 * exp(B53 * V) * exp((Temp - 20) * log(q53) / 10) / (A63 * exp(B63 * V) * exp((Temp - 20) * log(q63) / 10)) * IObound)

@@ -9,7 +9,7 @@ ikr.O = 0
 ikr.Ibound = 0
 ikr.Obound = 0
 ikr.Cbound = 0
-ikr.D = 0
+# ikr.D = 0
 
 [ikr]
 IKr = gKr * O * (membrane.V - nernst.EK)
@@ -46,8 +46,9 @@ Ku = 0
 Kt = 0
 Emax = Kmax * exp(n * log(D)) / (exp(n * log(D)) + halfmax)
 trapping_fn = 1 / (1 + exp(- (membrane.V - Vhalf) / 6.789 [mV]))
-dot(D) = 0
-    in [1]
+# dot(D) = 0
+#     in [1]
+D = 0 [nM]
 n = 1
     in [1]
 Vhalf = 1

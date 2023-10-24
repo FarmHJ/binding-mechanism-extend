@@ -1,4 +1,5 @@
 import myokit
+import os
 
 import modelling
 
@@ -18,21 +19,17 @@ axs = [[[fig.fig.add_subplot(subgs[k][i, j]) for j in range(
     subgridspecs[k][1])] for i in range(subgridspecs[k][0])] for
     k in range(len(subgs))]
 
-data_dir = '../../simulation_data/background/'
-fig_dir = '../../figures/background/'
+data_dir = os.path.join(modelling.RESULT_DIR, 'background')
+fig_dir = os.path.join(modelling.FIG_DIR, 'background')
 
-model_list = ['ORd-CiPA', 'Lei']
+model_list = ['Li', 'Lei']
 # Load steady state IKr data for drug free, addition of a dofetilide-like drug
 # and a verapamil-like drug conditions (AP clamp protocol)
 cipa_log = myokit.DataLog.load_csv(
-    data_dir + model_list[0] + '_APclamp_current.csv')
+    os.path.join(data_dir, model_list[0] + '_APclamp_current.csv'))
 lei_log = myokit.DataLog.load_csv(
-    data_dir + model_list[1] + '_APclamp_current.csv')
+    os.path.join(data_dir, model_list[1] + '_APclamp_current.csv'))
 log_all = [cipa_log, lei_log]
-
-# Load AP model
-APmodel = '../../math_model/AP_model/ohara-cipa-2017.mmt'
-APmodel, _, x = myokit.load(APmodel)
 pulse_time = 1000
 
 # Plot state occupancies of the hERG channel

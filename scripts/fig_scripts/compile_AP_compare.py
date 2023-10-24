@@ -17,13 +17,13 @@ repeats = 1000
 abs_tol = 1e-7
 rel_tol = 1e-8
 
-model_details = modelling.ModelDetails()
-model_list = ['ORd-CiPA', 'Grandi', 'TTP', 'Tomek-Cl', 'ORd-Lei']
+model_details = modelling.model_naming
+model_list = model_details.APmodel_list
 model_label = ['ORd-Li', 'Grandi-Li', 'ten Tusscher-Li', 'Tomek-Li', 'ORd-Lei']
 drug_list = ['dofetilide', 'verapamil']
 tuning_method = ['hERG_peak'] * 4 + ['AP_duration']
 
-fig_dir = '../../figures/kinetics_comparison/'
+fig_dir = os.path.join(modelling.FIG_DIR, 'kinetics_comparison')
 if not os.path.isdir(fig_dir):
     os.makedirs(fig_dir)
 
@@ -47,16 +47,16 @@ qNet_metric = {
 }
 for num, APmodel_name in enumerate(model_list):
     for drug_ind, drug in enumerate(drug_list):
-        data_dir = \
-            '../../simulation_data/kinetics_comparison/' + APmodel_name + \
-            '/' + tuning_method[num] + '_match/' + drug + '/'
+        data_dir = os.path.join(modelling.RESULT_DIR, 'kinetics_comparison',
+                                APmodel_name, tuning_method[num] + '_match',
+                                drug)
 
         SD_labelname = APmodel_name + '-SD model'
         CS_labelname = APmodel_name + '-CS model'
 
         # Load APD data
-        APD_trapping_df = pd.read_csv(data_dir + 'SD_APD_fine.csv')
-        APD_conductance_df = pd.read_csv(data_dir + 'CS_APD_fine.csv')
+        APD_trapping_df = pd.read_csv(os.path.join(data_dir, 'SD_APD_fine.csv'))
+        APD_conductance_df = pd.read_csv(os.path.join(data_dir, 'CS_APD_fine.csv'))
 
         # Identify EAD-like behaviour
         drug_conc = APD_trapping_df['drug concentration'].values.tolist()

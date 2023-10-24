@@ -11,7 +11,7 @@ import modelling
 
 # Define AP model
 parser = argparse.ArgumentParser(
-    description="Tuning of IKr for AP-Li model")
+    description="Tuning of IKr for AP-IKr model")
 parser.add_argument("APmodel", help="Name of AP model")
 parser.add_argument('--method', default='all',
                     choices=['all', 'hERG_peak', 'hERG_flux', 'AP_duration'],
@@ -53,39 +53,33 @@ if plot_bool:
     plotting_pulse_time = 800
 
 model_keys = modelling.model_naming.model_current_keys[APmodel_name]
-time_key = model_keys['time']
-Vm_key = model_keys['Vm']
-IKr_key = model_keys['IKr']
-
 ikr_scale_dict = {}
 
-#######################
-#
+###########
 # AP model
-#
-#######################
+###########
 model_title = modelling.model_naming.AP_file_names[APmodel_name]['label']
 APsim = modelling.ModelSimController(APmodel_name, ikr_modified=False)
 
-log = APsim.simulate()
+log = APsim.simulate(log_var='all')
 base_apd90 = APsim.APD90(log)
-base_ikr_flux = np.trapz(log[IKr_key], x=log.time())
+base_ikr_flux = np.trapz(log[APsim.ikr_key], x=log.time())
 peak_IKr_scale = 1
 
 # Plot AP and hERG
 if plot_bool:
     AP_panel = axs[0]
-    plot.add_single(AP_panel[0][0], log, Vm_key)
-    plot.add_single(AP_panel[1][0], log, IKr_key)
+    plot.add_single(AP_panel[0][0], log, APsim.Vm_key)
+    plot.add_single(AP_panel[1][0], log, APsim.ikr_key)
 
     AP_panel[0][0].set_title(model_title)
     AP_panel[0][0].set_ylabel("AP")
     AP_panel[1][0].set_ylabel(r"$I_\mathrm{Kr}$")
     AP_panel[0][0].text(370, 0, 'APD90: ' + '{:.1f}'.format(base_apd90),
                         fontsize=8, ha='left')
-    AP_y_bottom1, AP_y_top1 = AP_panel[0][0].get_ylim()
-    IKr_y_bottom1, IKr_y_top1 = AP_panel[1][0].get_ylim()
-    AP_panel[1][0].text(450, (IKr_y_top1 - IKr_y_bottom1) / 2, 'scale: 1',
+    AP_y_min, AP_y_max = AP_panel[0][0].get_ylim()
+    ikr_y_min, ikr_y_max = AP_panel[1][0].get_ylim()
+    AP_panel[1][0].text(450, (ikr_y_max - ikr_y_min) / 2, 'scale: 1',
                         fontsize=8, ha='left')
     fig.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
                axs=AP_panel, subgridspec=subgridspecs[0])
@@ -93,7 +87,7 @@ if plot_bool:
     # Plot current contribution
     none_key_list = [i for i in model_keys.keys() if model_keys[i] is None]
     for i in none_key_list:
-        del(model_keys[i])
+        del model_keys[i]
 
     plot_model_keys = [x for x in model_keys.keys() if x not in ['time', 'Vm']]
     colours = [cmap(current_colours[x]) for x in plot_model_keys]
@@ -104,11 +98,9 @@ if plot_bool:
                           normalise=True)
     current_panel[0][0].set_rasterization_zorder(2)
 
-#######################
-#
+#############
 # AP-Li model
-#
-#######################
+#############
 # Tuning method 1: scale conductance to have same peak of hERG current
 # Load AP-Li model
 APsim = modelling.ModelSimController(APmodel_name)
@@ -121,34 +113,39 @@ if tune_method in ['all', 'hERG_peak']:
     else:
         # Get the IKr scaling factor by matching the peak
         log1 = APsim.simulate()
-        SD_IKr_peak = max(log1[IKr_key])
-        del(log1)
-        peak_IKr_scale = max(log[IKr_key]) / SD_IKr_peak
+        SD_IKr_peak = max(log1[APsim.ikr_key])
+        del log1
+        peak_IKr_scale = max(log[APsim.ikr_key]) / SD_IKr_peak
         print('hERG_peak: ', peak_IKr_scale)
 
-        ikr_scale_dict.update({'hERG_peak': peak_IKr_scale})        
+        ikr_scale_dict.update({'hERG_peak': peak_IKr_scale})
 
     APsim.set_ikr_rescale(peak_IKr_scale)
-    log_tuned = APsim.simulate()
+    log_tuned = APsim.simulate(log_var='all')
     apd90 = APsim.APD90(log_tuned)
 
     if plot_bool:
         # Plot AP and hERG
         AP_panel = axs[1]
-        plot.add_single(AP_panel[0][0], log_tuned, Vm_key)
-        plot.add_single(AP_panel[1][0], log_tuned, IKr_key)
+        plot.add_single(AP_panel[0][0], log_tuned, APsim.Vm_key)
+        plot.add_single(AP_panel[1][0], log_tuned, APsim.ikr_key)
 
         AP_panel[0][0].text(370, 0, 'APD90: ' + '{:.1f}'.format(apd90),
                             fontsize=8, ha='left')
-        AP_y_bottom2, AP_y_top2 = AP_panel[0][0].get_ylim()
-        IKr_y_bottom2, IKr_y_top2 = AP_panel[1][0].get_ylim()
-        AP_panel[1][0].text(450, (IKr_y_top2 - IKr_y_bottom2) / 2,
+        AP_y_bottom, AP_y_top = AP_panel[0][0].get_ylim()
+        ikr_y_bottom, ikr_y_top = AP_panel[1][0].get_ylim()
+        AP_panel[1][0].text(450, (ikr_y_top - ikr_y_bottom) / 2,
                             'scale: ' + '{:.2f}'.format(peak_IKr_scale),
                             fontsize=8, ha='left')
         AP_panel[0][0].set_title(APmodel_name +
                                  r"-SD" "\n" r"$I_\mathrm{Kr}$ peak")
         fig.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
                    axs=AP_panel, subgridspec=subgridspecs[1])
+
+        AP_y_min = min(AP_y_min, AP_y_bottom)
+        AP_y_max = max(AP_y_max, AP_y_top)
+        ikr_y_min = min(ikr_y_min, ikr_y_bottom)
+        ikr_y_max = min(ikr_y_max, ikr_y_top)
 
         # Plot current contribution
         current_panel = axs[5]
@@ -163,7 +160,7 @@ if tune_method in ['all', 'hERG_peak']:
 
 def APD_problem(conductance_scale):
     APsim.set_ikr_rescale(conductance_scale)
-    log = APsim.simulate(log_var=[time_key, Vm_key])
+    log = APsim.simulate(log_var=[APsim.time_key, APsim.Vm_key])
 
     apd90 = APsim.APD90(log)
 
@@ -173,6 +170,7 @@ def APD_problem(conductance_scale):
 
 
 if tune_method in ['all', 'AP_duration']:
+    print(base_apd90)
     if args.cache:
         ikr_scale_df = pd.read_csv(result_file, index_col=[0],
                                    skipinitialspace=True)
@@ -189,25 +187,30 @@ if tune_method in ['all', 'AP_duration']:
         ikr_scale_dict.update({'AP_duration': conductance_scale})
 
     APsim.set_ikr_rescale(conductance_scale)
-    log_tuned = APsim.simulate()
+    log_tuned = APsim.simulate(log_var='all')
     apd90 = APsim.APD90(log_tuned)
 
     if plot_bool:
         # Plot AP and hERG
         AP_panel = axs[2]
-        plot.add_single(AP_panel[0][0], log_tuned, Vm_key)
-        plot.add_single(AP_panel[1][0], log_tuned, IKr_key)
+        plot.add_single(AP_panel[0][0], log_tuned, APsim.Vm_key)
+        plot.add_single(AP_panel[1][0], log_tuned, APsim.ikr_key)
 
         AP_panel[0][0].text(370, 0, 'APD90: ' + '{:.1f}'.format(apd90),
                             fontsize=8, ha='left')
-        AP_y_bottom3, AP_y_top3 = AP_panel[0][0].get_ylim()
-        IKr_y_bottom3, IKr_y_top3 = AP_panel[1][0].get_ylim()
-        AP_panel[1][0].text(450, (IKr_y_top3 - IKr_y_bottom3) / 2,
+        AP_y_bottom, AP_y_top = AP_panel[0][0].get_ylim()
+        ikr_y_bottom, ikr_y_top = AP_panel[1][0].get_ylim()
+        AP_panel[1][0].text(450, (ikr_y_top - ikr_y_bottom) / 2,
                             'scale: ' + '{:.2f}'.format(conductance_scale),
                             fontsize=8, ha='left')
         AP_panel[0][0].set_title(APmodel_name + "-SD\nAPD")
         fig.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
                    axs=AP_panel, subgridspec=subgridspecs[2])
+
+        AP_y_min = min(AP_y_min, AP_y_bottom)
+        AP_y_max = max(AP_y_max, AP_y_top)
+        ikr_y_min = min(ikr_y_min, ikr_y_bottom)
+        ikr_y_max = min(ikr_y_max, ikr_y_top)
 
         # Plot current contribution
         current_panel = axs[6]
@@ -222,9 +225,9 @@ if tune_method in ['all', 'AP_duration']:
 
 def flux_problem(conductance_scale):
     APsim.set_ikr_rescale(conductance_scale)
-    log = APsim.simulate(log_var=[time_key, IKr_key])
+    log = APsim.simulate(log_var=[APsim.time_key, APsim.ikr_key])
 
-    flux = np.trapz(log[IKr_key], x=log.time())
+    flux = np.trapz(log[APsim.ikr_key], x=log.time())
 
     error = np.sqrt(np.power(flux - base_ikr_flux, 2))
 
@@ -247,25 +250,30 @@ if tune_method in ['all', 'hERG_flux']:
         ikr_scale_dict.update({'hERG_flux': conductance_scale})
 
     APsim.set_ikr_rescale(conductance_scale)
-    log_tuned = APsim.simulate()
+    log_tuned = APsim.simulate(log_var='all')
     apd90 = APsim.APD90(log_tuned)
 
     if plot_bool:
         # Plot AP and hERG
         AP_panel = axs[3]
-        plot.add_single(AP_panel[0][0], log_tuned, Vm_key)
-        plot.add_single(AP_panel[1][0], log_tuned, IKr_key)
+        plot.add_single(AP_panel[0][0], log_tuned, APsim.Vm_key)
+        plot.add_single(AP_panel[1][0], log_tuned, APsim.ikr_key)
         AP_panel[0][0].text(370, 0, 'APD90: ' + '{:.1f}'.format(apd90),
                             fontsize=8, ha='left')
-        AP_y_bottom4, AP_y_top4 = AP_panel[0][0].get_ylim()
-        IKr_y_bottom4, IKr_y_top4 = AP_panel[1][0].get_ylim()
-        AP_panel[1][0].text(450, (IKr_y_top4 - IKr_y_bottom4) / 2,
+        AP_y_bottom, AP_y_top = AP_panel[0][0].get_ylim()
+        ikr_y_bottom, ikr_y_top = AP_panel[1][0].get_ylim()
+        AP_panel[1][0].text(450, (ikr_y_top - ikr_y_bottom) / 2,
                             'scale: ' + '{:.2f}'.format(conductance_scale),
                             fontsize=8, ha='left')
         AP_panel[0][0].set_title(APmodel_name +
                                  r"-SD" "\n" r"$I_\mathrm{Kr}$ flux")
         fig.sharex(['Time (ms)'], [(0, plotting_pulse_time)],
                    axs=AP_panel, subgridspec=subgridspecs[3])
+
+        AP_y_min = min(AP_y_min, AP_y_bottom)
+        AP_y_max = max(AP_y_max, AP_y_top)
+        ikr_y_min = min(ikr_y_min, ikr_y_bottom)
+        ikr_y_max = min(ikr_y_max, ikr_y_top)
 
         # Plot current contribution
         current_panel = axs[7]
@@ -277,14 +285,10 @@ if tune_method in ['all', 'hERG_flux']:
 # Tuning method 4: math APDs at different pacing rates
 #######################
 
-#######################
+################
 # Adjust figures
-#######################
+################
 if plot_bool:
-    AP_y_min = min(AP_y_bottom1, AP_y_bottom2, AP_y_bottom3, AP_y_bottom4)
-    AP_y_max = max(AP_y_top1, AP_y_top2, AP_y_top3, AP_y_top4)
-    IKr_y_min = min(IKr_y_bottom1, IKr_y_bottom2, IKr_y_bottom3, IKr_y_bottom4)
-    IKr_y_max = max(IKr_y_top1, IKr_y_top2, IKr_y_top3, IKr_y_top4)
     for i in range(4):
 
         # Current panels
@@ -294,7 +298,7 @@ if plot_bool:
         axs[i + 4][0][0].set_ylim(-1.02, 1.02)
 
         axs[i][0][0].set_ylim(AP_y_min, AP_y_max)
-        axs[i][1][0].set_ylim(IKr_y_min, IKr_y_max)
+        axs[i][1][0].set_ylim(ikr_y_min, ikr_y_max)
         if i == 0:
             axs[i][0][0].set_ylabel('AP')
             axs[i][1][0].set_ylabel(r"$I_\mathrm{Kr}$")
@@ -303,8 +307,7 @@ if plot_bool:
             axs[i][1][0].set_yticklabels([])
 
     # Save figures
-    # fig.savefig(os.path.join(fig_dir, 'IKr_tuning.pdf'))
-    fig.savefig(os.path.join(modelling.FIG_DIR, 'checking_figures', 'IKr_tuning_test.pdf'))
+    fig.savefig(os.path.join(fig_dir, 'IKr_tuning.pdf'))
 
 if not args.cache:
     df = pd.DataFrame.from_dict(ikr_scale_dict, orient='index',

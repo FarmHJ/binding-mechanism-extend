@@ -1,30 +1,32 @@
-#
-# Figure S11
 # Plot the (A) distribution of the RMSD values for each synthetic drug and
 # (B) the histogram of the RMSD for all synthetic drugs when varying the Hill
 # coefficient.
-#
 
+import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
-import pints
-import sys
 
-APmodel_name = sys.argv[1]
+import modelling
+
+parser = argparse.ArgumentParser(
+    description="Plot parameter space exploration outcome of an AP model")
+parser.add_argument("APmodel", help="Name of AP model")
+args = parser.parse_args()
+
+APmodel_name = args.APmodel
 
 # Read APD90 differences for all synthetic drug
-data_dir = '../../simulation_data/parameter_SA/'
-filename = 'SA_alldrugs_' + APmodel_name + '.csv'
-drug_df = pd.read_csv(data_dir + filename,
-                      header=[0, 1], index_col=[0],
+fpath = os.path.join(modelling.RESULT_DIR, 'parameter_SA',
+                     'SA_alldrugs_' + APmodel_name + '.csv')
+drug_df = pd.read_csv(fpath, header=[0, 1], index_col=[0],
                       skipinitialspace=True)
 drug_list = drug_df[('drug', 'drug')].values
 
 # Define directories and variables
-data_dir = '../../simulation_data/parameter_SA/APD90diff_N/' + \
-    APmodel_name + '/'
+data_dir = os.path.join(modelling.RESULT_DIR, 'parameter_SA', 'APD90diff_N',
+                        APmodel_name)
 percentage_diff_filename = 'N_percentage_diff.csv'
 first_iter = True
 RMSD_boxplot = []
@@ -32,9 +34,8 @@ delta_RMSD_boxplot = []
 
 for drug in drug_list:
     # Read RMSD of each synthetic drug when the Hill coefficient varies
-    filepath = data_dir + 'SA_' + drug + '_N.csv'
-    df = pd.read_csv(filepath,
-                     header=[0, 1], index_col=[0],
+    filepath = os.path.join(data_dir, 'SA_' + drug + '_N.csv')
+    df = pd.read_csv(filepath, header=[0, 1], index_col=[0],
                      skipinitialspace=True)
 
     N_range = np.array(df['param_values']['N'].values)
@@ -71,7 +72,7 @@ for drug in drug_list:
     else:
         combined_df = pd.concat([combined_df, delta_RMSD_df.T])
 
-combined_df.to_csv(data_dir + percentage_diff_filename)
+combined_df.to_csv(os.path.join(data_dir, percentage_diff_filename))
 
 RMSD_mean = np.mean(combined_df['deltaRMSD_mean'].values)
 
@@ -102,13 +103,13 @@ fig.text(0.075, 0.9, '(A)', fontsize=11)
 fig.text(0.5, 0.9, '(B)', fontsize=11)
 
 # Save figure
-fig_dir = '../../figures/parameter_SA/' + APmodel_name + '/'
+fig_dir = os.path.join(modelling.FIG_DIR, 'parameter_SA', APmodel_name)
 if not os.path.isdir(fig_dir):
     os.makedirs(fig_dir)
-plt.savefig(fig_dir + 'RMSD_N_test.pdf', bbox_inches='tight')
+plt.savefig(os.path.join(fig_dir, 'RMSD_N_test.pdf'), bbox_inches='tight')
 
 # Show mean and standard deviation of the histogram
 overall_stats = pd.DataFrame({'mean': np.mean(arr), 'std': np.std(arr),
                               'min': np.min(arr), 'max': np.max(arr)},
                              index=[0])
-overall_stats.to_csv(data_dir + 'overall_stats.csv')
+overall_stats.to_csv(os.path.join(data_dir, 'overall_stats.csv'))
