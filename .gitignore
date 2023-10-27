@@ -90,8 +90,8 @@ venv.bak/
 .DS_Store
 
 # Data, results and figures
-exp_data/
 scripts/checking_scripts/
 simulation_data/background/
 figures/checking_figures/
 modelling/tests/
+Li-data/

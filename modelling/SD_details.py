@@ -79,6 +79,10 @@ drug_names = ['dofetilide', 'bepridil', 'terfenadine',
               'cisapride', 'verapamil', 'ranolazine',
               'quinidine', 'sotalol', 'chlorpromazine',
               'ondansetron', 'diltiazem', 'mexiletine']
+validation_drugs = ['vandetanib', 'ibutilide', 'azimilide', 'disopyramide',
+                    'domperidone', 'droperidol', 'pimozide', 'clozapine',
+                    'risperidone', 'astemizole', 'clarithromycin', 'tamoxifen',
+                    'metoprolol', 'loratadine', 'nitrendipine', 'nifedipine']
 channels = ['IKr', 'INaL', 'ICaL', 'INa', 'Ito', 'IK1', 'IKs']
 SD_param_names = ['Kmax', 'Ku', 'halfmax', 'n', 'Vhalf']
 

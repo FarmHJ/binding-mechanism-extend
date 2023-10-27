@@ -21,3 +21,7 @@ from .Hill_model import (
 from .simulation import (
     ModelSimController
 )
+
+from .parameter_fit import (
+    DataLibrary
+)

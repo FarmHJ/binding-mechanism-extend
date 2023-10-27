@@ -19,6 +19,9 @@ MODEL_DIR = os.path.join(MAIN_DIR, 'math_model')
 # Define figures directory
 FIG_DIR = os.path.join(MAIN_DIR, 'figures')
 
+# Define experimental data directory
+DATA_DIR = os.path.join(MAIN_DIR, 'Li-data')
+
 del(os, inspect, frame)
 
 ABS_TOL = 1e-7
