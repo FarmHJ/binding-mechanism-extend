@@ -179,7 +179,7 @@ class ModelSimController(object):
         self.initial_state = self.sim.state()
 
     def simulate(self, prepace=1000, save_signal=1, timestep=0.1,
-                 log_var=None, reset=True):
+                 log_var=None, reset=True, log_times=None):
 
         self._set_parameters(self._parameters)
         self.prepace = prepace
@@ -196,7 +196,7 @@ class ModelSimController(object):
 
         self.sim.pre(self._cycle_length * self.prepace)
         log = self.sim.run(self._cycle_length * save_signal, log=log_var,
-                           log_interval=timestep).npview()
+                           log_times=log_times).npview()
         if save_signal > 1:
             log = log.fold(self._cycle_length)
 
