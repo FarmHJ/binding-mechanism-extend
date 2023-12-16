@@ -36,7 +36,7 @@ class DataLibrary(object):
         if conc not in self.concs:
             NameError("Choose a concentration within the \
                       list in `concs`")
-        self.data = self.data.loc[self.data['conc'] == conc]
+        self.conc_data = self.data.loc[self.data['conc'] == conc]
 
     def plot_signal(self):
 
@@ -53,7 +53,7 @@ class DataLibrary(object):
                range(len(self.concs))]
 
         # Remove artificial spike
-        self.data = self.data.loc[self.data['time'] >= 1005]
+        # self.data = self.data.loc[self.data['time'] >= 1005]
 
         for c, conc in enumerate(self.concs):
             for n in range(conc_reps[conc]):
@@ -68,7 +68,8 @@ class DataLibrary(object):
 
         adjust_labels(axs, self.concs, 'normalised \n current')
         fig.savefig(os.path.join(modelling.FIG_DIR, 'exp_data',
-                                 self.drug + '.pdf'), bbox_inches='tight')
+                                 self.drug + '_withspike.pdf'),
+                    bbox_inches='tight')
         plt.close()
 
     def get_mean_signal(self, cache=False):
@@ -116,41 +117,25 @@ class DataLibrary(object):
 
         return mean_signal
 
-    def plot_signal_mean(self):
+    def plot_mean_signal(self):
 
-        conc_reps = self.get_conc_reps()
+        data = self.get_mean_signal()
 
         fig = plt.figure(figsize=(3, 3))
         ax = fig.add_subplot(111)
         colors = matplotlib.cm.get_cmap('tab10')
-        # colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '']
 
         # Remove artificial spike
-        nospike_data = self.data.loc[self.data['time'] >= 1005]
+        nospike_data = data.loc[self.data['time'] >= 1005]
 
         for c, conc in enumerate(self.concs):
-            data_sweep = pd.DataFrame()
-            for n in range(conc_reps[conc]):
-                subset_data = nospike_data.loc[(nospike_data['conc'] == conc)
-                                               & (nospike_data['exp'] == n + 1)]
-
-                subset_data = subset_data.sort_values(['sweep', 'time'],
-                                                      ascending=[True, True])
-                frac_block = subset_data['frac'].reset_index(drop=True)
-                frac_block = frac_block.rename("exp " + str(n))
-
-                data_sweep = pd.concat([data_sweep, frac_block], axis=1)
-
-            data_sweep['sweep'] = subset_data['sweep'].values
-            data_sweep['time'] = subset_data['time'].values
-
+            data_sweep = nospike_data.loc[nospike_data['conc'] == conc]
             for s in range(1, self.n_sweeps + 1):
                 subset_data_sweep = data_sweep.loc[
                     data_sweep['sweep'] == s]
                 time = subset_data_sweep['time']
-                data = subset_data_sweep.iloc[:, :-2]
-                mean = data.mean(axis=1)
-                std = data.std(axis=1)
+                mean = subset_data_sweep['frac']
+                std = subset_data_sweep['frac_std']
                 ax.plot((time + s * max(time)) * 1e-3, mean, color=colors(c),
                         label=str(conc) + ' nM', zorder=1)
                 ax.fill_between((time + s * max(time)) * 1e-3, mean + std,
