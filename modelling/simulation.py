@@ -194,9 +194,12 @@ class ModelSimController(object):
         elif log_var == 'all':
             log_var = None
 
+        if log_times is not None:
+            timestep = None
+
         self.sim.pre(self._cycle_length * self.prepace)
         log = self.sim.run(self._cycle_length * save_signal, log=log_var,
-                           log_times=log_times).npview()
+                           log_interval=timestep, log_times=log_times).npview()
         if save_signal > 1:
             log = log.fold(self._cycle_length)
 
