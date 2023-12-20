@@ -6,13 +6,11 @@ import os
 import modelling
 
 fig_dir = os.path.join(modelling.FIG_DIR, 'background')
+if not os.path.isdir(fig_dir):
+    os.makedirs(fig_dir)
 
 # Set up figure for reversal potential, AP and current contribution
 plot = modelling.figures.FigurePlot()
-# fig = modelling.figures.FigureStructure(figsize=(10, 5),
-#                                         gridspec=(2, 2),
-#                                         height_ratios=[1] * 2,
-#                                         hspace=0.3, wspace=0.1)
 fig = modelling.figures.FigureStructure(figsize=(7, 3.5),
                                         gridspec=(2, 2),
                                         height_ratios=[1] * 2,
@@ -21,7 +19,6 @@ fig = modelling.figures.FigureStructure(figsize=(7, 3.5),
 # Figure parameters
 model_details = modelling.model_naming
 model_list = model_details.APmodel_list[:4]
-# model_list = ['Tomek', 'Tomek-Cl']
 current_list = model_details.current_list
 current_colours = model_details.IKr_current_colours
 
@@ -57,10 +54,6 @@ for num, APmodel_name in enumerate(model_list):
     panel.set_rasterization_zorder(2)
 
 legend_panel = fig.axs[1][1]
-# legend_panel = axs[0][1][1]
-# legend_panel.xaxis.set_visible(False)
-# legend_panel.yaxis.set_visible(False)
-# legend_panel.set_frame_on(False)
 lines = []
 for current, i in current_colours.items():
     lines.append(matplotlib.lines.Line2D([0], [0], color=cmap(i), lw=5))
@@ -72,5 +65,5 @@ legend_panel.legend(lines, labels, loc=(1.04, 0.45), ncol=1, handlelength=1)
 fig.sharex(["Time (ms)"] * 2, [(0, plotting_pulse_time)] * 2)
 fig.sharey(["Relative contribution"] * 2, [(-1.02, 1.02)] * 2)
 
-# Save figures
-fig.savefig(fig_dir + 'AP-IKr_models.svg', format='svg')
+# Save figure
+fig.savefig(os.path.join(fig_dir, 'AP-IKr_models.svg'), format='svg')

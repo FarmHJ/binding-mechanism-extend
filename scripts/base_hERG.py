@@ -5,6 +5,8 @@ import os
 import modelling
 
 data_dir = os.path.join(modelling.RESULT_DIR, 'background')
+if not os.path.isdir(data_dir):
+    os.makedirs(data_dir)
 
 # Load AP models
 APsim = modelling.ModelSimController('ORd-Li')
