@@ -17,10 +17,11 @@ subgridspecs = [(2, 1)] * 4
 fig.subgrid(subgridspecs, hspace=0.1)
 
 # Figure parameters
-current_list = modelling.model_naming.current_list
+model_details = modelling.model_naming
+current_list = model_details.current_list
 plotting_pulse_time = 800
 
-model_list = ['Grandi', 'TTP', 'Tomek-Cl', 'ORd-Lei']
+model_list = model_details.APmodel_list[1:]
 model_label = ['Grandi-Li', 'ten Tusscher-Li', 'Tomek-Li', 'ORd-Lei']
 
 # Figure y-axes limits
@@ -30,11 +31,11 @@ IKr_bottom_list = []
 IKr_top_list = []
 
 for num, APmodel_name in enumerate(model_list):
-    print(APmodel_name)
+    print('Simulating AP for', APmodel_name)
     # Load base model
     APsim = modelling.ModelSimController(APmodel_name, ikr_modified=False)
 
-    model_keys = modelling.model_naming.model_current_keys[APmodel_name]
+    model_keys = model_details.model_current_keys[APmodel_name]
 
     # Simulate AP
     base_log = APsim.simulate()
@@ -90,11 +91,11 @@ for i in range(4):
         fig.axs[i][0][0].set_yticklabels([])
         fig.axs[i][1][0].set_yticklabels([])
 
-fig.savefig(os.path.join(fig_dir, 'AP_tune_IKr_test.svg'))
+fig.savefig(os.path.join(fig_dir, 'AP_tune_IKr.svg'))
 
-#########################################
+##########################
 # IKr magnitude comparison
-#########################################
+##########################
 model_list = modelling.model_naming.APmodel_list[:4]
 model_label = ['ORd-Li', 'Grandi-Li', 'ten Tusscher-Li', 'Tomek-Li']
 
@@ -113,6 +114,7 @@ for num, APmodel_name in enumerate(model_list):
     APsim = modelling.ModelSimController(APmodel_name)
 
     # Load IKr scale
+    # TODO: Change all to AP duration
     if APmodel_name != 'ORd-Li':
         APsim.set_ikr_rescale_method('hERG_peak')
     log = APsim.simulate()

@@ -28,7 +28,7 @@ fig_dir = os.path.join(modelling.FIG_DIR, 'kinetics_comparison', APmodel_name)
 if not os.path.isdir(fig_dir):
     os.makedirs(fig_dir)
 result_file = os.path.join(modelling.RESULT_DIR,
-                           APmodel_name + '_conductance_scale.csv')
+                           f'{APmodel_name}_conductance_scale.csv')
 
 # Set up figure for reversal potential, AP and current contribution
 if plot_bool:
@@ -45,7 +45,7 @@ if plot_bool:
         subgridspecs[k][1])] for i in range(subgridspecs[k][0])] for k in
         range(len(subgs))]
 
-    cmap = matplotlib.cm.get_cmap('tab20')
+    cmap = matplotlib.colormaps['tab20']
 
     # Figure parameters
     current_list = modelling.model_naming.current_list
@@ -170,7 +170,6 @@ def APD_problem(conductance_scale):
 
 
 if tune_method in ['all', 'AP_duration']:
-    print(base_apd90)
     if args.cache:
         ikr_scale_df = pd.read_csv(result_file, index_col=[0],
                                    skipinitialspace=True)
