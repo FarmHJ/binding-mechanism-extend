@@ -6,6 +6,8 @@ import modelling
 
 data_dir = os.path.join(modelling.RESULT_DIR, 'background')
 fig_dir = os.path.join(modelling.FIG_DIR, 'background')
+if not os.path.isdir(fig_dir):
+    os.makedirs(fig_dir)
 
 # Load AP signal
 AP_log = myokit.DataLog.load_csv(os.path.join(data_dir, 'APclamp.csv'))

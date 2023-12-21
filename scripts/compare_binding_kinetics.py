@@ -118,7 +118,7 @@ if MODE in ["AP", "APD", "APD-qNet"]:
     if MODE == "AP":
         column_name = ['pulse ' + str(i) for i in range(save_signal)]
     else:
-        column_name = ['pulse 1']
+        column_name = ['APD']
     APD_trapping_df = pd.DataFrame(APD_trapping, columns=column_name)
     APD_trapping_df['drug concentration'] = drug_conc
     APD_trapping_df.to_csv(os.path.join(data_dir, 'SD_' + filename))

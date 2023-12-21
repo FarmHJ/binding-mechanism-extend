@@ -59,10 +59,12 @@ panel2 = axs[0]
 # Read files name of action potential data
 SD_data_files = glob.glob(os.path.join(data_dir, 'SD_AP_*.csv'))
 CS_data_files = glob.glob(os.path.join(data_dir, 'CS_AP_*.csv'))
-conc_label_SD = [fname[6:-4] for fname in SD_data_files]
-drug_conc_SD = [float(fname[6:-4]) for fname in SD_data_files]
-conc_label_CS = [fname[6:-4] for fname in CS_data_files]
-drug_conc_CS = [float(fname[6:-4]) for fname in CS_data_files]
+conc_label_SD = [os.path.basename(fname)[6:-4] for fname in SD_data_files]
+drug_conc_SD = [float(os.path.basename(fname)[6:-4])
+                for fname in SD_data_files]
+conc_label_CS = [os.path.basename(fname)[6:-4] for fname in CS_data_files]
+drug_conc_CS = [float(os.path.basename(fname)[6:-4])
+                for fname in CS_data_files]
 
 # Sort in increasing order of drug concentration
 sort_ind = [i[0] for i in sorted(enumerate(drug_conc_SD), key=lambda x: x[1])]
@@ -154,8 +156,6 @@ APD_conductance_df = pd.read_csv(os.path.join(data_dir, 'CS_APD_fine.csv'))
 drug_conc = APD_trapping_df['drug concentration'].values.tolist()
 APD_trapping = APD_trapping_df['APD'].values.tolist()
 APD_conductance = APD_conductance_df['APD'].values.tolist()
-print(APD_trapping)
-print(APD_conductance)
 EAD_marker = [1050 if (np.isnan((i, j)).any()) else None for (i, j)
               in zip(APD_trapping, APD_conductance)]
 
@@ -174,15 +174,15 @@ panel3[0][0].legend(handlelength=1)
 l_lim, r_lim = panel3[0][0].get_xlim()
 
 # Bottom right panel
-# Plots the qNet calculated for both models with drugs at a range of 0.5 to 25
-# multiples of Cmax
+# Plots the qNet calculated for both models
 panel4 = axs[2]
 
-param_lib = modelling.BindingParameters()
-Cmax = param_lib.binding_parameters[drug]['Cmax']
+# Load qNet data
+qNet_SD_df = pd.read_csv(os.path.join(data_dir, 'SD_qNet.csv'))
+qNet_CS_df = pd.read_csv(os.path.join(data_dir, 'CS_qNet.csv'))
 
-SD_qNet = APD_trapping_df['qNet'].values.tolist()
-CS_qNet = APD_conductance_df['qNet'].values.tolist()
+SD_qNet = qNet_SD_df['qNet'].values.tolist()
+CS_qNet = qNet_CS_df['qNet'].values.tolist()
 
 # EAD_indicator = np.array([1 if i is None else None for i in EAD_marker])
 SD_qNet = [None if np.isnan(APD_trapping[i]) else SD_qNet[i] for i in
@@ -208,4 +208,4 @@ fig.fig.text(0.1, 0.455, '(B)', fontsize=11)
 # fig.fig.text(0.49, 0.905, '(B)', fontsize=11)
 fig.fig.text(0.53, 0.455, '(C)', fontsize=11)
 
-fig.savefig(fig_dir + "model_compare.svg", format='svg')
+fig.savefig(os.path.join(fig_dir, "model_compare.svg"), format='svg')

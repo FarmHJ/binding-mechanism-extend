@@ -76,8 +76,11 @@ for num, APmodel_name in enumerate(model_list):
         RMSDiff_APD = np.sqrt(square_sum) / count
         APD_metric[drug].append(RMSDiff_APD)
 
-        SD_qNet = APD_trapping_df['qNet'].values.tolist()
-        CS_qNet = APD_conductance_df['qNet'].values.tolist()
+        qNet_SD_df = pd.read_csv(os.path.join(data_dir, 'SD_qNet.csv'))
+        qNet_CS_df = pd.read_csv(os.path.join(data_dir, 'CS_qNet.csv'))
+
+        SD_qNet = qNet_SD_df['qNet'].values.tolist()
+        CS_qNet = qNet_CS_df['qNet'].values.tolist()
 
         SD_qNet = np.array(SD_qNet)[np.array(EAD_marker)]
         CS_qNet = np.array(CS_qNet)[np.array(EAD_marker)]
