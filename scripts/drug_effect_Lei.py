@@ -88,7 +88,7 @@ if args.plot:
     plot = modelling.figures.FigurePlot()
 
     subgridspecs = [(1, 2), (1, 1)]
-    fig.subgrid(*subgridspecs[i], wspace=0.08, hspace=0.08)
+    fig.subgrid(subgridspecs, wspace=0.08, hspace=0.08)
 
     # Read files name of IKr data
     SD_data_files = glob.glob(os.path.join(data_dir, 'SD_current_*.csv'))

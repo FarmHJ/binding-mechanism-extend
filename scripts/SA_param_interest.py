@@ -106,7 +106,7 @@ if args.mode == 'only_drugs':
                  'param_values': param_values}
         param_space.append(input)
 
-    n_workers = 4
+    n_workers = 8
     evaluator = pints.ParallelEvaluator(param_evaluation,
                                         n_workers=n_workers,
                                         args=[20])
@@ -140,14 +140,12 @@ elif args.mode == 'parameter_SA':
 
     # Load previously saved parameter space
     drug_space_df = pd.read_csv(
-        os.path.join(modelling.RESULT_DIR, 'parameter_SA', 'SA_alldrugs.csv'),
+        os.path.join(modelling.RESULT_DIR, 'parameter_SA',
+                     'SA_alldrugs_' + APmodel + '_new.csv'),
         header=[0, 1], index_col=[0], skipinitialspace=True)
 
     for drug in drug_list:
-        print(drug)
-        # Get parameter values of each synthetic drug
-        param_values = drug_space_df.loc[
-            drug_space_df[('drug', 'drug')] == drug]['param_values']
+        print('parameter SA: ', drug)
 
         # Check for completed simulations to prevent repetition
         filename = 'SA_' + drug + '_' + param_interest + '_new.csv'
@@ -164,10 +162,13 @@ elif args.mode == 'parameter_SA':
         param_range = [i for i in param_fullrange if i not in ran_values]
         param_space = []
         for v in param_range:
+            # Get parameter values of each synthetic drug
+            param_values = drug_space_df.loc[[drug]]['param_values']
             param_values[param_interest] = v
             input = {'id': drug,
                      'param_values': param_values}
             param_space.append(input)
+        print(param_space)
 
         # Evaluate the RMSD and MD between APD90s of a synthetic drug with
         # changing Hill coefficient from the ORd-SD model and the ORd-CS model
