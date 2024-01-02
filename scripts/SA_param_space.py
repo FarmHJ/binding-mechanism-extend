@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser(
     description="Parameter space exploration for AP-IKr-SD model and "
     "the AP-IKr-CS model")
 parser.add_argument("APmodel", help="Name of AP model")
-parser.add_argument("--ikr_tuning", default='hERG_peak',
+parser.add_argument("--ikr_tuning", default='AP_duration',
                     choices=['hERG_peak', 'hERG_flux', 'AP_duration'],
                     help="Method used to tune IKr")
 args = parser.parse_args()
@@ -31,7 +31,8 @@ if not os.path.exists(data_dir):
     os.makedirs(data_dir)
 
 APsim = modelling.ModelSimController(APmodel)
-APsim.set_ikr_rescale_method(args.ikr_tuning)
+if APmodel != 'ORd-Li':
+    APsim.set_ikr_rescale_method(args.ikr_tuning)
 
 # Get name of parameters
 param_names = modelling.SD_details.SD_param_names
@@ -84,7 +85,8 @@ param_space_dir = os.path.join(data_dir, 'parameter_space')
 if not os.path.isdir(param_space_dir):
     os.makedirs(param_space_dir)
 if APmodel == 'ORd-Lei':
-    param_space_fpath = os.path.join(param_space_dir, 'parameter_space_Lei_new.csv')
+    param_space_fpath = os.path.join(param_space_dir,
+                                     'parameter_space_Lei.csv')
 else:
     param_space_fpath = os.path.join(param_space_dir, 'parameter_space_Li.csv')
 
@@ -93,7 +95,8 @@ if os.path.exists(param_space_fpath):
     param_space_df = pd.read_csv(param_space_fpath,
                                  header=[0, 1], index_col=[0],
                                  skipinitialspace=True)
-    param_space_df = param_space_df.rename(columns={"N": "n", "EC50": "halfmax"})
+    param_space_df = param_space_df.rename(columns={"N": "n",
+                                                    "EC50": "halfmax"})
     for i in range(len(param_space_df.index)):
         param_space.append(param_space_df.iloc[[i]])
 else:
@@ -126,8 +129,7 @@ samples_split_n = int(np.ceil(total_samples / samples_per_save))
 total_saving_file_num = np.arange(samples_split_n)
 
 # Determine completed simulations so that it is not repeated
-# file_prefix = 'SA_allparam_'
-file_prefix = 'SA_test_'
+file_prefix = 'SA_allparam_'
 results_dir = os.path.join(data_dir, 'SA_space', APmodel)
 if not os.path.isdir(results_dir):
     os.makedirs(results_dir)

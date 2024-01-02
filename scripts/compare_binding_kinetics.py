@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser(
     description="Comparison between AP-IKr-SD model and the AP-IKr-CS model")
 parser.add_argument("APmodel", help="Name of AP model")
 parser.add_argument("drug", help="Drug")
-parser.add_argument("--ikr_tuning", default='hERG_peak',
+parser.add_argument("--ikr_tuning", default='AP_duration',
                     choices=['hERG_peak', 'hERG_flux', 'AP_duration'],
                     help="Method used to tune IKr")
 parser.add_argument("-m", "--mode", default="APD-qNet", type=str,
@@ -36,7 +36,7 @@ MODE = args.mode
 
 # Define directories to save simulated data
 data_dir = os.path.join(modelling.RESULT_DIR, 'kinetics_comparison',
-                        APmodel_name, ikr_tuning + '_match', drug)
+                        APmodel_name, f'{ikr_tuning}_match', drug)
 if not os.path.isdir(data_dir):
     os.makedirs(data_dir)
 
@@ -54,7 +54,8 @@ current_key = model_keys['IKr']
 APsim = modelling.ModelSimController(APmodel_name)
 
 # Scale conductance value
-APsim.set_ikr_rescale_method(ikr_tuning)
+if APmodel_name != 'ORd-Li':
+    APsim.set_ikr_rescale_method(ikr_tuning)
 
 # Define the range of drug concentration for a given drug
 if MODE == 'AP':
@@ -86,7 +87,7 @@ if MODE in ["AP", "APD", "APD-qNet"]:
         log = APsim.simulate(save_signal=save_signal)
         if MODE == "AP":
             log.save_csv(os.path.join(data_dir,
-                                      'SD_AP_' + str(drug_conc[i]) + '.csv'))
+                                      f'SD_AP_{drug_conc[i]}.csv'))
 
         apd90 = APsim.APD90(log)
         APD_trapping.append(apd90)
@@ -98,7 +99,7 @@ if MODE in ["AP", "APD", "APD-qNet"]:
         APsim.set_CS_parameter(1)
         if MODE == "AP":
             log.save_csv(os.path.join(data_dir,
-                                      'CS_AP_' + str(drug_conc[i]) + '.csv'))
+                                      f'CS_AP_{drug_conc[i]}.csv'))
 
         apd90 = APsim.APD90(log)
         APD_conductance.append(apd90)
@@ -107,7 +108,7 @@ if MODE in ["AP", "APD", "APD-qNet"]:
 
 # Save simulated APD90 of both the ORd-SD model and the ORd-CS model
 if MODE == "AP":
-    filename = 'APD_pulses' + str(int(save_signal)) + '.csv'
+    filename = f'APD_pulses{int(save_signal)}.csv'
 elif MODE in ["APD", "APD-qNet"]:
     filename = 'APD_fine.csv'
     APD_trapping = [float('nan') if np.isnan(i).any() else max(i)
@@ -121,11 +122,11 @@ if MODE in ["AP", "APD", "APD-qNet"]:
         column_name = ['APD']
     APD_trapping_df = pd.DataFrame(APD_trapping, columns=column_name)
     APD_trapping_df['drug concentration'] = drug_conc
-    APD_trapping_df.to_csv(os.path.join(data_dir, 'SD_' + filename))
+    APD_trapping_df.to_csv(os.path.join(data_dir, f'SD_{filename}'))
 
     APD_conductance_df = pd.DataFrame(APD_conductance, columns=column_name)
     APD_conductance_df['drug concentration'] = drug_conc
-    APD_conductance_df.to_csv(os.path.join(data_dir, 'CS_' + filename))
+    APD_conductance_df.to_csv(os.path.join(data_dir, f'CS_{filename}'))
 
 # Compute qNet
 if MODE in ["qNet", "APD-qNet"]:
@@ -148,7 +149,7 @@ if MODE in ["qNet", "APD-qNet"]:
     print('Computing qNet...')
     APsim.set_SD_parameters(drug)
     for i in range(len(drug_conc)):
-        print('simulating concentration: ' + str(drug_conc[i]))
+        print(f'simulating concentration: {drug_conc[i]}')
 
         # Run simulation for the AP-SD model till steady state
         APsim.set_conc(drug_conc[i])
@@ -168,8 +169,6 @@ if MODE in ["qNet", "APD-qNet"]:
 
         qNet = APsim.qNet(log)
         qNet_CS_arr.append(qNet)
-
-        print('done concentration: ' + str(drug_conc[i]))
 
     # Save qNet
     qNet_SD_df = pd.DataFrame(np.array(qNet_SD_arr), columns=['qNet'])

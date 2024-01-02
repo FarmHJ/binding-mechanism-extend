@@ -21,7 +21,8 @@ model_details = modelling.model_naming
 model_list = model_details.APmodel_list
 model_label = ['ORd-Li', 'Grandi-Li', 'ten Tusscher-Li', 'Tomek-Li', 'ORd-Lei']
 drug_list = ['dofetilide', 'verapamil']
-tuning_method = ['hERG_peak'] * 4 + ['AP_duration']
+# tuning_method = ['hERG_peak'] * 4 + ['AP_duration']
+tuning_method = ['AP_duration'] * 5
 
 fig_dir = os.path.join(modelling.FIG_DIR, 'kinetics_comparison')
 if not os.path.isdir(fig_dir):
@@ -48,11 +49,11 @@ qNet_metric = {
 for num, APmodel_name in enumerate(model_list):
     for drug_ind, drug in enumerate(drug_list):
         data_dir = os.path.join(modelling.RESULT_DIR, 'kinetics_comparison',
-                                APmodel_name, tuning_method[num] + '_match',
+                                APmodel_name, f'{tuning_method[num]}_match',
                                 drug)
 
-        SD_labelname = APmodel_name + '-SD model'
-        CS_labelname = APmodel_name + '-CS model'
+        SD_labelname = f'{APmodel_name}-SD model'
+        CS_labelname = f'{APmodel_name}-CS model'
 
         # Load APD data
         APD_trapping_df = pd.read_csv(os.path.join(data_dir, 'SD_APD_fine.csv'))
@@ -136,11 +137,15 @@ fig.axs[1][1].xaxis.tick_bottom()
 d = 0.015
 for i in range(2):
     kwargs = dict(transform=fig.axs[0][i].transAxes, color='k', clip_on=False)
-    fig.axs[0][i].plot((-d, +d), (-d, +d), **kwargs)        # top-left diagonal
-    fig.axs[0][i].plot((1 - d, 1 + d), (-d, +d), **kwargs)  # top-right diagonal
+    # top-left diagonal
+    fig.axs[0][i].plot((-d, +d), (-d, +d), **kwargs)
+    # top-right diagonal
+    fig.axs[0][i].plot((1 - d, 1 + d), (-d, +d), **kwargs)
     kwargs.update(transform=fig.axs[1][i].transAxes)
-    fig.axs[1][i].plot((-d, +d), (1 - d / 2, 1 + d / 2), **kwargs)  # bottom-left diagonal
-    fig.axs[1][i].plot((1 - d, 1 + d), (1 - d / 2, 1 + d / 2), **kwargs)  # bottom-right diagonal
+    # bottom-left diagonal
+    fig.axs[1][i].plot((-d, +d), (1 - d / 2, 1 + d / 2), **kwargs)
+    # bottom-right diagonal
+    fig.axs[1][i].plot((1 - d, 1 + d), (1 - d / 2, 1 + d / 2), **kwargs)
 
 # Adjust figure
 fig.axs[0][0].set_title(r'APD$_{90}$')
@@ -156,4 +161,4 @@ fig.axs[0][0].legend(handlelength=1)
 fig.fig.text(0.1, 0.905, '(A)', fontsize=11)
 fig.fig.text(0.52, 0.905, '(B)', fontsize=11)
 
-fig.savefig(fig_dir + "model_compare_all.svg", format='svg')
+fig.savefig(os.path.join(fig_dir, "model_compare_all.svg"), format='svg')

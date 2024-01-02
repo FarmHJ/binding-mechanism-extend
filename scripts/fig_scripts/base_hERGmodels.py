@@ -47,8 +47,8 @@ panel_lei = axs[1]
 
 cipa_states = ['O', 'IO', 'IC1', 'C1', 'IC2', 'C2']
 # state 'y3' is open state
-lei_states = ['y3', 'y2', 'y1', 'y4']
-lei_states_name = ['O', 'I', 'CI', 'C']
+# lei_states = ['y3', 'y2', 'y1', 'y4']
+lei_states = ['O', 'I', 'CI', 'C']
 
 # Plot state occupancies of the hERG channel
 panel_cipa[2][0].stackplot(cipa_log.time(),
@@ -62,7 +62,7 @@ panel_cipa[2][0].set_ylim(bottom=0, top=1)
 panel_cipa[2][0].set_rasterization_zorder(0)
 panel_lei[2][0].stackplot(lei_log.time(),
                           *[lei_log['ikr.' + s] for s in lei_states],
-                          labels=[s for s in lei_states_name],
+                          labels=[s for s in lei_states],
                           colors=color_seq[:4], zorder=-10,
                           edgecolor='k')
 panel_lei[2][0].legend(ncol=2, loc='upper right', handlelength=1,

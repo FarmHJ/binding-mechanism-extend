@@ -116,7 +116,8 @@ for num, APmodel_name in enumerate(model_list):
     # Load IKr scale
     # TODO: Change all to AP duration
     if APmodel_name != 'ORd-Li':
-        APsim.set_ikr_rescale_method('hERG_peak')
+        # APsim.set_ikr_rescale_method('hERG_peak')
+        APsim.set_ikr_rescale_method('AP_duration')
     log = APsim.simulate()
 
     for i in range(4):

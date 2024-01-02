@@ -20,7 +20,7 @@ parser.add_argument('--mode', default='only_drugs',
                     choices=['only_drugs', 'parameter_SA'],
                     help='Choose between sensitiivity analysis of parameter '
                     'of interest or only drugs')
-parser.add_argument("--ikr_tuning", default='hERG_peak',
+parser.add_argument("--ikr_tuning", default='AP_duration',
                     choices=['hERG_peak', 'hERG_flux', 'AP_duration'],
                     help="Method used to tune IKr")
 parser.add_argument('--parameter_interest', default='n',
@@ -35,7 +35,7 @@ param_interest = args.parameter_interest
 # Define directory to save simulation data
 data_dir = os.path.join(modelling.RESULT_DIR, 'parameter_SA')
 if args.mode == 'parameter_SA':
-    data_dir = os.path.join(data_dir, 'parameter_' + param_interest,
+    data_dir = os.path.join(data_dir, f'parameter_{param_interest}',
                             APmodel)
 if not os.path.exists(data_dir):
     os.makedirs(data_dir)
@@ -55,7 +55,6 @@ def param_evaluation(inputs, counter):
 
     # Prepare the inputs for simulation
     ComparisonController.prepare_inputs(inputs)
-    # ComparisonController.set_parameters(param_values)
 
     # Set the normalising constant
     ComparisonController.normalise_drug_conc()
@@ -88,7 +87,7 @@ SD_params = modelling.BindingParameters()
 SD_params.load_SD_parameters()
 
 if args.mode == 'only_drugs':
-    filename = 'SA_alldrugs_' + APmodel + '_new.csv'
+    filename = f'SA_alldrugs_{APmodel}_new.csv'
     fpath = os.path.join(data_dir, filename)
     if os.path.exists(fpath):
         results_df = pd.read_csv(fpath, header=[0, 1], index_col=[0],
@@ -141,14 +140,14 @@ elif args.mode == 'parameter_SA':
     # Load previously saved parameter space
     drug_space_df = pd.read_csv(
         os.path.join(modelling.RESULT_DIR, 'parameter_SA',
-                     'SA_alldrugs_' + APmodel + '_new.csv'),
+                     f'SA_alldrugs_{APmodel}_new.csv'),
         header=[0, 1], index_col=[0], skipinitialspace=True)
 
     for drug in drug_list:
         print('parameter SA: ', drug)
 
         # Check for completed simulations to prevent repetition
-        filename = 'SA_' + drug + '_' + param_interest + '_new.csv'
+        filename = f'SA_{drug}_{param_interest}_new.csv'
         filepath = os.path.join(data_dir, filename)
         if os.path.exists(filepath):
             saved_results_df = pd.read_csv(filepath, header=[0, 1],

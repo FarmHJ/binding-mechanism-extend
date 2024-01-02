@@ -25,8 +25,8 @@ if not os.path.isdir(fig_dir):
 # Read simulated data for synthetic drugs
 data_dir = os.path.join(modelling.RESULT_DIR, 'parameter_SA')
 filename = 'SA_alldrugs_' + APmodel_name + '.csv'
-df = pd.read_csv(data_dir + filename, header=[0, 1], index_col=[0],
-                 skipinitialspace=True)
+df = pd.read_csv(os.path.join(data_dir, filename), header=[0, 1],
+                 index_col=[0], skipinitialspace=True)
 
 Vhalf_list = df['param_values']['Vhalf'].values
 Kmax_list = df['param_values']['Kmax'].values

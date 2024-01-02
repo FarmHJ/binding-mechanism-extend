@@ -20,28 +20,26 @@ fig = modelling.figures.FigureStructure(figsize=(7, 3.5),
 model_details = modelling.model_naming
 model_list = model_details.APmodel_list[:4]
 current_list = model_details.current_list
-current_colours = model_details.IKr_current_colours
+current_colours = model_details.contribution_current_colours
 
 cmap = matplotlib.colormaps['tab20']
 plotting_pulse_time = 800
 
 for num, APmodel_name in enumerate(model_list):
-    model_current_keys = model_details.current_keys[APmodel_name]
+    model_current_keys = model_details.model_current_keys[APmodel_name]
+    model_title = model_details.AP_file_names[APmodel_name]['label']
+
+    APsim = modelling.ModelSimController(APmodel_name)
+    if APmodel_name != 'ORd-Li':
+        APsim.set_ikr_rescale_method('AP_duration')
+    # Simulate AP
+    log = APsim.simulate(log_var='all')
+
     none_key_list = [i for i in model_current_keys.keys() if
                      model_current_keys[i] is None]
     none_key_list.extend(['time', 'Vm'])
     for i in none_key_list:
         del model_current_keys[i]
-
-    model_title = model_details.AP_file_names[APmodel_name]['label']
-
-    APsim = modelling.ModelSimController(APmodel_name)
-
-    if APmodel_name != 'ORd-Li':
-        APsim.set_ikr_rescale_method('hERG_peak')
-
-    # Simulate AP
-    log = APsim.simulate(log_var='all')
 
     # Plot current contribution
     colours = [cmap(current_colours[x]) for x in model_current_keys.keys()]
@@ -66,4 +64,4 @@ fig.sharex(["Time (ms)"] * 2, [(0, plotting_pulse_time)] * 2)
 fig.sharey(["Relative contribution"] * 2, [(-1.02, 1.02)] * 2)
 
 # Save figure
-fig.savefig(os.path.join(fig_dir, 'AP-IKr_models.svg'), format='svg')
+fig.savefig(os.path.join(fig_dir, 'base_APmodels.svg'), format='svg')

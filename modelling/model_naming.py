@@ -14,7 +14,7 @@ def load_ikr_scaling(APmodel, tuning):
     return conductance_scale
 
 
-APmodel_list = ['ORd-Li', 'Grandi', 'TTP', 'Tomek-Cl', 'ORd-Lei']
+APmodel_list = ['ORd-Li', 'Grandi', 'TTP', 'Tomek', 'ORd-Lei']
 
 AP_file_names = {
     'ORd': {
@@ -36,15 +36,15 @@ AP_file_names = {
         'AP_IKr': 'TTP-2006-Li-SD.mmt',
         'label': 'ten Tusscher (2006)'
     },
-    'Tomek': {
+    'Tomek-old': {
         'AP': 'Tomek-2019.mmt',
         'AP_IKr': 'Tomek-2019-Li-SD.mmt',
         'label': 'Tomek (2019)'
     },
-    'Tomek-Cl': {
+    'Tomek': {
         'AP': 'Tomek-Cl-2020.mmt',
         'AP_IKr': 'Tomek-Cl-2020-Li-SD.mmt',
-        'label': 'Tomek (2019)'
+        'label': 'Tomek (2020)'
     },
     'ORd-Lei': {
         'AP': 'ohara-cipa-2017.mmt',
@@ -152,7 +152,7 @@ model_current_keys = {
         'time': 'environment.time',
         'Vm': 'membrane.V'
     },
-    'Tomek': {
+    'Tomek-old': {
         'IClB': 'ICl.IClb',
         'IClCa': 'ICl.IClCa',
         'Ito': 'Ito.Ito',
@@ -173,7 +173,7 @@ model_current_keys = {
         'time': 'environment.time',
         'Vm': 'membrane.v'
     },
-    'Tomek-Cl': {
+    'Tomek': {
         'IClB': 'ICl.IClb',
         'IClCa': 'ICl.IClCa',
         'Ito': 'Ito.Ito',
