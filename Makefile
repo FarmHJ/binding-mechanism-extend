@@ -1,79 +1,79 @@
 .PHONY: all clean
 
-AP_MODELS = Grandi TTP Tomek-Cl
-DRUGS = dofetilide verapamil
+# AP_MODELS = Grandi TTP Tomek-Cl
+# DRUGS = dofetilide verapamil
 
-# Get Hill coef of drugs for Lei model
-Hill_Lei:
-	cd scripts/; \
-	for drug in $(DRUGS); do\
-		python3 drug_effect_Lei.py $$drug --plot; \
-	done
+# # Get Hill coef of drugs for Lei model
+# Hill_Lei:
+# 	cd scripts/; \
+# 	for drug in $(DRUGS); do\
+# 		python3 drug_effect_Lei.py $$drug --plot; \
+# 	done
 
-# Get IKr conductance scale for all AP-IKr models
-tune_IKr:
-	cd scripts/; \
-	for ap_model in $(AP_MODELS); do \
-		python3 tune_IKr.py $$ap_model; \
-	done
-	cd scripts/; \
-	python3 tune_IKr.py ORd-Lei;
+# # Get IKr conductance scale for all AP-IKr models
+# tune_IKr:
+# 	cd scripts/; \
+# 	for ap_model in $(AP_MODELS); do \
+# 		python3 tune_IKr.py $$ap_model; \
+# 	done
+# 	cd scripts/; \
+# 	python3 tune_IKr.py ORd-Lei;
 
-# Compare kinetics
-kinetics:
-	# cd scripts/; \
-	# for ap_model in $(AP_MODELS); do \
-	# 	python3 compare_binding_kinetics.py $$ap_model dofetilide; \
-	# 	python3 compare_binding_kinetics.py $$ap_model verapamil; \
-	# done
-	cd scripts/; \
-	python3 compare_binding_kinetics.py ORd-Lei dofetilide --ikr_tuning AP_duration; \
-	python3 compare_binding_kinetics.py ORd-Lei verapamil --ikr_tuning AP_duration; \
+# # Compare kinetics
+# kinetics:
+# 	# cd scripts/; \
+# 	# for ap_model in $(AP_MODELS); do \
+# 	# 	python3 compare_binding_kinetics.py $$ap_model dofetilide; \
+# 	# 	python3 compare_binding_kinetics.py $$ap_model verapamil; \
+# 	# done
+# 	cd scripts/; \
+# 	python3 compare_binding_kinetics.py ORd-Lei dofetilide --ikr_tuning AP_duration; \
+# 	python3 compare_binding_kinetics.py ORd-Lei verapamil --ikr_tuning AP_duration; \
 
-kinetics_apd90:
-	cd scripts/; \
-	for ap_model in $(AP_MODELS); do \
-		python3 compare_binding_kinetics.py $$ap_model dofetilide -m AP; \
-		python3 compare_binding_kinetics.py $$ap_model verapamil -m AP; \
-	done
-	cd scripts/; \
-	python3 compare_binding_kinetics.py ORd-Lei dofetilide --ikr_tuning AP_duration -m AP; \
-	python3 compare_binding_kinetics.py ORd-Lei verapamil --ikr_tuning AP_duration -m AP; \
+# kinetics_apd90:
+# 	cd scripts/; \
+# 	for ap_model in $(AP_MODELS); do \
+# 		python3 compare_binding_kinetics.py $$ap_model dofetilide -m AP; \
+# 		python3 compare_binding_kinetics.py $$ap_model verapamil -m AP; \
+# 	done
+# 	cd scripts/; \
+# 	python3 compare_binding_kinetics.py ORd-Lei dofetilide --ikr_tuning AP_duration -m AP; \
+# 	python3 compare_binding_kinetics.py ORd-Lei verapamil --ikr_tuning AP_duration -m AP; \
 
-kinetics_fig:
-	# cd scripts/fig_scripts/; \
-	# for ap_model in $(AP_MODELS); do \
-	# 	python3 APD_compare.py $$ap_model dofetilide; \
-	# 	python3 APD_compare.py $$ap_model verapamil; \
-	# done
-	cd scripts/fig_scripts/; \
-	python3 APD_compare.py ORd-Lei dofetilide --ikr_tuning AP_duration; \
-	python3 APD_compare.py ORd-Lei verapamil --ikr_tuning AP_duration; \
+# kinetics_fig:
+# 	# cd scripts/fig_scripts/; \
+# 	# for ap_model in $(AP_MODELS); do \
+# 	# 	python3 APD_compare.py $$ap_model dofetilide; \
+# 	# 	python3 APD_compare.py $$ap_model verapamil; \
+# 	# done
+# 	cd scripts/fig_scripts/; \
+# 	python3 APD_compare.py ORd-Lei dofetilide --ikr_tuning AP_duration; \
+# 	python3 APD_compare.py ORd-Lei verapamil --ikr_tuning AP_duration; \
 
-kinetics_fig_all:
-	cd scripts/fig_scripts/; \
-	python3 compile_AP_compare.py
+# kinetics_fig_all:
+# 	cd scripts/fig_scripts/; \
+# 	python3 compile_AP_compare.py
 
-RMSE_drugs:
-	# cd scripts/; \
-	# for ap_model in $(AP_MODELS); do \
-	# 	python3 SA_param_interest.py $$ap_model --mode only_drugs; \
-	# done
-	cd scripts/; \
-	python3 SA_param_interest.py ORd-Lei --mode only_drugs --ikr_tuning AP_duration; \
+# RMSE_drugs:
+# 	# cd scripts/; \
+# 	# for ap_model in $(AP_MODELS); do \
+# 	# 	python3 SA_param_interest.py $$ap_model --mode only_drugs; \
+# 	# done
+# 	cd scripts/; \
+# 	python3 SA_param_interest.py ORd-Lei --mode only_drugs --ikr_tuning AP_duration; \
 
-SA_n:
-	# cd scripts/; \
-	# for ap_model in $(AP_MODELS); do \
-	# 	python3 SA_param_interest.py $$ap_model --mode parameter_SA; \
-	# done
-	cd scripts/; \
-	python3 SA_param_interest.py ORd-Lei --mode parameter_SA --ikr_tuning AP_duration; \
+# SA_n:
+# 	# cd scripts/; \
+# 	# for ap_model in $(AP_MODELS); do \
+# 	# 	python3 SA_param_interest.py $$ap_model --mode parameter_SA; \
+# 	# done
+# 	cd scripts/; \
+# 	python3 SA_param_interest.py ORd-Lei --mode parameter_SA --ikr_tuning AP_duration; \
 
-AP_schematic:
-	cd scripts/; \
-	python3 side_scripts/base_hERG.py; \
-	python3 fig_scripts/AP_schematic.py; \
+# AP_schematic:
+# 	cd scripts/; \
+# 	python3 side_scripts/base_hERG.py; \
+# 	python3 fig_scripts/AP_schematic.py; \
 
 DRUG_LIST = bepridil terfenadine cisapride ranolazine quinidine sotalol chlorpromazine ondansetron diltiazem mexiletine
 AP_MODEL = ORd-Li Grandi TTP Tomek
@@ -81,10 +81,12 @@ IKR_MODEL = Li Lei
 
 # TODO: check the data required for load_Hill_eq function
 # TODO: rerun everything with AP_duration tuning method
+# TODO: Update Tomek-Cl to Tomek, not using Tomek anyway
 
 # Background figures
 # Current contribution of AP models
 # Check the IKr_tuning method
+# Require conductance scaling factor to be calculated
 APmodels:
 	python3 scripts/fig_scripts/base_APmodels.py; \
 
@@ -96,7 +98,8 @@ IKrmodels:
 # Methods
 # Tuning of IKr in modified AP models
 IKr_tuning:
-	for model in $(AP_MODEL); do \
+	for model in Grandi TTP Tomek; do \
+		echo $$model; \
 		python3 scripts/tune_IKr.py $$model --method AP_duration --noplot; \
 	done
 	python3 scripts/fig_scripts/IKr_tuning.py; \
@@ -111,7 +114,7 @@ dof_vs_ver:
 	python3 scripts/fig_scripts/compile_AP_compare.py; \
 
 param_space_exploration:
-	for model in $(AP_MODEL); do \
+	for model in Grandi TTP Tomek; do \
 		python3 scripts/SA_param_space.py $$model --ikr_tuning AP_duration; \
 		python3 scripts/fig_scripts/SA_3D.py $$model; \
 	done
@@ -125,10 +128,10 @@ param_opt:
 
 # RMSD distribution with varying Hill coefficient
 SA_Hill:
-	for model in $(AP_MODEL); do \
+	for model in Grandi TTP Tomek; do \
 		python3 scripts/SA_param_interest.py $$model --ikr_tuning AP_duration; \
 		python3 scripts/SA_param_interest.py $$model --mode parameter_SA --ikr_tuning AP_duration; \
-		python3 scripts/fig_scripts/SA_N_diff.py $$model
+		python3 scripts/fig_scripts/SA_N_diff.py $$model; \
 	done
 
 # Biomarker comparison between dofetilide and verapamil for each AP models
