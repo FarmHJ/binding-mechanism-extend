@@ -29,6 +29,8 @@ class BindingParameters(object):
         param_file = os.path.join(modelling.PARAM_DIR,
                                   self.ikr_model + '-SD.csv')
         self.binding_params = pd.read_csv(param_file, index_col=0)
+        if 'error' in self.binding_params.columns:
+            self.binding_params = self.binding_params.drop(columns=['error'])
 
         if drug is not None:
             if drug not in drug_names:
@@ -50,16 +52,17 @@ class BindingParameters(object):
                       list in `drug_compounds`")
 
         param_file = os.path.join(modelling.PARAM_DIR, ikr_model + '-Hill.csv')
-        self.Hill = pd.read_csv(param_file, index_col=0)
+        self.Hill = pd.read_csv(param_file, index_col=0, header=[0, 1])
+        channel_list = set([header[0] for header in self.Hill.columns])
         # see if can reduce the loading of csv file everytime
 
         if channel is None:
             return self.Hill.loc[[drug]]
         else:
-            if channel not in self.channels:
+            if channel not in channel_list:
                 NameError("Choose an ion channel within the \
                           list in `channels`")
-            return self.Hill.loc[[drug]][channel]
+            return self.Hill.loc[[drug]][channel].values.tolist()[0]
 
     def load_Hill_eq(self, drug, ikr_model='Li'):
         if drug not in drug_names:
@@ -90,12 +93,14 @@ drug_concentrations = {
     'dofetilide': {
         'coarse': [0, 0.1, 1, 10, 30, 100, 300, 500, 1000],
         'fine': 10.0**np.linspace(-1, 3, 20),
-        'lit_default': [1, 3, 10, 30]
+        'lit_default': [1, 3, 10, 30],
+        'Cmax': [2, 4, 6, 8]
     },
     'verapamil': {
         'coarse': [0, 0.1, 1, 30, 300, 1000, 10000, 1e5],
         'fine': 10.0**np.linspace(-1, 5, 20),
-        'lit_default': [30, 100, 300, 1000]
+        'lit_default': [30, 100, 300, 1000],
+        'Cmax': [81, 2 * 81, 3 * 81, 4 * 81]
     },
     'bepridil': {
         'coarse': [0, 0.1, 1, 30, 100, 300, 1000, 10000],
