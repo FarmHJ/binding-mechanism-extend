@@ -205,23 +205,27 @@ param_list.append('error')
 fig = modelling.figures.FigureStructure(figsize=(4 * 2, 1.5 * 3),
                                         gridspec=(3, 2),
                                         height_ratios=[1] * 3,
-                                        hspace=0.15, wspace=0.3,
+                                        hspace=0.15, wspace=0.25,
                                         plot_in_subgrid=True)
 
 subgridspecs = [(1, 2)] * 6
-fig.subgrid(subgridspecs, hspace=0.08, width_ratios=[3, 1])
+fig.subgrid(subgridspecs, hspace=0.08, width_ratios=[3, 0.8])
 
 drug_list = modelling.SD_details.drug_names
+drug_list.sort()
+print(drug_list)
 Li_param = pd.read_csv(os.path.join(modelling.PARAM_DIR,
                                     'Li-SD.csv'), index_col=0)
+# Renamed filename to Lei-SD from Farm-SD
+# Parameters were refitted
 Lei_param = pd.read_csv(os.path.join(modelling.PARAM_DIR,
                                      'Lei-SD.csv'), index_col=0)
-Farm_param = pd.read_csv(os.path.join(modelling.PARAM_DIR,
-                                      'Farm-SD.csv'), index_col=0)
+# Farm_param = pd.read_csv(os.path.join(modelling.PARAM_DIR,
+#                                       'Farm-SD.csv'), index_col=0)
 
 Li_param = Li_param.loc[Li_param.index.isin(drug_list), :].sort_index()
 Lei_param = Lei_param.loc[Lei_param.index.isin(drug_list), :].sort_index()
-Farm_param = Farm_param.loc[Farm_param.index.isin(drug_list), :].sort_index()
+# Farm_param = Farm_param.loc[Farm_param.index.isin(drug_list), :].sort_index()
 
 for p, param in enumerate(param_list):
 
@@ -233,25 +237,29 @@ for p, param in enumerate(param_list):
     if param != 'error':
         panel[0][0].scatter(np.arange(len(drug_list)), Li_param[param],
                             color='none', lw=1.5, ec='orange', label='Li')
-        panel[0][0].scatter(np.arange(len(drug_list)), Lei_param[param],
-                            marker='^', color='none', lw=1.5, ec='g',
-                            label='Lei')
-        bp = panel[0][1].boxplot([Li_param[param], Lei_param[param],
-                                  Farm_param[param]], patch_artist=True,
+        # panel[0][0].scatter(np.arange(len(drug_list)), Lei_param[param],
+        #                     marker='^', color='none', lw=1.5, ec='g',
+        #                     label='Lei')
+        bp = panel[0][1].boxplot([Li_param[param], Lei_param[param]],
+                                #   Farm_param[param]], 
+                                 patch_artist=True,
                                  medianprops=dict(color="white"))
     else:
         panel[0][0].scatter(np.arange(len(drug_list)), Li_err_df[param],
                             color='none', lw=1.5, ec='orange', label='Li')
-        panel[0][0].scatter(np.arange(len(drug_list)), Lei_err_df[param],
-                            marker='^', color='none', lw=1.5, ec='g',
-                            label='Lei')
-        bp = panel[0][1].boxplot([Li_err_df[param], Lei_err_df[param],
-                                  Farm_param[param]], patch_artist=True,
+        # panel[0][0].scatter(np.arange(len(drug_list)), Lei_err_df[param],
+        #                     marker='^', color='none', lw=1.5, ec='g',
+        #                     label='Lei')
+        bp = panel[0][1].boxplot([Li_err_df[param], Lei_err_df[param]],
+                                #   Farm_param[param]],
+                                 patch_artist=True,
                                  medianprops=dict(color="white"))
-    panel[0][0].scatter(np.arange(len(drug_list)), Farm_param[param],
-                        marker='s', color='none', lw=1.5, ec='k', label='Farm')
+    panel[0][0].scatter(np.arange(len(drug_list)), Lei_param[param],
+                        marker='^', color='none', lw=1.5, ec='k',
+                        label='Lei')
 
-    colors = ['orange', 'g', 'grey']
+    # colors = ['orange', 'g', 'grey']
+    colors = ['orange', 'grey']
     for patch, color in zip(bp['boxes'], colors):
         patch.set_facecolor(color)
 
@@ -270,47 +278,51 @@ for p, param in enumerate(param_list):
         panel[0][0].set_xticks(np.arange(len(drug_list)), labels=drug_list)
         plt.setp(panel[0][0].get_xticklabels(), rotation=45,
                  ha='right', rotation_mode='anchor')
-        panel[0][1].set_xticks(np.arange(1, 4), labels=['Li', 'Lei', 'Farm'])
+        # panel[0][1].set_xticks(np.arange(1, 4), labels=['Li', 'Lei', 'Farm'])
+        panel[0][1].set_xticks(np.arange(1, 3), labels=['Li', 'Lei'])
         plt.setp(panel[0][1].get_xticklabels(), rotation=45,
                  ha='right', rotation_mode='anchor')
     else:
         panel[0][0].set_xticks(np.arange(len(drug_list)))
         panel[0][0].tick_params(labelbottom=False)
-        panel[0][1].set_xticks(np.arange(1, 4))
+        # panel[0][1].set_xticks(np.arange(1, 4))
+        panel[0][1].set_xticks(np.arange(1, 3))
         panel[0][1].tick_params(labelbottom=False)
-fig.axs[1][0][0].legend(ncols=3, loc='lower right', bbox_to_anchor=(1.0, 1.0))
+fig.axs[1][0][0].legend(ncols=2, loc='lower right',
+                        columnspacing=1.2, handletextpad=0.5,
+                        bbox_to_anchor=(1.0, 1.0))
 fig.savefig(os.path.join(modelling.FIG_DIR, 'Lei_SD_fit',
                          'parameters.pdf'))
 
 
-#########################
-# Hil curve comparison
-#########################
+# #########################
+# # Hil curve comparison
+# #########################
 
-for drug in drug_list:
-    conc_list = modelling.SD_details.drug_concentrations[drug]['fine']
-    peaks = []
+# for drug in drug_list:
+#     conc_list = modelling.SD_details.drug_concentrations[drug]['fine']
+#     peaks = []
 
-    Li_sim.set_SD_parameters(drug)
-    for i in range(len(conc_list)):
-        Li_sim.set_conc(conc_list[i])
-        Li_sim.simulate()
-        log = Li_sim.custom_simulation(
-            param_values, drug_conc[i], 1000,
-            log_var=['engine.time', 'ikr.IKr'],
-            abs_tol=1e-7, rel_tol=1e-8)
-        peak, _ = current_model.extract_peak(log, 'ikr.IKr')
-        peaks.append(peak[-1])
+#     Li_sim.set_SD_parameters(drug)
+#     for i in range(len(conc_list)):
+#         Li_sim.set_conc(conc_list[i])
+#         Li_sim.simulate()
+#         log = Li_sim.custom_simulation(
+#             param_values, drug_conc[i], 1000,
+#             log_var=['engine.time', 'ikr.IKr'],
+#             abs_tol=1e-7, rel_tol=1e-8)
+#         peak, _ = current_model.extract_peak(log, 'ikr.IKr')
+#         peaks.append(peak[-1])
 
-    peaks_norm = (peaks - min(peaks)) / (max(peaks) - min(peaks))
+#     peaks_norm = (peaks - min(peaks)) / (max(peaks) - min(peaks))
 
-    Hill_curve_SD = []
-    for i in range(len(drug_conc)):
-        reduction_scale = Hill_model.simulate(Hill_coef, drug_conc[i])
-        Hill_curve_SD.append(reduction_scale)
+#     Hill_curve_SD = []
+#     for i in range(len(drug_conc)):
+#         reduction_scale = Hill_model.simulate(Hill_coef, drug_conc[i])
+#         Hill_curve_SD.append(reduction_scale)
 
-    plt.figure()
-    plt.plot(peaks_norm, label='Lei')
-    plt.plot(Hill_curve_SD, label='SD')
-    plt.legend()
-    plt.savefig(fig_dir + 'LeivsSD_Hill.pdf')
+#     plt.figure()
+#     plt.plot(peaks_norm, label='Lei')
+#     plt.plot(Hill_curve_SD, label='SD')
+#     plt.legend()
+#     plt.savefig(fig_dir + 'LeivsSD_Hill.pdf')
