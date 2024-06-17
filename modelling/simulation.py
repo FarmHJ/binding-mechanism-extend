@@ -93,9 +93,11 @@ class ModelSimController(object):
         SD_params = modelling.BindingParameters(
             ikr_model=ikr_model).load_SD_parameters(drug)
 
-        SD_params['Kt'] = 3.5e-5
         if 'Cmax' in SD_params.columns:
             SD_params = SD_params.drop(columns=['Cmax'])
+        elif 'error' in SD_params.columns:
+            SD_params = SD_params.drop(columns=['error'])
+        SD_params = SD_params.to_dict(orient='index')[drug]
 
         self.set_parameters(SD_params)
 
@@ -106,16 +108,14 @@ class ModelSimController(object):
                       * self._conductance_scale}
         self._parameters.update(param_dict)
 
-    def set_parameters(self, param_df, default_Kt=True):
-        param_dict = param_df.to_dict(orient='index')
-        param_dict = param_dict[list(param_dict.keys())[0]]
-        if default_Kt:
-            param_dict['Kt'] = 3.5e-5
+    def set_parameters(self, param_input, set_Kt=True):
 
-        dict_contents = list(param_dict.items())
-        param_dict.clear()
-        for k, content in dict_contents:
-            param_dict[self.ikr_key_head + '.' + k] = content
+        if set_Kt:
+            param_input['Kt'] = 3.5e-5
+
+        dict_contents = list(param_input.items())
+        param_dict = {f"{self.ikr_key_head}.{k}": content
+                      for k, content in dict_contents}
 
         self._parameters.update(param_dict)
 
@@ -136,7 +136,7 @@ class ModelSimController(object):
                 self.model.get(self.ikr_component.var(k)).eval()
 
         self._parameters.update(param_dict)
-        del(param_dict)
+        del param_dict
 
     def get_parameters(self):
         return self._parameters
@@ -145,22 +145,24 @@ class ModelSimController(object):
         if concentration < 0:
             ValueError('Drug concentration is lower than 0.')
         self._conc = float(concentration)
-        # self.initial_state[-1] = self._conc
 
         param_dict = {self.ikr_key_head + '.D': self._conc}
         self._parameters.update(param_dict)
 
-    def _set_parameters(self, parameters):
+    def _set_parameters(self):
         """
         Set the parameter values
         """
-        for p in parameters.keys():
-            self.sim.set_constant(p, parameters[p])
+        for p in self._parameters.keys():
+            self.sim.set_constant(p, self._parameters[p])
 
     def set_protocol(self, times, voltages):
         self._cycle_length = times[-1] - times[0] + \
-            (times[-1] - times[0]) / len(times)
+            np.mean(times[1:] - times[:-1])
         self.sim.set_protocol(myokit.TimeSeriesProtocol(times, voltages))
+
+    def set_initial_state(self, states):
+        self.initial_state = states
 
     def update_initial_state(self, paces=1000):
         """
@@ -168,10 +170,9 @@ class ModelSimController(object):
         """
 
         # Update fixed parameters
-        self._set_parameters(self._parameters)
+        self._set_parameters()
 
         # Ensure initial condition
-        self.sim.set_time(0)
         self.sim.reset()
         self.sim.set_state(self.initial_state)
 
@@ -181,7 +182,7 @@ class ModelSimController(object):
     def simulate(self, prepace=1000, save_signal=1, timestep=0.1,
                  log_var=None, reset=True, log_times=None):
 
-        self._set_parameters(self._parameters)
+        self._set_parameters()
         self.prepace = prepace
 
         self.sim.set_time(0)
@@ -198,6 +199,7 @@ class ModelSimController(object):
             timestep = None
 
         self.sim.pre(self._cycle_length * self.prepace)
+
         log = self.sim.run(self._cycle_length * save_signal, log=log_var,
                            log_interval=timestep, log_times=log_times).npview()
         if save_signal > 1:
@@ -210,7 +212,7 @@ class ModelSimController(object):
         Compute APD90
         """
         time_log = log.time()
-        timestep = (max(time_log) - min(time_log)) / len(time_log)
+        timestep = np.mean(time_log[1:] - time_log[:-1])
 
         Vm_key_list = [x for x in log.keys() if x.endswith(str(self.Vm_key))]
         Vm_key_list.sort()
@@ -236,21 +238,24 @@ class ModelSimController(object):
             offset_index = int(self.protocol_offset / timestep)
             # offset index can be estimated from log
 
-            start_time = time_log[offset_index]
-            end_time = None
-            for ind, v in enumerate(AP_Vm[offset_index + min_APD:]):
-                if v < APD90_v:
-                    t_prev = time_log[offset_index + min_APD:][ind - 1]
-                    v_prev = AP_Vm[offset_index + min_APD:][ind - 1]
-                    t_current = time_log[offset_index + min_APD:][ind]
-                    end_time = t_prev + (APD90_v - v_prev) / (v - v_prev) * \
-                        (t_current - t_prev)
-                    break
-
-            if end_time is not None:
-                APD90_value = end_time - start_time
-            else:
+            if np.abs(np.mean(AP_Vm[:offset_index]) - min(AP_Vm)) > 2:
                 APD90_value = float('Nan')
+            else:
+                start_time = time_log[offset_index]
+                end_time = None
+                for ind, v in enumerate(AP_Vm[offset_index + min_APD:]):
+                    if v < APD90_v:
+                        t_prev = time_log[offset_index + min_APD:][ind - 1]
+                        v_prev = AP_Vm[offset_index + min_APD:][ind - 1]
+                        t_current = time_log[offset_index + min_APD:][ind]
+                        end_time = t_prev + (APD90_v - v_prev) / \
+                            (v - v_prev) * (t_current - t_prev)
+                        break
+
+                if end_time is not None:
+                    APD90_value = end_time - start_time
+                else:
+                    APD90_value = float('Nan')
 
             APD90s.append(APD90_value)
 
@@ -259,12 +264,12 @@ class ModelSimController(object):
         else:
             return APD90s
 
-    def qNet(self, log):
+    def qNet(self, log, period=1):
         """
         Compute qNet
         """
         time_log = log.time()
-        timestep = (max(time_log) - min(time_log)) / len(time_log)
+        timestep = np.mean(time_log[1:] - time_log[:-1])
 
         # Make sure requirements to compute qNet are satisfied
         if np.abs(timestep - 0.01) > 1e-8:
@@ -289,9 +294,12 @@ class ModelSimController(object):
         qNet_current_keys = [self.current_keys[i] for i in qNet_current
                              if self.current_keys[i] is not None]
         inet = 0
-        for c in qNet_current_keys:
-            inet += log[c]
-            # Assuming the data log has only one period
+        if period == 1:
+            for c in qNet_current_keys:
+                inet += log[c]
+        else:
+            for c in qNet_current_keys:
+                inet += log[log.keys_like(c)[1]]
 
         return np.trapz(inet, x=log.time()) * 1e-3  # pA/pF*ms -> pA/pF*s
 
