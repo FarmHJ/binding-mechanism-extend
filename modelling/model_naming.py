@@ -28,8 +28,8 @@ AP_file_names = {
     },
     'ORd-Li': {
         'AP': 'ORd-2011.mmt',
-        'AP_IKr': 'ohara-cipa-2017.mmt',
-        'label': "CiPAORdv1.0 (2017)"
+        'AP_IKr': 'ohara-cipa-2017-opt.mmt',
+        'label': "ORd-CiPAv1.0 (2017)"
     },
     'TTP': {
         'AP': 'TTP-2006.mmt',
