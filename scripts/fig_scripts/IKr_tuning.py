@@ -19,10 +19,11 @@ fig.subgrid(subgridspecs, hspace=0.1)
 # Figure parameters
 model_details = modelling.model_naming
 current_list = model_details.current_list
+model_label = model_details.AP_file_names
 plotting_pulse_time = 800
 
 model_list = model_details.APmodel_list[1:]
-model_label = ['Grandi-Li', 'ten Tusscher-Li', 'Tomek-Li', 'ORd-Lei']
+# model_label = ['Grandi-Li', 'ten Tusscher-Li', 'Tomek-Li', 'ORd-Lei']
 
 # Figure y-axes limits
 AP_bottom_list = []
@@ -38,7 +39,7 @@ for num, APmodel_name in enumerate(model_list):
     model_keys = model_details.model_current_keys[APmodel_name]
 
     # Simulate AP
-    base_log = APsim.simulate()
+    base_log = APsim.simulate(prepace=5)
 
     # Plot AP and hERG
     panel = fig.axs[num]
@@ -61,7 +62,7 @@ for num, APmodel_name in enumerate(model_list):
                      label=r'$I_\mathrm{Kr}$ replaced '
                      r'$+  I_\mathrm{Kr}$ tuned')
     panel[1][0].plot(log.time(), log[APsim.ikr_key], 'r')
-    panel[0][0].set_title(model_label[num])
+    panel[0][0].set_title(model_label[APmodel_name]['label'])
 
     AP_y_bottom, AP_y_top = panel[0][0].get_ylim()
     IKr_y_bottom, IKr_y_top = panel[1][0].get_ylim()
@@ -91,13 +92,13 @@ for i in range(4):
         fig.axs[i][0][0].set_yticklabels([])
         fig.axs[i][1][0].set_yticklabels([])
 
-fig.savefig(os.path.join(fig_dir, 'AP_tune_IKr.svg'))
+fig.savefig(os.path.join(fig_dir, 'AP_tune_IKr.pdf'))
 
 ##########################
 # IKr magnitude comparison
 ##########################
 model_list = modelling.model_naming.APmodel_list[:4]
-model_label = ['ORd-Li', 'Grandi-Li', 'ten Tusscher-Li', 'Tomek-Li']
+# model_label = ['ORd-Li', 'Grandi-Li', 'ten Tusscher-Li', 'Tomek-Li']
 
 # Set up figure for reversal potential, AP and current contribution
 plot = modelling.figures.FigurePlot()
@@ -114,9 +115,7 @@ for num, APmodel_name in enumerate(model_list):
     APsim = modelling.ModelSimController(APmodel_name)
 
     # Load IKr scale
-    # TODO: Change all to AP duration
     if APmodel_name != 'ORd-Li':
-        # APsim.set_ikr_rescale_method('hERG_peak')
         APsim.set_ikr_rescale_method('AP_duration')
     log = APsim.simulate()
 
@@ -124,7 +123,7 @@ for num, APmodel_name in enumerate(model_list):
         if i == num:
             r, c = int(num / 2), num % 2
             fig.axs[r][c].plot(log.time(), log[APsim.ikr_key], 'k', zorder=5)
-            fig.axs[r][c].set_title(model_label[num])
+            fig.axs[r][c].set_title(model_label[APmodel_name]['label'])
         else:
             r, c = int(i / 2), i % 2
             fig.axs[r][c].plot(log.time(), log[APsim.ikr_key], '#cccccc',
@@ -148,4 +147,4 @@ for i in range(4):
     else:
         fig.axs[r][c].set_yticklabels([])
 
-fig.savefig(os.path.join(fig_dir, 'IKr_magnitude.svg'))
+fig.savefig(os.path.join(fig_dir, 'IKr_magnitude.pdf'))
