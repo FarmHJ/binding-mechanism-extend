@@ -17,6 +17,8 @@ import pandas as pd
 
 import modelling
 
+# TODO: pace model before drug
+
 # Define AP model, drug and tuning method
 parser = argparse.ArgumentParser(
     description="Comparison between AP-IKr-SD model and the AP-IKr-CS model")
@@ -26,7 +28,11 @@ parser.add_argument("--ikr_tuning", default='AP_duration',
                     choices=['hERG_peak', 'hERG_flux', 'AP_duration'],
                     help="Method used to tune IKr")
 parser.add_argument("-m", "--mode", default="APD-qNet", type=str,
+                    choices=['AP', 'APD', 'qNet', 'APD-qNet'],
                     help="Type of output: AP, APD, qNet, APD-qNet")
+parser.add_argument("-c", "--conc", default="conc", type=str,
+                    choices=['dimless', 'conc'],
+                    help='Choose to convert concentration to dimensionless')
 args = parser.parse_args()
 
 APmodel_name = args.APmodel
@@ -43,10 +49,14 @@ if not os.path.isdir(data_dir):
 # Get the Hill coef for Li-CS model
 # Update according to file format
 if APmodel_name == 'ORd-Lei':
-    Hill_coef = modelling.BindingParameters().load_Hill_eq(drug,
-                                                           ikr_model='Lei')
+    ikr_model = 'Lei'
 else:
-    Hill_coef = modelling.BindingParameters().load_Hill_eq(drug)
+    ikr_model = 'Li'
+
+Hill_coef = modelling.BindingParameters().load_published_Hill_eq(
+    drug, ikr_model=ikr_model, channel='IKr')
+# Hill_coef = modelling.BindingParameters().load_Hill_eq(
+#     drug, ikr_model=ikr_model)
 
 # Set AP model
 model_keys = modelling.model_naming.model_current_keys[APmodel_name]
@@ -60,16 +70,24 @@ if APmodel_name != 'ORd-Li':
 # Define the range of drug concentration for a given drug
 if MODE == 'AP':
     drug_conc = modelling.SD_details.drug_concentrations[drug]['coarse']
+    if args.conc == 'dimless':
+        dimless_input = np.array([10 ** i for i in
+                                  np.linspace(-10, np.log10(0.9), 10)])
 else:
     drug_conc = modelling.SD_details.drug_concentrations[drug]['fine']
+    if args.conc == 'dimless':
+        dimless_input = np.array([10 ** i for i in
+                                  np.linspace(-10, np.log10(0.9), 20)])
+    # if drug == 'dofetilide':
+    #     drug_conc = 10.0**np.linspace(3, 6, 10)
+    # elif drug == 'verapamil':
+    #     drug_conc = 10.0**np.linspace(5, 8, 10)
 
-# # For plotting purpose - so that EAD-like behaviour happens on the same pulse
-# if drug == 'dofetilide':
-#     repeats_SD = 1000 + 1
-#     repeats_CS = 1000
-# else:
-#     repeats_SD = 1000
-#     repeats_CS = 1000
+
+def from_dimless(dimless_conc, n, halfmax):
+    expon = np.log(dimless_conc / (1 - dimless_conc)) / n
+    return np.power(halfmax, 1 / n) * np.exp(expon)
+
 
 HillModel = modelling.HillModel()
 
@@ -79,15 +97,24 @@ if MODE in ["AP", "APD", "APD-qNet"]:
     APD_trapping = []
     save_signal = 2
 
-    APsim.set_SD_parameters(drug)
+    APsim.set_SD_parameters(drug, ikr_model=ikr_model)
+    if args.conc == 'dimless':
+        SD_params = modelling.BindingParameters(
+            ikr_model=ikr_model).load_SD_parameters(drug)
+        drug_conc = from_dimless(dimless_input, SD_params['n'].values,
+                                 SD_params['halfmax'].values)
     for i in range(len(drug_conc)):
         print('simulating concentration: ' + str(drug_conc[i]))
 
         APsim.set_conc(drug_conc[i])
         log = APsim.simulate(save_signal=save_signal)
         if MODE == "AP":
-            log.save_csv(os.path.join(data_dir,
-                                      f'SD_AP_{drug_conc[i]}.csv'))
+            if args.conc == 'dimless':
+                log.save_csv(os.path.join(data_dir,
+                                          f'SD_AP_dimless_{drug_conc[i]}.csv'))
+            else:
+                log.save_csv(os.path.join(data_dir,
+                                          f'SD_AP_conc_{drug_conc[i]}.csv'))
 
         apd90 = APsim.APD90(log)
         APD_trapping.append(apd90)
@@ -98,8 +125,12 @@ if MODE in ["AP", "APD", "APD-qNet"]:
         log = APsim.simulate(save_signal=save_signal)
         APsim.set_CS_parameter(1)
         if MODE == "AP":
-            log.save_csv(os.path.join(data_dir,
-                                      f'CS_AP_{drug_conc[i]}.csv'))
+            if args.conc == 'dimless':
+                log.save_csv(os.path.join(data_dir,
+                                          f'CS_AP_dimless_{drug_conc[i]}.csv'))
+            else:
+                log.save_csv(os.path.join(data_dir,
+                                          f'CS_AP_conc_{drug_conc[i]}.csv'))
 
         apd90 = APsim.APD90(log)
         APD_conductance.append(apd90)
@@ -108,9 +139,15 @@ if MODE in ["AP", "APD", "APD-qNet"]:
 
 # Save simulated APD90 of both the ORd-SD model and the ORd-CS model
 if MODE == "AP":
-    filename = f'APD_pulses{int(save_signal)}.csv'
+    if args.conc == 'dimless':
+        filename = f'APD_pulses{int(save_signal)}_dimless.csv'
+    else:
+        filename = f'APD_pulses{int(save_signal)}.csv'
 elif MODE in ["APD", "APD-qNet"]:
-    filename = 'APD_fine.csv'
+    if args.conc == 'dimless':
+        filename = 'APD_fine_dimless.csv'
+    else:
+        filename = 'APD_fine_litHill.csv'
     APD_trapping = [float('nan') if np.isnan(i).any() else max(i)
                     for i in APD_trapping]
     APD_conductance = [float('nan') if np.isnan(i).any() else max(i)
@@ -142,38 +179,63 @@ if MODE in ["qNet", "APD-qNet"]:
                                                     offset=50))
     APsim._cycle_length = pulse_time
     APsim.reset_parameters()
-    APsim.update_initial_state()
+    states = myokit.load_state(
+        os.path.join(modelling.RESULT_DIR, 'steady_states',
+                     f'{APmodel_name}_steadystate_qNetprot.csv'))
+    APsim.set_initial_state(states)
 
     qNet_SD_arr = []
     qNet_CS_arr = []
     print('Computing qNet...')
-    APsim.set_SD_parameters(drug)
+    APsim.set_SD_parameters(drug, ikr_model=ikr_model)
+    if args.conc == 'dimless':
+        SD_params = modelling.BindingParameters(
+            ikr_model=ikr_model).load_SD_parameters(drug)
+        drug_conc = from_dimless(dimless_input, SD_params['n'].values,
+                                 SD_params['halfmax'].values)
+
     for i in range(len(drug_conc)):
         print(f'simulating concentration: {drug_conc[i]}')
 
         # Run simulation for the AP-SD model till steady state
         APsim.set_conc(drug_conc[i])
-        log = APsim.simulate(timestep=0.01,
+        log = APsim.simulate(save_signal=2, timestep=0.01,
                              log_var=base_log_key + qNet_current_list)
 
-        qNet = APsim.qNet(log)
+        # Check for EAD-like behaviour
+        apd90 = APsim.APD90(log)
+        if np.isnan(apd90).any():
+            qNet = float('nan')
+        else:
+            qNet = APsim.qNet(log, period=2)
+        # qNet = APsim.qNet(log)
         qNet_SD_arr.append(qNet)
 
         # Run simulation for the AP-CS model till steady state
         reduction_scale = HillModel.simulate(Hill_coef, drug_conc[i])
         APsim.set_conc(0)
         APsim.set_CS_parameter(reduction_scale)
-        log = APsim.simulate(timestep=0.01,
+        log = APsim.simulate(save_signal=2, timestep=0.01,
                              log_var=base_log_key + qNet_current_list)
         APsim.set_CS_parameter(1)
 
-        qNet = APsim.qNet(log)
+        # Check for EAD-like behaviour
+        apd90 = APsim.APD90(log)
+        if np.isnan(apd90).any():
+            qNet = float('nan')
+        else:
+            qNet = APsim.qNet(log, period=2)
+        # qNet = APsim.qNet(log)
         qNet_CS_arr.append(qNet)
 
     # Save qNet
     qNet_SD_df = pd.DataFrame(np.array(qNet_SD_arr), columns=['qNet'])
     qNet_SD_df['drug concentration'] = drug_conc
-    qNet_SD_df.to_csv(os.path.join(data_dir, 'SD_qNet.csv'))
     qNet_CS_df = pd.DataFrame(np.array(qNet_CS_arr), columns=['qNet'])
     qNet_CS_df['drug concentration'] = drug_conc
-    qNet_CS_df.to_csv(os.path.join(data_dir, 'CS_qNet.csv'))
+    if args.conc == 'dimless':
+        qNet_SD_df.to_csv(os.path.join(data_dir, 'SD_qNet_EAD_dimless.csv'))
+        qNet_CS_df.to_csv(os.path.join(data_dir, 'CS_qNet_EAD_dimless.csv'))
+    else:
+        qNet_SD_df.to_csv(os.path.join(data_dir, 'SD_qNet_EAD_litHill.csv'))
+        qNet_CS_df.to_csv(os.path.join(data_dir, 'CS_qNet_EAD_litHill.csv'))
