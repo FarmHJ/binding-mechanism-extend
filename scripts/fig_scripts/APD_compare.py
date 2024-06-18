@@ -14,9 +14,12 @@ parser = argparse.ArgumentParser(
     description="Comparison between AP-IKr-SD model and the AP-IKr-CS model")
 parser.add_argument("APmodel", help="Name of AP model")
 parser.add_argument("drug", help="Drug")
-parser.add_argument("--ikr_tuning", default='hERG_peak',
+parser.add_argument("--ikr_tuning", default='AP_duration',
                     choices=['hERG_peak', 'hERG_flux', 'AP_duration'],
                     help="Method used to tune IKr")
+parser.add_argument("-c", "--conc", default="conc", type=str,
+                    choices=['dimless', 'conc'],
+                    help='Choose to convert concentration to dimensionless')
 args = parser.parse_args()
 
 APmodel_name = args.APmodel
@@ -57,13 +60,18 @@ axs = [[[fig.fig.add_subplot(subgs[k][i, j]) for j in range(
 panel2 = axs[0]
 
 # Read files name of action potential data
-SD_data_files = glob.glob(os.path.join(data_dir, 'SD_AP_*.csv'))
-CS_data_files = glob.glob(os.path.join(data_dir, 'CS_AP_*.csv'))
-conc_label_SD = [os.path.basename(fname)[6:-4] for fname in SD_data_files]
-drug_conc_SD = [float(os.path.basename(fname)[6:-4])
+if args.conc == 'conc':
+    fname = 'AP_conc_'
+else:
+    fname = 'AP_dimless_'
+SD_data_files = glob.glob(os.path.join(data_dir, f'SD_{fname}*.csv'))
+CS_data_files = glob.glob(os.path.join(data_dir, f'CS_{fname}*.csv'))
+key_len = len(fname) + 3
+conc_label_SD = [os.path.basename(fname)[key_len:-4] for fname in SD_data_files]
+drug_conc_SD = [float(os.path.basename(fname)[key_len:-4])
                 for fname in SD_data_files]
-conc_label_CS = [os.path.basename(fname)[6:-4] for fname in CS_data_files]
-drug_conc_CS = [float(os.path.basename(fname)[6:-4])
+conc_label_CS = [os.path.basename(fname)[key_len:-4] for fname in CS_data_files]
+drug_conc_CS = [float(os.path.basename(fname)[key_len:-4])
                 for fname in CS_data_files]
 
 # Sort in increasing order of drug concentration
@@ -89,8 +97,12 @@ for i in range(len(trapping_data_files)):
     conductance_AP_log.append(myokit.DataLog.load_csv(
         os.path.join(data_dir, conductance_data_files[i])))
 
-APD_trapping = pd.read_csv(os.path.join(data_dir, 'SD_APD_pulses2.csv'))
-APD_conductance = pd.read_csv(os.path.join(data_dir, 'CS_APD_pulses2.csv'))
+if args.conc == 'conc':
+    fname = 'APD_pulses2.csv'
+else:
+    fname = 'APD_pulses2_dimless.csv'
+APD_trapping = pd.read_csv(os.path.join(data_dir, f'SD_{fname}'))
+APD_conductance = pd.read_csv(os.path.join(data_dir, f'CS_{fname}'))
 
 APD_trapping = [max(APD_trapping.loc[i].values.tolist()[1:-1]) for i in
                 range(APD_trapping.shape[0])]
@@ -149,8 +161,12 @@ fig.sharey(['Voltage (mV)', 'Current (A/F)'],
 panel3 = axs[1]
 
 # Load APD data
-APD_trapping_df = pd.read_csv(os.path.join(data_dir, 'SD_APD_fine.csv'))
-APD_conductance_df = pd.read_csv(os.path.join(data_dir, 'CS_APD_fine.csv'))
+if args.conc == 'conc':
+    fname = 'APD_fine.csv'
+else:
+    fname = 'APD_fine_dimless.csv'
+APD_trapping_df = pd.read_csv(os.path.join(data_dir, f'SD_{fname}'))
+APD_conductance_df = pd.read_csv(os.path.join(data_dir, f'CS_{fname}'))
 
 # Identify EAD-like behaviour
 drug_conc = APD_trapping_df['drug concentration'].values.tolist()
@@ -178,8 +194,12 @@ l_lim, r_lim = panel3[0][0].get_xlim()
 panel4 = axs[2]
 
 # Load qNet data
-qNet_SD_df = pd.read_csv(os.path.join(data_dir, 'SD_qNet.csv'))
-qNet_CS_df = pd.read_csv(os.path.join(data_dir, 'CS_qNet.csv'))
+if args.conc == 'conc':
+    fname = 'qNet_EAD.csv'
+else:
+    fname = 'qNet_EAD_dimless.csv'
+qNet_SD_df = pd.read_csv(os.path.join(data_dir, f'SD_{fname}'))
+qNet_CS_df = pd.read_csv(os.path.join(data_dir, f'CS_{fname}'))
 
 SD_qNet = qNet_SD_df['qNet'].values.tolist()
 CS_qNet = qNet_CS_df['qNet'].values.tolist()
@@ -208,4 +228,8 @@ fig.fig.text(0.1, 0.455, '(B)', fontsize=11)
 # fig.fig.text(0.49, 0.905, '(B)', fontsize=11)
 fig.fig.text(0.53, 0.455, '(C)', fontsize=11)
 
-fig.savefig(os.path.join(fig_dir, "model_compare.svg"), format='svg')
+if args.conc == 'conc':
+    fname = 'model_compare.svg'
+else:
+    fname = 'model_compare_dimless.svg'
+fig.savefig(os.path.join(fig_dir, fname), format='svg')
