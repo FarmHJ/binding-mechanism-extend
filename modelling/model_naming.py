@@ -19,38 +19,45 @@ APmodel_list = ['ORd-Li', 'Grandi', 'TTP', 'Tomek', 'ORd-Lei']
 AP_file_names = {
     'ORd': {
         'AP': 'ORd-2011.mmt',
-        'label': "ORd (2011)"
+        'title': "ORd (2011)",
+        'label': 'ORd'
     },
     'Grandi': {
         'AP': 'Grd-2010.mmt',
         'AP_IKr': 'Grd-2010-Li-SD.mmt',
-        'label': 'Grandi (2010)'
+        'title': 'Grandi (2010)',
+        'label': 'Grandi-Li'
     },
     'ORd-Li': {
         'AP': 'ORd-2011.mmt',
         'AP_IKr': 'ohara-cipa-2017-opt.mmt',
-        'label': "ORd-CiPAv1.0 (2017)"
+        'title': "ORd-CiPAv1.0 (2017)",
+        'label': 'ORd-Li'
     },
     'TTP': {
         'AP': 'TTP-2006.mmt',
         'AP_IKr': 'TTP-2006-Li-SD.mmt',
-        'label': 'ten Tusscher (2006)'
+        'title': 'ten Tusscher (2006)',
+        'label': 'ten Tusscher-Li'
     },
     'Tomek-old': {
         'AP': 'Tomek-2019.mmt',
         'AP_IKr': 'Tomek-2019-Li-SD.mmt',
-        'label': 'Tomek (2019)'
+        'title': 'Tomek (2019)',
+        'label': 'Tomek-Li'
     },
     'Tomek': {
         'AP': 'Tomek-Cl-2020.mmt',
         'AP_IKr': 'Tomek-Cl-2020-Li-SD.mmt',
-        'label': 'Tomek (2020)'
+        'title': 'Tomek (2020)',
+        'label': 'Tomek-Li'
     },
     'ORd-Lei': {
         'AP': 'ohara-cipa-2017.mmt',
         # 'AP': 'ORd-2011.mmt',
         'AP_IKr': 'ORd-2011-Lei-SD.mmt',
-        'label': 'Lei (2019)'
+        'title': 'Lei (2019)',
+        'label': 'ORd-Lei'
     }}
 
 IKr_file_names = {
