@@ -92,6 +92,8 @@ venv.bak/
 # Data, results and figures
 scripts/checking_scripts/
 simulation_data/background/
+simulation_data/parameter_space_exploration/check/
 figures/checking_figures/
 modelling/tests/
 Li-data/
+log/
