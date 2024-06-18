@@ -16,6 +16,11 @@ fig = modelling.figures.FigureStructure(figsize=(7, 3.5),
                                         height_ratios=[1] * 2,
                                         hspace=0.3, wspace=0.1)
 
+import matplotlib.pyplot as plt
+fig_ikr = plt.figure(figsize=(4, 4))
+gs_ikr = fig_ikr.add_gridspec(1, 1)
+axs_ikr = fig_ikr.add_subplot(gs_ikr[0, 0])
+
 # Figure parameters
 model_details = modelling.model_naming
 model_list = model_details.APmodel_list[:4]
@@ -31,7 +36,10 @@ for num, APmodel_name in enumerate(model_list):
 
     APsim = modelling.ModelSimController(APmodel_name)
     if APmodel_name != 'ORd-Li':
+        # APsim = modelling.ModelSimController(APmodel_name, ikr_modified=False)
         APsim.set_ikr_rescale_method('AP_duration')
+    # else:
+        # APsim = modelling.ModelSimController(APmodel_name)
     # Simulate AP
     log = APsim.simulate(log_var='all')
 
@@ -49,6 +57,25 @@ for num, APmodel_name in enumerate(model_list):
     panel.set_title(model_title)
     mp.cumulative_current(log, currents, panel, colors=colours,
                           normalise=True)
+    import numpy as np
+    pos = np.array([log[c] for c in currents])
+
+    # Split positive and negative
+    neg = np.minimum(pos, 0)
+    pos = np.maximum(pos, 0)
+    pos /= np.maximum(np.sum(pos, axis=0), 1e-99)
+    ikr_key = model_current_keys['IKr']
+    # print(ikr_key)
+    k = currents.index(ikr_key)
+    # print(pos[k])
+    axs_ikr.plot(pos[k], 'o', label=APmodel_name)
+    # print(currents.find('IKr'))
+    # label = c[c.find('.') + 1:]
+
+    # Get positive and negative parts
+    # p, n = op + pos[k], on + neg[k]
+    # print(pos)
+
     panel.set_rasterization_zorder(2)
 
 legend_panel = fig.axs[1][1]
@@ -58,10 +85,13 @@ for current, i in current_colours.items():
 del current_colours['IKACh']
 del current_colours['IKATP']
 labels = [model_details.current_labels[x] for x in current_colours]
-legend_panel.legend(lines, labels, loc=(1.04, 0.45), ncol=1, handlelength=1)
+legend_panel.legend(lines, labels, loc=(1.04, 0.15), ncol=1, handlelength=1)
 
 fig.sharex(["Time (ms)"] * 2, [(0, plotting_pulse_time)] * 2)
 fig.sharey(["Relative contribution"] * 2, [(-1.02, 1.02)] * 2)
 
 # Save figure
-fig.savefig(os.path.join(fig_dir, 'base_APmodels.svg'), format='svg')
+fig.savefig(os.path.join(fig_dir, 'AP-Limodels_tuned.pdf'))  # , format='svg')
+
+# axs_ikr.legend()
+# fig_ikr.savefig(os.path.join(fig_dir, 'norm_current.svg'), format='svg')
