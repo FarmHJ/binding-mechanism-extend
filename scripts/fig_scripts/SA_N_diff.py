@@ -13,41 +13,44 @@ import modelling
 parser = argparse.ArgumentParser(
     description="Plot parameter space exploration outcome of an AP model")
 parser.add_argument("APmodel", help="Name of AP model")
+parser.add_argument('--parameter_interest', default='n',
+                    choices=['Vhalf', 'Kmax', 'Ku', 'n', 'halfmax'],
+                    help='Choose the parameter of interest for '
+                    'sensitivity analysis')
 args = parser.parse_args()
 
 APmodel_name = args.APmodel
+param_interest = args.parameter_interest
 
 # Read APD90 differences for all synthetic drug
 fpath = os.path.join(modelling.RESULT_DIR, 'parameter_SA',
                      'SA_alldrugs_' + APmodel_name + '.csv')
 drug_df = pd.read_csv(fpath, header=[0, 1], index_col=[0],
                       skipinitialspace=True)
-drug_list = drug_df[('drug', 'drug')].values
+drug_list = list(drug_df.index)
 
 # Define directories and variables
-data_dir = os.path.join(modelling.RESULT_DIR, 'parameter_SA', 'APD90diff_N',
-                        APmodel_name)
-percentage_diff_filename = 'N_percentage_diff.csv'
+data_dir = os.path.join(modelling.RESULT_DIR, 'parameter_SA',
+                        f'parameter_{param_interest}', APmodel_name)
+percentage_diff_filename = f'{param_interest}_percentage_diff.csv'
 first_iter = True
 RMSD_boxplot = []
 delta_RMSD_boxplot = []
 
 for drug in drug_list:
     # Read RMSD of each synthetic drug when the Hill coefficient varies
-    filepath = os.path.join(data_dir, 'SA_' + drug + '_N.csv')
+    filepath = os.path.join(data_dir, f'SA_{drug}_{param_interest}.csv')
     df = pd.read_csv(filepath, header=[0, 1], index_col=[0],
                      skipinitialspace=True)
 
-    N_range = np.array(df['param_values']['N'].values)
+    N_range = np.array(df['param_values'][param_interest].values)
     RMSD_arr = np.array(df['RMSE']['RMSE'].values)
 
     RMSD_arr_boxplot = RMSD_arr[~np.isnan(RMSD_arr)]
     RMSD_boxplot.append(RMSD_arr_boxplot)
 
     # Calculate the ratio of the difference in RMSD
-    drug_RMSD = drug_df.loc[drug_df[('drug', 'drug')] == drug][
-        ('RMSE', 'RMSE')].values
-    print(drug_RMSD)
+    drug_RMSD = drug_df.loc[drug, :][('RMSE', 'RMSE')]
     delta_RMSD = np.abs(RMSD_arr - drug_RMSD)
     delta_RMSD_ratio = delta_RMSD / drug_RMSD
     df[("RMSD", "deltaRMSD_ratio")] = delta_RMSD_ratio
@@ -106,7 +109,8 @@ fig.text(0.5, 0.9, '(B)', fontsize=11)
 fig_dir = os.path.join(modelling.FIG_DIR, 'parameter_SA', APmodel_name)
 if not os.path.isdir(fig_dir):
     os.makedirs(fig_dir)
-plt.savefig(os.path.join(fig_dir, 'RMSD_N_test.pdf'), bbox_inches='tight')
+plt.savefig(os.path.join(fig_dir, f'RMSD_{param_interest}.pdf'),
+            bbox_inches='tight')
 
 # Show mean and standard deviation of the histogram
 overall_stats = pd.DataFrame({'mean': np.mean(arr), 'std': np.std(arr),
