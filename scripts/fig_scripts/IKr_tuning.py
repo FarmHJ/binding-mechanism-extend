@@ -13,7 +13,7 @@ fig_AP.subgrid(subgridspecs, hspace=0.1)
 fig_IKr = modelling.figures.FigureStructure(figsize=(9, 1.5), gridspec=(1, 4),
                                             wspace=0.1)
 
-prepace = 5
+prepace = 1000
 # Figure parameters
 model_details = modelling.model_naming
 model_list = model_details.APmodel_list[1:]
