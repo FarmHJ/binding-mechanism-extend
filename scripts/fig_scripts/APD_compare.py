@@ -14,9 +14,6 @@ parser = argparse.ArgumentParser(
     description="Comparison between AP-IKr-SD model and the AP-IKr-CS model")
 parser.add_argument("APmodel", help="Name of AP model")
 parser.add_argument("drug", help="Drug")
-parser.add_argument("--ikr_tuning", default='AP_duration',
-                    choices=['hERG_peak', 'hERG_flux', 'AP_duration'],
-                    help="Method used to tune IKr")
 parser.add_argument("-c", "--conc", default="conc", type=str,
                     choices=['dimless', 'conc'],
                     help='Choose to convert concentration to dimensionless')
@@ -24,13 +21,13 @@ args = parser.parse_args()
 
 APmodel_name = args.APmodel
 drug = args.drug
-ikr_tuning = args.ikr_tuning
+conc_type = 'conc'
 
 # Define directories to read data and save plotted figures
 data_dir = os.path.join(modelling.RESULT_DIR, 'kinetics_comparison',
-                        APmodel_name, ikr_tuning + '_match', drug)
+                        APmodel_name, 'AP_duration_match', drug)
 fig_dir = os.path.join(modelling.FIG_DIR, 'kinetics_comparison',
-                       APmodel_name, ikr_tuning + '_match', drug)
+                       APmodel_name, 'AP_duration_match', drug)
 if not os.path.isdir(fig_dir):
     os.makedirs(fig_dir)
 
@@ -60,17 +57,16 @@ axs = [[[fig.fig.add_subplot(subgs[k][i, j]) for j in range(
 panel2 = axs[0]
 
 # Read files name of action potential data
-if args.conc == 'conc':
-    fname = 'AP_conc_'
-else:
-    fname = 'AP_dimless_'
+fname = f'AP_{args.conc}_'
 SD_data_files = glob.glob(os.path.join(data_dir, f'SD_{fname}*.csv'))
 CS_data_files = glob.glob(os.path.join(data_dir, f'CS_{fname}*.csv'))
 key_len = len(fname) + 3
-conc_label_SD = [os.path.basename(fname)[key_len:-4] for fname in SD_data_files]
+conc_label_SD = [os.path.basename(fname)[key_len:-4]
+                 for fname in SD_data_files]
 drug_conc_SD = [float(os.path.basename(fname)[key_len:-4])
                 for fname in SD_data_files]
-conc_label_CS = [os.path.basename(fname)[key_len:-4] for fname in CS_data_files]
+conc_label_CS = [os.path.basename(fname)[key_len:-4]
+                 for fname in CS_data_files]
 drug_conc_CS = [float(os.path.basename(fname)[key_len:-4])
                 for fname in CS_data_files]
 
@@ -97,12 +93,9 @@ for i in range(len(trapping_data_files)):
     conductance_AP_log.append(myokit.DataLog.load_csv(
         os.path.join(data_dir, conductance_data_files[i])))
 
-if args.conc == 'conc':
-    fname = 'APD_pulses2.csv'
-else:
-    fname = 'APD_pulses2_dimless.csv'
-APD_trapping = pd.read_csv(os.path.join(data_dir, f'SD_{fname}'))
-APD_conductance = pd.read_csv(os.path.join(data_dir, f'CS_{fname}'))
+fname = f'APD_qNet_{args.conc}.csv'
+trapping_df = pd.read_csv(os.path.join(data_dir, f'SD_{fname}'))
+conductance_df = pd.read_csv(os.path.join(data_dir, f'CS_{fname}'))
 
 APD_trapping = [max(APD_trapping.loc[i].values.tolist()[1:-1]) for i in
                 range(APD_trapping.shape[0])]

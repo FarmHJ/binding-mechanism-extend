@@ -28,12 +28,6 @@ def log_tick_formatter(val, pos=None):
 
 
 # Set up figure structure
-# fig = plt.figure(figsize=(7, 5))
-# gs = fig.add_gridspec(2, 3, wspace=0.25, hspace=0.25)
-# fig = plt.figure(figsize=(10, 6))
-# gs = fig.add_gridspec(2, 3, wspace=0.15, hspace=0.35)
-# axs = [fig.add_subplot(gs[i, j], projection='3d') for j in range(3) for i in range(2)]
-
 fig = modelling.figures.FigureStructure(figsize=(10, 9), gridspec=(2, 1),
                                         height_ratios=[3, 1], hspace=0.25,
                                         plot_in_subgrid=True)
@@ -42,7 +36,7 @@ plot = modelling.figures.FigurePlot()
 subgridspecs = [(2, 3), (1, 4)]
 subgs = []
 subgs.append(fig.gs[0].subgridspec(*subgridspecs[0], wspace=0.1,
-                                   hspace=0.3, height_ratios=[1, 1]))
+                                   hspace=0.41, height_ratios=[1, 1]))
 subgs.append(fig.gs[1].subgridspec(*subgridspecs[1], wspace=0.15))
 SA_panel = [fig.fig.add_subplot(subgs[0][i, j], projection='3d') for j in range(3)
             for i in range(2)]
@@ -357,10 +351,8 @@ for n, APmodel_name in enumerate(model_list):
                              c=scale_map.to_rgba(Error_norm_drug),
                              s=100, marker='^', zorder=-5)
     SA_panel[bottom].scatter(Vhalf_chosen, np.log10(Kmax_chosen),
-                             np.log10(Ku_chosen),
-                            #  c='purple',
-                             c='dimgrey',
-                             s=10, marker='o', zorder=-10,
+                             np.log10(Ku_chosen), c='dimgrey',
+                             s=3, marker='o', zorder=-10,
                              alpha=0.2)
     SA_panel[bottom].scatter(xmin * np.ones(len(Vhalf_list)),
                              np.log10(Kmax_list), np.log10(Ku_list),
@@ -402,20 +394,15 @@ for n, APmodel_name in enumerate(model_list):
 
     cax = SA_panel[2 * n].inset_axes([0.08, -0.2, 0.8, 0.03])
     scale_map.set_array(Error_space)
-    fig.fig.colorbar(scale_map, orientation='horizontal', ax=SA_panel, cax=cax)
+    fig.fig.colorbar(scale_map, orientation='horizontal', ax=SA_panel, cax=cax,
+                     label=r'$\Delta \widetilde{\mathrm{APD}}_{90}$')
     SA_panel[2 * n].set_title(model_label[n])
-    # SA_panel[2 * n + 1].xaxis.set_pane_color((142 / 255, 142 / 255, 142 / 255, 1.0))
-    # SA_panel[2 * n + 1].yaxis.set_pane_color((142 / 255, 142 / 255, 142 / 255, 1.0))
-    # SA_panel[2 * n + 1].zaxis.set_pane_color((142 / 255, 142 / 255, 142 / 255, 1.0))
 
 # Save figure
 fig.fig.text(0.125, 0.88, '(A)', fontsize=10)
 fig.fig.text(0.375, 0.88, '(B)', fontsize=10)
 fig.fig.text(0.675, 0.88, '(C)', fontsize=10)
 fig.fig.text(0.1, 0.29, '(D)', fontsize=10)
-# fig.text(0.1, 0.425, '(D)', fontsize=10)
-# fig.text(0.375, 0.425, '(E)', fontsize=10)
-# fig.text(0.675, 0.425, '(F)', fontsize=10)
 
 axs_1D[1].set_xscale('log')
 axs_1D[2].set_xscale('log')
@@ -436,7 +423,5 @@ for i in range(1, 4):
     hist_panel[i].tick_params(labelleft=False)
     hist_panel[i].spines[['right', 'top']].set_visible(False)
     hist_panel[i].set_xlabel(r'$\Delta \mathrm{APD}_{90}$')
-# fig_hist.savefig(os.path.join(fig_dir, 'SA_hist_new.pdf'),
-#                  bbox_inches='tight')
 fig.savefig(os.path.join(fig_dir, 'SA_3D_hist_normsignedRMSD.pdf'),)
             # bbox_inches='tight', pad_inches=0.2)

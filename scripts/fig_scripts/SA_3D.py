@@ -25,7 +25,7 @@ if not os.path.isdir(fig_dir):
 
 # Read simulated data for synthetic drugs
 data_dir = os.path.join(modelling.RESULT_DIR, 'parameter_SA')
-filename = 'SA_alldrugs_' + APmodel_name + '.csv'
+filename = f'SA_alldrugs_{APmodel_name}.csv'
 df = pd.read_csv(os.path.join(data_dir, filename), header=[0, 1],
                  index_col=[0], skipinitialspace=True)
 
@@ -58,8 +58,6 @@ for d in range(APD_SD_list.shape[0]):
     FnClass.ME()
     MD = FnClass.Error
     Error_norm_drug.append(RMSD * MD / np.abs(MD))
-# Error_drug = np.array(RMSError_drug) * np.array(MError_drug) / \
-#     np.abs(np.array(MError_drug))
 
 # Read simulated data of virtual drugs in the parameter space
 data_dir = os.path.join(modelling.RESULT_DIR, 'parameter_space_exploration',
@@ -101,8 +99,6 @@ RMSError = combined_df['RMSE']['RMSE'].values
 MError = combined_df['ME']['ME'].values
 
 # Remove points where there is numerical issue in the simulation
-# nan_ind = [i for i in range(len(RMSError)) if np.isnan(RMSError[i]) or
-#            np.isnan(MError[i])]
 APD_SD_list = combined_df['APD_trapping']
 APD_CS_list = combined_df['APD_conductance']
 Error_norm_space = []
@@ -128,15 +124,6 @@ cmin = min(min(Error_norm_drug), min(Error_norm_space))
 cmax = max(max(Error_norm_drug), max(Error_norm_space))
 print('min and max of APD difference in the parameter space:', cmin, cmax)
 
-# Vhalf_range = [Vhalf_range[i] for i in range(len(Vhalf_range))
-#                if i not in nan_ind]
-# Kmax_range = [Kmax_range[i] for i in range(len(Kmax_range))
-#               if i not in nan_ind]
-# Ku_range = [Ku_range[i] for i in range(len(Ku_range))
-#             if i not in nan_ind]
-# Error_space = [Error_space[i] for i in range(len(Error_space))
-#                if i not in nan_ind]
-
 Vhalf_chosen = combined_chosen_df['param_values']['Vhalf'].values
 Kmax_chosen = combined_chosen_df['param_values']['Kmax'].values
 Ku_chosen = combined_chosen_df['param_values']['Ku'].values
@@ -149,11 +136,6 @@ def log_tick_formatter(val, pos=None):
 
 
 # Set up figure structure
-# fig = plt.figure(figsize=(7, 3.5))
-
-# gs = fig.add_gridspec(1, 2, wspace=0.1)
-# axs = [fig.add_subplot(gs[0, j], projection='3d') for j in range(2)]
-
 fig = modelling.figures.FigureStructure(figsize=(10, 3.5), gridspec=(1, 2),
                                         width_ratios=[2.5, 1], wspace=0.2,
                                         plot_in_subgrid=True)
@@ -166,15 +148,13 @@ subgs.append(fig.gs[1].subgridspec(*subgridspecs[1]))
 SA_panel = [fig.fig.add_subplot(subgs[0][0, j], projection='3d')
             for j in range(2)]
 hist_panel = fig.fig.add_subplot(subgs[1][0, 0], box_aspect=1)
-# hist_panel = subgs[1][0, 0].add_axes([0, 0.1, 0.1, 0.8])
 
-# print('shape of error space: ', Error_space.shape)
 hist_panel.hist(Error_space, 20)
 hist_panel.axvline(0, 0, 1, color='grey', ls='--', zorder=-1)
 hist_panel.fill_between([-error_range, error_range], 0, 3300,
                         alpha=0.5, color='grey', zorder=-2)
 hist_panel.spines[['right', 'top']].set_visible(False)
-hist_panel.set_xlabel('signed RMSD')
+hist_panel.set_xlabel(r'$\Delta \mathrm{APD}_{90}$')
 
 cmap = plt.get_cmap('viridis')
 cmap_norm = matplotlib.colors.Normalize(cmin, cmax)
@@ -198,7 +178,7 @@ SA_panel[0].view_init(32, 55)
 # range
 xmin, xmax = min(Vhalf_range), max(Vhalf_range)
 SA_panel[1].scatter(Vhalf_chosen, np.log10(Kmax_chosen), np.log10(Ku_chosen),
-                    c='dimgrey', s=10, marker='o', zorder=-10, alpha=0.2)
+                    c='dimgrey', s=3, marker='o', zorder=-10, alpha=0.2)
 SA_panel[1].scatter(Vhalf_list, np.log10(Kmax_list), np.log10(Ku_list),
                     c=scale_map.to_rgba(Error_norm_drug),
                     s=100, marker='^', zorder=-1)
@@ -233,7 +213,8 @@ for i in range(2):
 
 cax = SA_panel[0].inset_axes([0.5, -0.15, 1, 0.03])
 scale_map.set_array(Error_norm_space)
-fig.fig.colorbar(scale_map, orientation='horizontal', ax=SA_panel, cax=cax)
+fig.fig.colorbar(scale_map, orientation='horizontal', ax=SA_panel, cax=cax,
+                 label=r'$\Delta \widetilde{\mathrm{APD}}_{90}$')
 
 # Add panel labels
 fig.fig.text(0.075, 0.765, '(A)', fontsize=10)

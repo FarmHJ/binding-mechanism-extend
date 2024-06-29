@@ -85,6 +85,7 @@ V = engine.pace
     in [mV]
 
 [nernst]
-EK = -85 [mV]
-    in [mV]
-    oxmeta: potassium_reversal_potential
+# EK = -85 [mV]
+#     in [mV]
+#     oxmeta: potassium_reversal_potential
+EK = 8314 * 310 / 96485 * log(5.4 / 1.44655591799999996e2)
