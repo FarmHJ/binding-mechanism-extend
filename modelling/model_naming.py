@@ -6,12 +6,10 @@ import modelling
 
 def load_ikr_scaling(APmodel, tuning):
     scale_df = pd.read_csv(
-        os.path.join(modelling.RESULT_DIR,
-                     APmodel + '_conductance_scale.csv'),
+        os.path.join(modelling.RESULT_DIR, 'ikr_calibration.csv'),
         index_col=[0], skipinitialspace=True)
-    conductance_scale = scale_df.loc[tuning].values[0]
 
-    return conductance_scale
+    return scale_df.loc[APmodel, tuning]
 
 
 APmodel_list = ['ORd-Li', 'Grandi', 'TTP', 'Tomek', 'ORd-Lei']
@@ -53,7 +51,7 @@ AP_file_names = {
         'label': 'Tomek-Li'
     },
     'ORd-Lei': {
-        'AP': 'ohara-cipa-2017.mmt',
+        'AP': 'ohara-cipa-2017-opt.mmt',
         # 'AP': 'ORd-2011.mmt',
         'AP_IKr': 'ORd-2011-Lei-SD.mmt',
         'title': 'Lei (2019)',

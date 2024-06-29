@@ -8,7 +8,8 @@ data_dir = os.path.join(modelling.RESULT_DIR, 'background')
 if not os.path.isdir(data_dir):
     os.makedirs(data_dir)
 
-model_list = modelling.model_naming.APmodel_list[:-1]
+# model_list = modelling.model_naming.APmodel_list[:-1]
+model_list = ['ORd-Lei']
 for APmodel in model_list:
     # Load AP models
     APsim = modelling.ModelSimController(APmodel)

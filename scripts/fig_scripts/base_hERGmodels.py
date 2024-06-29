@@ -6,20 +6,21 @@ import os
 
 import modelling
 
-fig = modelling.figures.FigureStructure(figsize=(12, 8), gridspec=(3, 2),
-                                        height_ratios=[1.5, 3, 4], hspace=0.51,
-                                        wspace=0.3, plot_in_subgrid=True)
+fig = modelling.figures.FigureStructure(figsize=(10, 7), gridspec=(3, 2),
+                                        height_ratios=[2, 3, 3],
+                                        hspace=0.53, wspace=0.3,
+                                        plot_in_subgrid=True)
 plot = modelling.figures.FigurePlot()
 
 ikr_gridspec = (2, 1)
-state_gridspec = [(2, 2), (2, 2)]
+state_gridspec = [(1, 2), (1, 2)]
 subgs = []
 subgs.append(fig.gs[2:4].subgridspec(*ikr_gridspec, hspace=0.08,
                                      height_ratios=[1, 1]))
 for i in range(2):
-    subgs.append(fig.gs[i + 4].subgridspec(*state_gridspec[i], wspace=0.07,
-                                           hspace=0.08,
-                                           height_ratios=[1, 1]))
+    subgs.append(fig.gs[i + 4].subgridspec(*state_gridspec[i], wspace=0.07,))
+                                        #    hspace=0.08,
+                                        #    height_ratios=[1, 1]))
 ikr_axs = [fig.fig.add_subplot(subgs[0][i, 0]) for i in range(2)]
 state_axs = [[[fig.fig.add_subplot(subgs[k + 1][i, j]) for j in range(
     state_gridspec[k][1])] for i in range(state_gridspec[k][0])] for
@@ -27,8 +28,10 @@ state_axs = [[[fig.fig.add_subplot(subgs[k + 1][i, j]) for j in range(
 
 data_dir = os.path.join(modelling.RESULT_DIR, 'background')
 fig_dir = os.path.join(modelling.FIG_DIR, 'background')
-APmodels = modelling.model_naming.APmodel_list[:-1]
-AP_label = ['ORd-Li', 'Grandi', 'ten Tusscher', 'Tomek']
+# APmodels = modelling.model_naming.APmodel_list[:-1]
+APmodels = ['ORd-Li', 'ORd-Lei']
+AP_label = APmodels
+# AP_label = ['ORd-Li', 'Grandi', 'ten Tusscher', 'Tomek']
 current_keys = modelling.model_naming.model_current_keys
 
 # Plot state occupancies of the hERG channel
@@ -77,7 +80,7 @@ for m, APmodel in enumerate(APmodels):
         labels=[s for s in li_states], colors=color_seq[:6], zorder=-10,
         edgecolor='k')
     state_panel.set_ylim(bottom=0, top=1)
-    state_panel.text(0.95, 0.9, AP_label[m], fontsize=8, ha='right', va='top',
+    state_panel.text(0.95, 0.95, AP_label[m], fontsize=8, ha='right', va='top',
                      transform=state_panel.transAxes)
     state_panel.set_rasterization_zorder(0)
 
@@ -97,7 +100,7 @@ for m, APmodel in enumerate(APmodels):
         labels=[s for s in lei_states], colors=color_seq[:4], zorder=-10,
         edgecolor='k')
     state_panel.set_ylim(bottom=0, top=1)
-    state_panel.text(0.95, 0.9, AP_label[m], fontsize=8, ha='right', va='top',
+    state_panel.text(0.95, 0.95, AP_label[m], fontsize=8, ha='right', va='top',
                      transform=state_panel.transAxes)
     state_panel.set_rasterization_zorder(0)
 
@@ -109,7 +112,7 @@ state_axs[1][0][0].legend(ncol=4, loc='lower left', handlelength=1,
                           columnspacing=1, labelspacing=0.3)
 # Adjust axes
 pulse_time = 1000
-ikr_axs[1].set_xlim((0, pulse_time))
+ikr_axs[1].set_xlim((0, 600))
 ikr_axs[0].set_ylabel('Voltage \n (ms)')
 ikr_axs[1].set_ylabel('Current \n (A/F)')
 ikr_axs[0].sharex(ikr_axs[1])
@@ -121,7 +124,7 @@ ikr_axs[0].spines[['right', 'top']].set_visible(False)
 ikr_axs[1].spines[['right', 'top']].set_visible(False)
 
 lines = []
-for i in range(4):
+for i in range(2):
     lines.append(matplotlib.lines.Line2D([0], [0], color=model_color(i), lw=5))
 lines.append(matplotlib.lines.Line2D([0], [0], color='k', linestyle='-'))
 lines.append(matplotlib.lines.Line2D([0], [0], color='k', linestyle='--'))
@@ -132,12 +135,12 @@ ikr_axs[0].legend(lines, AP_label + ['Li', 'Lei'], loc='upper left',
 for i in range(2):
     fig.sharex(['Time (ms)'] * 2, [(0, pulse_time)] * 2,
                axs=state_axs[i], subgridspec=state_gridspec[i])
-    fig.sharey(['State\noccupancy'] * 2,
+    fig.sharey(['State\noccupancy'],
                axs=state_axs[i], subgridspec=state_gridspec[i])
 
 fig.fig.text(0.11, 0.925, '(A)', fontsize=11)
 fig.fig.text(0.56, 0.925, '(B)', fontsize=11)
-fig.fig.text(0.27, 0.7, '(C)', fontsize=11)
-fig.fig.text(0.09, 0.405, '(D)', fontsize=11)
-fig.fig.text(0.53, 0.405, '(E)', fontsize=11)
-fig.savefig(os.path.join(fig_dir, "hERGmodels_APs.svg"), format='svg')
+fig.fig.text(0.23, 0.66, '(C)', fontsize=11)
+fig.fig.text(0.09, 0.35, '(D)', fontsize=11)
+fig.fig.text(0.53, 0.35, '(E)', fontsize=11)
+fig.savefig(os.path.join(fig_dir, "hERGmodels_APs_LiLei.svg"), format='svg')
