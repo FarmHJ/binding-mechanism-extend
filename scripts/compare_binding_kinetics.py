@@ -53,10 +53,10 @@ if APmodel_name == 'ORd-Lei':
 else:
     ikr_model = 'Li'
 
-Hill_coef = modelling.BindingParameters().load_published_Hill_eq(
-    drug, ikr_model=ikr_model, channel='IKr')
-# Hill_coef = modelling.BindingParameters().load_Hill_eq(
-#     drug, ikr_model=ikr_model)
+# Hill_coef = modelling.BindingParameters().load_published_Hill_eq(
+#     drug, ikr_model=ikr_model, channel='IKr')
+Hill_coef = modelling.BindingParameters().load_Hill_eq(
+    drug, ikr_model=ikr_model)
 
 # Set AP model
 model_keys = modelling.model_naming.model_current_keys[APmodel_name]

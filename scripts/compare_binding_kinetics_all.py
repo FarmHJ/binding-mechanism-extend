@@ -13,7 +13,8 @@ import pandas as pd
 import modelling
 
 model_details = model_details = modelling.model_naming
-APmodel_list = model_details.APmodel_list[1:]
+# APmodel_list = model_details.APmodel_list[1:]
+APmodel_list = ['ORd-Li']
 drug_list = ['dofetilide', 'verapamil']
 model_drug_pair = [(m, d) for m in APmodel_list for d in drug_list]
 
@@ -35,11 +36,11 @@ for APmodel, drug in model_drug_pair:
     if APmodel == 'ORd-Lei':
         ikr_model = 'Lei'
     else:
-        APsim.set_ikr_rescale_method('AP_duration')
         ikr_model = 'Li'
 
-    HillModel = modelling.HillModel()
-    APsim.update_initial_state()
+    # Scale conductance value
+    if APmodel != 'ORd-Li':
+        APsim.set_ikr_rescale_method('AP_duration')
 
     Hill_coef = modelling.BindingParameters().load_Hill_eq(
         drug, ikr_model=ikr_model)
@@ -47,6 +48,12 @@ for APmodel, drug in model_drug_pair:
     #     drug, ikr_model=ikr_model, channel='IKr')
     # Define the range of drug concentration for a given drug
     drug_conc = modelling.SD_details.drug_concentrations[drug]['fine']
+
+    HillModel = modelling.HillModel()
+    states = myokit.load_state(
+        os.path.join(modelling.RESULT_DIR, 'steady_states',
+                     f'{APmodel}_steadystate_APDprot.csv'))
+    APsim.set_initial_state(states)
 
     # Simulate AP of the AP-SD model and the AP-CS model
     APD_conductance = []
@@ -64,7 +71,7 @@ for APmodel, drug in model_drug_pair:
         if i % save_AP == 0:
             conc_str = "{0:.3e}".format(drug_conc[i])
             log.save_csv(os.path.join(data_dir,
-                                      f'SD_AP_litHill_{conc_str}.csv'))
+                                      f'SD_AP_conc_{conc_str}.csv'))
 
         apd90 = APsim.APD90(log)
         APD_trapping.append(apd90)
@@ -76,7 +83,7 @@ for APmodel, drug in model_drug_pair:
         APsim.set_CS_parameter(1)
         if i % save_AP == 0:
             log.save_csv(os.path.join(data_dir,
-                                      f'CS_AP_litHill_{conc_str}.csv'))
+                                      f'CS_AP_conc_{conc_str}.csv'))
 
         apd90 = APsim.APD90(log)
         APD_conductance.append(apd90)
@@ -154,5 +161,5 @@ for APmodel, drug in model_drug_pair:
     # Save qNet
     trapping_df['qNet'] = qNet_SD_arr
     conductance_df['qNet'] = qNet_CS_arr
-    trapping_df.to_csv(os.path.join(data_dir, 'SD_APD_qNet_litHill.csv'))
-    conductance_df.to_csv(os.path.join(data_dir, 'CS_APD_qNet_litHill.csv'))
+    trapping_df.to_csv(os.path.join(data_dir, 'SD_APD_qNet_conc.csv'))
+    conductance_df.to_csv(os.path.join(data_dir, 'CS_APD_qNet_conc.csv'))
