@@ -1,6 +1,7 @@
 import matplotlib
 import matplotlib.pyplot as plt
 import myokit
+import numpy as np
 import os
 
 import modelling
@@ -52,6 +53,7 @@ lei_states = ['O', 'I', 'CI', 'C']
 # Plot AP and IKr
 ##################
 for m, APmodel in enumerate(APmodels):
+    print('AP of model: ', APmodel)
     # Plot AP-clamp protocol
     prot_log = myokit.DataLog.load_csv(os.path.join(data_dir,
                                                     f'APclamp_{APmodel}.csv'))
@@ -64,6 +66,9 @@ for m, APmodel in enumerate(APmodels):
     li_log = myokit.DataLog.load_csv(os.path.join(
         data_dir, f'{APmodel}_APclamp_Li_current.csv'))
     ikr_axs[1].plot(li_log.time(), li_log['ikr.IKr'], color=model_color(m))
+    auc_li = np.trapz(np.array(li_log['ikr.O']) + np.array(li_log['ikr.IO']),
+                      x=li_log.time())
+    print('Li: ', auc_li)
 
     # Plot state occupancy - Li model
     state_panel = state_axs[0][m_row][m_col]
@@ -81,6 +86,9 @@ for m, APmodel in enumerate(APmodels):
         data_dir, f'{APmodel}_APclamp_Lei_current.csv'))
     ikr_axs[1].plot(lei_log.time(), lei_log['ikr.IKr'], '--',
                     color=model_color(m))
+    auc_lei = np.trapz(np.array(lei_log['ikr.O']) + np.array(lei_log['ikr.I']),
+                       x=lei_log.time())
+    print('Lei: ', auc_lei)
 
     # Plot state occupancy - Lei model
     state_panel = state_axs[1][m_row][m_col]
@@ -101,12 +109,12 @@ state_axs[1][0][0].legend(ncol=4, loc='lower left', handlelength=1,
                           columnspacing=1, labelspacing=0.3)
 # Adjust axes
 pulse_time = 1000
+ikr_axs[1].set_xlim((0, pulse_time))
 ikr_axs[0].set_ylabel('Voltage \n (ms)')
 ikr_axs[1].set_ylabel('Current \n (A/F)')
 ikr_axs[0].sharex(ikr_axs[1])
 ikr_axs[0].tick_params(labelbottom=False)
 ikr_axs[1].set_xlabel('Time (ms)')
-ikr_axs[1].set_xlim((0, pulse_time))
 ikr_axs[0].set_box_aspect(0.15)
 ikr_axs[1].set_box_aspect(0.15)
 ikr_axs[0].spines[['right', 'top']].set_visible(False)
