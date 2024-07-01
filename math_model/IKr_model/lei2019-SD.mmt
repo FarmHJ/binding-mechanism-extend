@@ -12,7 +12,7 @@ ikr.Cbound = 0
 # ikr.D = 0
 
 [ikr]
-IKr = gKr * O * (membrane.V - nernst.EK)
+IKr = gKr * tune.ikr_rescale * O * (membrane.V - nernst.EK)
     in [nA]
     oxmeta: membrane_rapid_delayed_rectifier_potassium_current
 k12 = p1 * exp(p2 * membrane.V)
@@ -78,6 +78,12 @@ time = 0 bind time
     in [ms]
 pace = 0 bind pace
 
+#
+# Rescaling of currents
+#
+[tune]
+ikr_rescale = 1
+    in [1]
 
 [membrane]
 V = engine.pace

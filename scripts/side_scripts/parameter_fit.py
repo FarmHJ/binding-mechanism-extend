@@ -1,4 +1,3 @@
-import argparse
 import myokit
 import numpy as np
 import os
@@ -8,16 +7,7 @@ import pints
 import modelling
 
 
-# Define drug
-parser = argparse.ArgumentParser(
-    description="Fit parameters for Lei-SD model")
-parser.add_argument('-d', '--drug', nargs='*', help='Choose drugs')
-args = parser.parse_args()
-
-if not args.drug:
-    drug_list = modelling.SD_details.drug_names
-else:
-    drug_list = args.drug
+drug_list = modelling.SD_details.drug_names
 
 results_dir = os.path.join(modelling.PARAM_DIR, 'Lei-SD-inference')
 if not os.path.isdir(results_dir):
@@ -28,7 +18,7 @@ if not os.path.isdir(results_dir):
 class InfModel(pints.ForwardModel):
     def __init__(self):
         self.sim = modelling.ModelSimController('Lei')
-        # TODO: have to rescale conductance? Not for now
+        self.sim.set_ikr_rescale_method('AP_duration')
         self.sim.initial_state = control_state
 
     def n_outputs(self):
@@ -43,15 +33,14 @@ class InfModel(pints.ForwardModel):
     def simulate(self, parameters, times):
 
         self.sim.update_initial_state(paces=0)
-        param_df = pd.DataFrame(parameters,
-                                index=modelling.SD_details.SD_param_names).T
-        self.sim.set_parameters(param_df)
+        # param_df = pd.DataFrame(parameters,
+        #                         index=modelling.SD_details.SD_param_names).T
+        param_values = {name: parameters[n] for n, name in
+                        enumerate(modelling.SD_details.SD_param_names)}
+        self.sim.set_parameters(param_values)
         self.sim.set_conc(self.conc)
 
         # TODO: add pre-simulation of -80mV for 10s
-        # log_times = []
-        # for i in range(sweep_num):
-        #     log_times.extend(window + 25e3 * i)
         log = self.sim.simulate(prepace=0, save_signal=sweep_num,
                                 log_times=times,
                                 log_var=[self.sim.time_key, self.sim.ikr_key],
@@ -70,7 +59,7 @@ sweep_num = 10
 dataset = modelling.DataLibrary()
 
 # Prepare control data
-general_win = np.arange(1005, 1005 + 10000, 10)
+general_win = np.arange(1005 + 100, 1005 + 10000, 10)
 if os.path.isdir(os.path.join(results_dir, 'control_state.csv')) and \
    os.path.isdir(os.path.join(results_dir, 'control_log.csv')):
     control_state = myokit.load_state(
@@ -100,8 +89,6 @@ for drug in drug_list:
 
     signal = dataset.get_mean_signal(cache=True)
     dataset.data = signal
-    # dataset.data = signal.loc[signal['time'] > 1000]
-    # dataset.set_conc(conc_list[0])
 
     errors = []
     for c in conc_list:
@@ -111,17 +98,9 @@ for drug in drug_list:
         # Defining window to choose experimental data
         sweep_signal = dataset.conc_data.loc[(dataset.conc_data['sweep'] == 1),
                                              ['time', 'frac']]
-        # ref_signal = sweep_signal.loc[(sweep_signal['time'] >= ref_time - 10)
-        #                               & (sweep_signal['time'] <= ref_time + 10)]
-        # if np.mean(ref_signal['frac'].values) < 0.5:
-        #     print('different window')
-        #     window = sweep_signal.loc[(sweep_signal['frac'] < 0.5),
-        #                               'time'].values
-        # else:
         window = sweep_signal.loc[(sweep_signal['time'] >= ref_time),
                                   'time'].values
 
-        print(c, window[0])
         log_times = []
         frac_block = []
         for s in range(dataset.n_sweeps):
@@ -133,8 +112,6 @@ for drug in drug_list:
                                              'frac'].values)
         control_log_win = control_log.trim(window[0] + 60,
                                            window[-1] + 60 + 10)
-        print(len(control_log_win['ikr.IKr']))
-        # time = np.arange(0, len(frac_block)) * 10
 
         # Instantiate forward model
         model = InfModel()
@@ -154,17 +131,13 @@ for drug in drug_list:
 
     # prior
     # SD_param_names = ['Kmax', 'Ku', 'halfmax', 'n', 'Vhalf']
-    # prior_list = [pints.UniformLogPrior(1e-1, 1e8),
-    #               pints.UniformLogPrior(1e-5, 1e1),
-    #               pints.UniformLogPrior(1e0, 1e9),
-    #               pints.UniformLogPrior(1e-1, 1e8)]
     prior_list = [pints.UniformLogPrior(1e5, 1e10),
                   pints.UniformLogPrior(1e-7, 1e-5),
                   pints.UniformLogPrior(1e7, 1e9)]
     boundaries = pints.RectangularBoundaries([1e-1, 1e-8, 1e0, 0, -200],
                                              [1e10, 1e1, 1e10, 2, 0])
 
-    reps = 3
+    reps = 5
     param_scores = []
     for i in range(reps):
         np.random.seed((i + 1) * 100)
@@ -177,7 +150,6 @@ for drug in drug_list:
                                            boundaries=boundaries,
                                            transformation=transform,
                                            method=pints.CMAES)
-        # opt.set_log_to_file(os.path.join(results_dir, f'log_{drug}_rep{i}.txt'))
         opt.set_parallel(True)
 
         p, s = opt.run()

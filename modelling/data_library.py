@@ -18,7 +18,7 @@ class DataLibrary(object):
         self.drug = drug
 
         self.data = pd.read_csv(os.path.join(modelling.DATA_DIR,
-                                             self.drug + '.csv'))
+                                             f'{self.drug}.csv'))
         self.n_exp = max(self.data['exp'])
         self.n_sweeps = 10
 
