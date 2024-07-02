@@ -7,8 +7,7 @@ import pints
 import modelling
 
 
-drug_list = modelling.SD_details.drug_names
-
+# Set up directory to save results
 results_dir = os.path.join(modelling.PARAM_DIR, 'Lei-SD-inference')
 if not os.path.isdir(results_dir):
     os.makedirs(results_dir)
@@ -17,6 +16,7 @@ if not os.path.isdir(results_dir):
 # PINTS model
 class InfModel(pints.ForwardModel):
     def __init__(self):
+        # Set up model
         self.sim = modelling.ModelSimController('Lei')
         self.sim.set_ikr_rescale_method('AP_duration')
         self.sim.initial_state = control_state
@@ -33,8 +33,6 @@ class InfModel(pints.ForwardModel):
     def simulate(self, parameters, times):
 
         self.sim.update_initial_state(paces=0)
-        # param_df = pd.DataFrame(parameters,
-        #                         index=modelling.SD_details.SD_param_names).T
         param_values = {name: parameters[n] for n, name in
                         enumerate(modelling.SD_details.SD_param_names)}
         self.sim.set_parameters(param_values)
@@ -54,11 +52,8 @@ class InfModel(pints.ForwardModel):
         return output
 
 
-# Set up inference problem
-sweep_num = 10
-dataset = modelling.DataLibrary()
-
 # Prepare control data
+dataset = modelling.DataLibrary()
 general_win = np.arange(1005 + 100, 1005 + 10000, 10)
 if os.path.isdir(os.path.join(results_dir, 'control_state.csv')) and \
    os.path.isdir(os.path.join(results_dir, 'control_log.csv')):
@@ -70,6 +65,7 @@ if os.path.isdir(os.path.join(results_dir, 'control_state.csv')) and \
 else:
     # Simulate control condition
     sim = modelling.ModelSimController('Lei')
+    sim.set_ikr_rescale_method('AP_duration')
     sim.set_conc(0)
     control_log = sim.simulate(prepace=999,
                                log_var=[sim.time_key, sim.ikr_key],
@@ -81,9 +77,14 @@ else:
                       control_state)
     del sim
 
+# Set up inference problem
+sweep_num = 10
 ref_time = 945 + 100
+drug_list = modelling.SD_details.drug_names
 for drug in drug_list:
     print(drug)
+    # Get drug concentrations and mean of IKr from Li et al.'s experimental
+    # data
     dataset.set_drug(drug)
     conc_list = dataset.concs
 
@@ -92,10 +93,11 @@ for drug in drug_list:
 
     errors = []
     for c in conc_list:
-        # Prepare data
         dataset.set_conc(c)
 
-        # Defining window to choose experimental data
+        # Define window of interest, to avoid the channel opening process
+        # from interfering with the drug block development process, as
+        # mentioned in Li et al.
         sweep_signal = dataset.conc_data.loc[(dataset.conc_data['sweep'] == 1),
                                              ['time', 'frac']]
         window = sweep_signal.loc[(sweep_signal['time'] >= ref_time),
@@ -104,8 +106,10 @@ for drug in drug_list:
         log_times = []
         frac_block = []
         for s in range(dataset.n_sweeps):
+            # Create times to log for simulated output
             log_times.extend(window + 60 + 25e3 * s)
 
+            # Combine data of all pulses together
             sweep_data = dataset.conc_data.loc[
                 dataset.conc_data['sweep'] == s + 1, ['time', 'frac']]
             frac_block.extend(sweep_data.loc[sweep_data['time'].isin(window),
@@ -119,7 +123,7 @@ for drug in drug_list:
         # Create single output problem
         problem = pints.SingleOutputProblem(model, log_times, frac_block)
 
-        # Error function
+        # Define error function
         errors.append(pints.RootMeanSquaredError(problem))
 
     error_fn = pints.SumOfErrors(errors, [1 / len(conc_list)] * len(conc_list))
@@ -129,7 +133,7 @@ for drug in drug_list:
         pints.IdentityTransformation(2),
     )
 
-    # prior
+    # Define prior and set boundaries
     # SD_param_names = ['Kmax', 'Ku', 'halfmax', 'n', 'Vhalf']
     prior_list = [pints.UniformLogPrior(1e5, 1e10),
                   pints.UniformLogPrior(1e-7, 1e-5),
@@ -140,11 +144,13 @@ for drug in drug_list:
     reps = 5
     param_scores = []
     for i in range(reps):
+        # Generate random initial guess
         np.random.seed((i + 1) * 100)
         guess = [p.sample()[0][0] for p in prior_list]
         guess.append(np.random.uniform(0, 1))
         guess.append(np.random.uniform(-100, 0))
 
+        # Run optimisation
         print('initial guess: ', guess)
         opt = pints.OptimisationController(error_fn, guess,
                                            boundaries=boundaries,
@@ -155,6 +161,7 @@ for drug in drug_list:
         p, s = opt.run()
         param_scores.append(list(p) + [s])
 
+    # Save optimised parameters
     scores_dict = pd.DataFrame(param_scores,
                                columns=modelling.SD_details.SD_param_names +
                                ['error'])
