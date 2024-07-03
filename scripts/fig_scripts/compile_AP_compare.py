@@ -6,15 +6,18 @@ import pandas as pd
 import modelling
 
 
+# Define all AP models and drugs for comparison
 model_details = modelling.model_naming
 model_list = model_details.APmodel_list
 model_label = ['ORd-Li', 'Grandi-Li', 'ten Tusscher-Li', 'Tomek-Li', 'ORd-Lei']
 drug_list = ['dofetilide', 'verapamil']
 
+# Define directory to save figure
 fig_dir = os.path.join(modelling.FIG_DIR, 'kinetics_comparison')
 if not os.path.isdir(fig_dir):
     os.makedirs(fig_dir)
 
+# Define color and label for each drug
 drug_color = {
     'dofetilide': 'k',
     'verapamil': 'r'
@@ -33,6 +36,7 @@ qNet_metric = {
     'verapamil': []
 }
 
+# To use functions defined within the ModelSimController class
 FnClass = modelling.ModelComparison(modelling.ModelSimController('Grandi'))
 
 model_drug_pair = [(m, d) for m in model_list for d in drug_list]
@@ -58,6 +62,12 @@ for APmodel_name, drug in model_drug_pair:
     APD_trapping = np.array(APD_trapping)[np.array(EAD_marker)]
     APD_conductance = np.array(APD_conductance)[np.array(EAD_marker)]
 
+    # Calculate metric to quantify difference between the AP-SD model and
+    # the AP-CS model
+    # First, normalise APD90s of both the AP-SD model and the AP-CS model for
+    # all drug concentrations
+    # Then, compute the RMSD and MD
+    # Finally, multiply the sign value of MD on to the RMSD
     APD_min = min(min(APD_trapping), min(APD_conductance))
     APD_max = max(max(APD_trapping), max(APD_conductance))
     APD_SD_norm = (APD_trapping - APD_min) / (APD_max - APD_min)
@@ -70,12 +80,14 @@ for APmodel_name, drug in model_drug_pair:
     MD = FnClass.Error
     APD_metric[drug].append(RMSD * MD / np.abs(MD))
 
+    # Take the qNet data
     SD_qNet = trapping_df['qNet'].values.tolist()
     CS_qNet = conductance_df['qNet'].values.tolist()
 
     SD_qNet = np.array(SD_qNet)[np.array(EAD_marker)]
     CS_qNet = np.array(CS_qNet)[np.array(EAD_marker)]
 
+    # Compute the metric for qNet
     qnet_min = min(min(SD_qNet), min(CS_qNet))
     qnet_max = max(max(SD_qNet), max(CS_qNet))
     qnet_SD_norm = (SD_qNet - qnet_min) / (qnet_max - qnet_min)
@@ -89,13 +101,14 @@ for APmodel_name, drug in model_drug_pair:
     MD = FnClass.Error
     qNet_metric[drug].append(RMSD * MD / np.abs(MD))
 
-x = np.arange(len(model_list))
-bar_width = 0.3
-
+# Set up figure for bar plot
 plot = modelling.figures.FigurePlot()
 fig = modelling.figures.FigureStructure(figsize=(8, 3), gridspec=(1, 2),
                                         wspace=0.27)
+x = np.arange(len(model_list))
+bar_width = 0.3
 
+# Plot metric of APD90 and qNet for all AP models
 multiplier = 0
 for drug, metric in APD_metric.items():
     offset = bar_width * multiplier
@@ -110,6 +123,7 @@ for drug, metric in qNet_metric.items():
                       label=drug_label[drug], color=drug_color[drug])
     multiplier += 1
 
+# Adjust figures
 fig.axs[0][0].set_ylabel(r'$\Delta \widetilde{\mathrm{APD}}_{90}$')
 fig.axs[0][1].set_ylabel(r'$\Delta \widetilde{\mathrm{qNet}}$')
 
@@ -126,5 +140,6 @@ fig.axs[0][0].legend(handlelength=1)
 fig.fig.text(0.1, 0.905, '(A)', fontsize=11)
 fig.fig.text(0.52, 0.905, '(B)', fontsize=11)
 
+# Save figure
 fig.savefig(os.path.join(fig_dir,
                          "model_compare_all_normsignedRMSD.pdf"))

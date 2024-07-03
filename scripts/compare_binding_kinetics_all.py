@@ -12,11 +12,15 @@ import pandas as pd
 
 import modelling
 
-model_details = model_details = modelling.model_naming
-# APmodel_list = model_details.APmodel_list[1:]
-APmodel_list = ['ORd-Li']
+# Define models and drugs
+model_details = modelling.model_naming
+APmodel_list = model_details.APmodel_list[1:]
 drug_list = ['dofetilide', 'verapamil']
 model_drug_pair = [(m, d) for m in APmodel_list for d in drug_list]
+
+# Set up Hill curve model to compute corresponding conductance for given
+# Hill curve
+HillModel = modelling.HillModel()
 
 for APmodel, drug in model_drug_pair:
     print('##############')
@@ -27,29 +31,22 @@ for APmodel, drug in model_drug_pair:
     if not os.path.isdir(data_dir):
         os.makedirs(data_dir)
 
-    # Set AP model
+    # Set up AP model and IKr model
     model_keys = modelling.model_naming.model_current_keys[APmodel]
     current_key = model_keys['IKr']
     APsim = modelling.ModelSimController(APmodel)
-
-    # Get the Hill coef for Li-CS model
-    if APmodel == 'ORd-Lei':
-        ikr_model = 'Lei'
-    else:
-        ikr_model = 'Li'
-
-    # Scale conductance value
     if APmodel != 'ORd-Li':
         APsim.set_ikr_rescale_method('AP_duration')
+    ikr_model = 'Lei' if APmodel == 'ORd-Lei' else 'Li'
 
+    # Get the Hill coef for CS model
     Hill_coef = modelling.BindingParameters().load_Hill_eq(
         drug, ikr_model=ikr_model)
-    # Hill_coef = modelling.BindingParameters().load_published_Hill_eq(
-    #     drug, ikr_model=ikr_model, channel='IKr')
+
     # Define the range of drug concentration for a given drug
     drug_conc = modelling.SD_details.drug_concentrations[drug]['fine']
 
-    HillModel = modelling.HillModel()
+    # Load steady state of the AP model
     states = myokit.load_state(
         os.path.join(modelling.RESULT_DIR, 'steady_states',
                      f'{APmodel}_steadystate_APDprot.csv'))
@@ -59,36 +56,45 @@ for APmodel, drug in model_drug_pair:
     APD_conductance = []
     APD_trapping = []
     save_AP = 3
-    EAD_present = False
 
     APsim.set_SD_parameters(drug, ikr_model=ikr_model)
 
     for i in range(len(drug_conc)):
         print('simulating concentration: ', i, drug_conc[i])
 
+        # Simulate AP for the AP-SD model
         APsim.set_conc(drug_conc[i])
         log = APsim.simulate(save_signal=2)
+
+        # Save traces once every three drug concentrations
         if i % save_AP == 0:
             conc_str = "{0:.3e}".format(drug_conc[i])
             log.save_csv(os.path.join(data_dir,
                                       f'SD_AP_conc_{conc_str}.csv'))
 
+        # Compute APD90
         apd90 = APsim.APD90(log)
         APD_trapping.append(apd90)
 
+        # Compute the scaling of the conductance value for the AP-CS model
         reduction_scale = HillModel.simulate(Hill_coef, drug_conc[i])
+
+        # Simualte AP for the AP-CS model
         APsim.set_conc(0)
         APsim.set_CS_parameter(reduction_scale)
         log = APsim.simulate(save_signal=2)
         APsim.set_CS_parameter(1)
+
+        # Save traces once every three drug concentrations
         if i % save_AP == 0:
             log.save_csv(os.path.join(data_dir,
                                       f'CS_AP_conc_{conc_str}.csv'))
 
+        # Compute APD90
         apd90 = APsim.APD90(log)
         APD_conductance.append(apd90)
 
-    # Save simulated APD90 of both the ORd-SD model and the ORd-CS model
+    # Save simulated APD90 of both the AP-SD model and the AP-CS model
     APD_SD_max = [float('nan') if np.isnan(i).any() else max(i)
                   for i in APD_trapping]
     APD_CS_max = [float('nan') if np.isnan(i).any() else max(i)
@@ -106,11 +112,14 @@ for APmodel, drug in model_drug_pair:
     # Compute qNet
     pulse_time = 2000
     base_log_key = [APsim.time_key, APsim.Vm_key]
+
+    # Define current included in qNet
     qNet_current_list = [model_keys['ICaL'], model_keys['INaL'],
                          current_key, model_keys['IKs'],
                          model_keys['IK1'], model_keys['Ito']]
     qNet_current_list = [i for i in qNet_current_list if i is not None]
 
+    # Set up protocol and steady state of the AP model
     APsim.sim.set_protocol(myokit.pacing.blocktrain(period=pulse_time,
                                                     duration=0.5,
                                                     offset=50))
@@ -134,7 +143,7 @@ for APmodel, drug in model_drug_pair:
         log = APsim.simulate(save_signal=2, timestep=0.01,
                              log_var=base_log_key + qNet_current_list)
 
-        # Check for EAD-like behaviour
+        # Check for EAD-like behaviour then compute qNet
         apd90 = APsim.APD90(log)
         if np.isnan(apd90).any():
             qNet = float('nan')
@@ -150,7 +159,7 @@ for APmodel, drug in model_drug_pair:
                              log_var=base_log_key + qNet_current_list)
         APsim.set_CS_parameter(1)
 
-        # Check for EAD-like behaviour
+        # Check for EAD-like behaviour then compute qNet
         apd90 = APsim.APD90(log)
         if np.isnan(apd90).any():
             qNet = float('nan')
@@ -158,7 +167,7 @@ for APmodel, drug in model_drug_pair:
             qNet = APsim.qNet(log, period=2)
         qNet_CS_arr.append(qNet)
 
-    # Save qNet
+    # Save APD90 and qNet
     trapping_df['qNet'] = qNet_SD_arr
     conductance_df['qNet'] = qNet_CS_arr
     trapping_df.to_csv(os.path.join(data_dir, 'SD_APD_qNet_conc.csv'))
