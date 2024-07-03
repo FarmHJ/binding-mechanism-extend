@@ -16,50 +16,26 @@ parser = argparse.ArgumentParser(
     description="Parameter space exploration for AP-IKr-SD model and "
     "the AP-IKr-CS model")
 parser.add_argument("APmodel", help="Name of AP model")
-parser.add_argument('--mode', default='only_drugs',
-                    choices=['only_drugs', 'parameter_SA'],
-                    help='Choose between sensitiivity analysis of parameter '
-                    'of interest or only drugs')
-parser.add_argument("--ikr_tuning", default='AP_duration',
-                    choices=['hERG_peak', 'hERG_flux', 'AP_duration'],
-                    help="Method used to tune IKr")
-parser.add_argument('--parameter_interest', default='n',
-                    choices=['Vhalf', 'Kmax', 'Ku', 'n', 'halfmax'],
-                    help='Choose the parameter of interest for '
-                    'sensitivity analysis')
 args = parser.parse_args()
 
 APmodel = args.APmodel
-param_interest = args.parameter_interest
 
 # Define directory to save simulation data
 data_dir = os.path.join(modelling.RESULT_DIR, 'parameter_SA')
 if args.mode == 'parameter_SA':
-    data_dir = os.path.join(data_dir, f'parameter_{param_interest}',
-                            APmodel)
+    data_dir = os.path.join(data_dir, 'parameter_n', APmodel)
 if not os.path.exists(data_dir):
     os.makedirs(data_dir)
 
-# # Load IKr model
-# if APmodel == 'ORd-Lei':
-#     ikr_model = 'Lei'
-# else:
-#     ikr_model = 'Li'
-# IKr_sim = modelling.ModelSimController(ikr_model)
-# APsim = modelling.ModelSimController(APmodel)
-# APsim.set_ikr_rescale_method(args.ikr_tuning)
-
 # Get list of synthetic drugs and the name of parameters
 drug_list = modelling.SD_details.drug_names
-
-# ComparisonController = modelling.ModelComparison(APsim, IKr_simulator=IKr_sim)
 
 APsim = modelling.ModelSimController(APmodel)
 states = myokit.load_state(
     os.path.join(modelling.RESULT_DIR, 'steady_states',
                  f'{APmodel}_steadystate_APDprot.csv'))
 APsim.set_initial_state(states)
-APsim.set_ikr_rescale_method(args.ikr_tuning)
+APsim.set_ikr_rescale_method('AP_duration')
 
 # Get name of parameters
 param_names = modelling.SD_details.SD_param_names
@@ -112,110 +88,110 @@ def param_evaluation(inputs, counter):
 SD_params = modelling.BindingParameters(ikr_model=ikr_model)
 SD_params.load_SD_parameters()
 
-if args.mode == 'only_drugs':
-    filename = f'SA_alldrugs_{APmodel}.csv'
-    fpath = os.path.join(data_dir, filename)
+########################################
+# Run model comparison for 12 CiPA drugs
+filename = f'SA_alldrugs_{APmodel}.csv'
+fpath = os.path.join(data_dir, filename)
+
+# Load completed simulation to reduce repetition
+if os.path.exists(fpath):
+    results_df = pd.read_csv(fpath, header=[0, 1], index_col=[0],
+                             skipinitialspace=True)
+    ran_drugs = results_df.index
+else:
+    ran_drugs = []
+drug_list = [i for i in drug_list if i not in ran_drugs]
+
+# Combine parameter combinations of 12 CiPA drugs
+param_space = []
+for drug in drug_list:
+    param_values = SD_params.get_SD_parameters(drug)
+    input = {'id': drug, 'param_values': param_values}
+    param_space.append(input)
+
+# Evaluate the RMSD and MD for 12 CiPA drugs
+n_workers = 8
+evaluator = pints.ParallelEvaluator(param_evaluation,
+                                    n_workers=n_workers,
+                                    args=[20])
+for i in range(int(np.ceil(len(param_space) / n_workers))):
+    print('Running samples ', n_workers * i, 'to',
+          n_workers * (i + 1) - 1)
+    sub_param_space = param_space[i * n_workers: (i + 1) * n_workers]
+
+    big_df = evaluator.evaluate(sub_param_space)
+
     if os.path.exists(fpath):
-        results_df = pd.read_csv(fpath, header=[0, 1], index_col=[0],
-                                 skipinitialspace=True)
-        ran_drugs = results_df.index
+        combined_df = pd.read_csv(fpath, header=[0, 1], index_col=[0],
+                                  skipinitialspace=True)
+        for i in range(len(big_df)):
+            combined_df = pd.concat([combined_df, big_df[i]])
     else:
-        ran_drugs = []
+        combined_df = big_df[0]
+        for i in range(1, len(big_df)):
+            combined_df = pd.concat([combined_df, big_df[i]])
 
-    drug_list = [i for i in drug_list if i not in ran_drugs]
+    combined_df.to_csv(fpath)
 
+###############################################
+# Run model comparison with varying parameter n
+# Take min and max of parameter n from the 12 CiPA drugs
+param_value_list = [SD_params.get_SD_parameters(i)['n'].values[0]
+                    for i in drug_list]
+param_fullrange = np.linspace(min(param_value_list),
+                              max(param_value_list), 20)
+
+# Load previously saved parameter space
+drug_space_df = pd.read_csv(
+    os.path.join(modelling.RESULT_DIR, 'parameter_SA',
+                 f'SA_alldrugs_{APmodel}.csv'),
+    header=[0, 1], index_col=[0], skipinitialspace=True)
+
+for drug in drug_list:
+    print('parameter SA: ', drug)
+
+    # Check for completed simulations to prevent repetition
+    filename = f'SA_{drug}_n.csv'
+    filepath = os.path.join(data_dir, filename)
+    if os.path.exists(filepath):
+        saved_results_df = pd.read_csv(filepath, header=[0, 1],
+                                       index_col=[0],
+                                       skipinitialspace=True)
+        ran_values = saved_results_df['param_values']['n'].values
+    else:
+        ran_values = []
+
+    param_range = [i for i in param_fullrange if i not in ran_values]
     param_space = []
-    for drug in drug_list:
-        param_values = SD_params.get_SD_parameters(drug)
-        input = {'id': drug,
-                 'param_values': param_values}
+    for v in param_range:
+        # Get parameter values of each synthetic drug
+        param_values = drug_space_df.loc[[drug]]['param_values']
+        param_values['n'] = v
+        input = {'id': drug, 'param_values': param_values}
         param_space.append(input)
 
-    param_evaluation(param_space[0], 20)
-    # n_workers = 8
-    # evaluator = pints.ParallelEvaluator(param_evaluation,
-    #                                     n_workers=n_workers,
-    #                                     args=[20])
-    # for i in range(int(np.ceil(len(param_space) / n_workers))):
-    #     print('Running samples ', n_workers * i, 'to',
-    #           n_workers * (i + 1) - 1)
-    #     sub_param_space = param_space[i * n_workers: (i + 1) * n_workers]
+    # Evaluate the RMSD and MD between APD90s of a synthetic drug with
+    # changing Hill coefficient
+    n_workers = 8
+    evaluator = pints.ParallelEvaluator(param_evaluation,
+                                        n_workers=n_workers,
+                                        args=[30])
+    for i in range(int(np.ceil(len(param_space) / n_workers))):
+        print('Running samples ', n_workers * i, 'to', n_workers * (i + 1) - 1)
+        sub_param_space = param_space[i * n_workers: (i + 1) * n_workers]
 
-    #     big_df = evaluator.evaluate(sub_param_space)
+        # Evaluate RMSD and MD for a subset of the parameter combination list
+        big_df = evaluator.evaluate(sub_param_space)
 
-    #     if os.path.exists(fpath):
-    #         combined_df = pd.read_csv(fpath, header=[0, 1], index_col=[0],
-    #                                   skipinitialspace=True)
-    #         for i in range(len(big_df)):
-    #             combined_df = pd.concat([combined_df, big_df[i]])
-    #     else:
-    #         combined_df = big_df[0]
-    #         for i in range(1, len(big_df)):
-    #             combined_df = pd.concat([combined_df, big_df[i]])
-
-    #     combined_df.to_csv(fpath)
-
-elif args.mode == 'parameter_SA':
-    param_value_list = []
-    for i in drug_list:
-        param_value_list.append(
-            SD_params.get_SD_parameters(i)[param_interest].values[0])
-
-    param_fullrange = np.linspace(min(param_value_list),
-                                  max(param_value_list), 20)
-
-    # Load previously saved parameter space
-    drug_space_df = pd.read_csv(
-        os.path.join(modelling.RESULT_DIR, 'parameter_SA',
-                     f'SA_alldrugs_{APmodel}.csv'),
-        header=[0, 1], index_col=[0], skipinitialspace=True)
-
-    for drug in drug_list:
-        print('parameter SA: ', drug)
-
-        # Check for completed simulations to prevent repetition
-        filename = f'SA_{drug}_{param_interest}.csv'
-        filepath = os.path.join(data_dir, filename)
+        # Save results
         if os.path.exists(filepath):
-            saved_results_df = pd.read_csv(filepath, header=[0, 1],
-                                           index_col=[0],
-                                           skipinitialspace=True)
-            ran_values = saved_results_df['param_values'][
-                param_interest].values
+            combined_df = pd.read_csv(filepath, header=[0, 1],
+                                      index_col=[0], skipinitialspace=True)
+            for i in range(len(big_df)):
+                combined_df = pd.concat([combined_df, big_df[i]])
         else:
-            ran_values = []
+            combined_df = big_df[0]
+            for i in range(1, len(big_df)):
+                combined_df = pd.concat([combined_df, big_df[i]])
 
-        param_range = [i for i in param_fullrange if i not in ran_values]
-        param_space = []
-        for v in param_range:
-            # Get parameter values of each synthetic drug
-            param_values = drug_space_df.loc[[drug]]['param_values']
-            param_values[param_interest] = v
-            input = {'id': drug,
-                     'param_values': param_values}
-            param_space.append(input)
-
-        # Evaluate the RMSD and MD between APD90s of a synthetic drug with
-        # changing Hill coefficient from the ORd-SD model and the ORd-CS model
-        n_workers = 8
-        evaluator = pints.ParallelEvaluator(param_evaluation,
-                                            n_workers=n_workers,
-                                            args=[30])
-        for i in range(int(np.ceil(len(param_space) / n_workers))):
-            print('Running samples ', n_workers * i, 'to',
-                  n_workers * (i + 1) - 1)
-            sub_param_space = param_space[i * n_workers: (i + 1) * n_workers]
-
-            big_df = evaluator.evaluate(sub_param_space)
-
-            if os.path.exists(filepath):
-                combined_df = pd.read_csv(filepath, header=[0, 1],
-                                          index_col=[0], skipinitialspace=True)
-                for i in range(len(big_df)):
-                    combined_df = pd.concat([combined_df, big_df[i]])
-            else:
-                combined_df = big_df[0]
-                for i in range(1, len(big_df)):
-                    combined_df = pd.concat([combined_df, big_df[i]])
-
-            combined_df.to_csv(filepath)
+        combined_df.to_csv(filepath)

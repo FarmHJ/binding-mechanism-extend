@@ -14,8 +14,11 @@ data_dir = os.path.join(modelling.RESULT_DIR, 'parameter_space_exploration')
 file_prefix = 'SA_paramid_'
 results_dir = os.path.join(data_dir, 'SA_space', args.APmodel)
 
+# Gather all simulated results
 result_files = glob.glob(os.path.join(results_dir,
                                       f'{file_prefix}*.csv'))
+
+# Get all parameter set IDs of computed results
 id_list = []
 for paths in result_files:
     id_num = int(os.path.basename(paths)[len(file_prefix):-4])
@@ -24,22 +27,30 @@ id_list = sorted(id_list)
 
 filenum_list = list(set([int(i / 1000) for i in id_list]))
 
+# Compile all results into a single file
+# Includes APD90s of both the AP-SD model and the AP-CS model,
+# and the RMSDs between those models
 for fnum in filenum_list:
 
+    # Save every thousand data points in a single file
     sub_id_list = [i for i in id_list if int(i / 1000) == fnum]
 
     filename = f'SA_allparam_{fnum}.csv'
     filepath = os.path.join(results_dir, filename)
 
     if os.path.exists(filepath):
+        # Load existing files
         combined_df = pd.read_csv(filepath, header=[0, 1], index_col=[0],
                                   skipinitialspace=True)
     else:
+        # Create new file if no existing file
         fname_id = f'{file_prefix}{sub_id_list[0]}.csv'
         combined_df = pd.read_csv(os.path.join(results_dir, fname_id),
                                   header=[0, 1], index_col=[0],
                                   skipinitialspace=True)
         sub_id_list = sub_id_list[1:]
+
+    # Combine data into one
     for i in sub_id_list:
         output = pd.read_csv(os.path.join(results_dir,
                                           f'{file_prefix}{i}.csv'),

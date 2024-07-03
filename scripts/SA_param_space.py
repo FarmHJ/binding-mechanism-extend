@@ -18,9 +18,6 @@ parser = argparse.ArgumentParser(
     description="Parameter space exploration for AP-IKr-SD model and "
     "the AP-IKr-CS model")
 parser.add_argument("APmodel", help="Name of AP model")
-parser.add_argument("--ikr_tuning", default='AP_duration',
-                    choices=['hERG_peak', 'hERG_flux', 'AP_duration'],
-                    help="Method used to tune IKr")
 args = parser.parse_args()
 
 APmodel = args.APmodel
@@ -37,7 +34,7 @@ states = myokit.load_state(
 APsim.set_initial_state(states)
 
 if APmodel != 'ORd-Li':
-    APsim.set_ikr_rescale_method(args.ikr_tuning)
+    APsim.set_ikr_rescale_method('AP_duration')
 
 # Get name of parameters
 param_names = modelling.SD_details.SD_param_names

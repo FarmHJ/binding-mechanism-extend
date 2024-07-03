@@ -35,6 +35,8 @@ if APmodel != 'ORd-Li':
 
 # Get name of parameters
 param_names = modelling.SD_details.SD_param_names
+
+# Set up AP models and their corresponding IKr model
 if APmodel == 'ORd-Lei':
     IKrmodel = 'Lei'
     IKr_sim = modelling.ModelSimController(IKrmodel)
@@ -49,6 +51,8 @@ else:
     ComparisonController = modelling.ModelComparison(APsim)
 
 
+# Define function to evaluate the RMSD between the AP-SD model and
+# the AP-CS model
 def param_evaluation(inputs, skip_ikr):
 
     # Prepare the inputs for simulation
@@ -72,19 +76,15 @@ def param_evaluation(inputs, skip_ikr):
         ComparisonController.RMSError = float("Nan")
         ComparisonController.MAError = float("Nan")
 
+    # Post-process the data
     outcome_df = ComparisonController.process_data()
 
     return outcome_df
 
 
-# Save defined parameter space or load previously saved parameter space
-param_space_dir = os.path.join(data_dir, 'parameter_space')
-if not os.path.isdir(param_space_dir):
-    os.makedirs(param_space_dir)
-
-param_space_fpath = os.path.join(param_space_dir,
+# Load previously saved parameter space
+param_space_fpath = os.path.join(data_dir, 'parameter_space',
                                  f'parameter_space_{IKrmodel}.csv')
-
 param_dict = pd.read_csv(param_space_fpath, header=[0, 1], index_col=[0],
                          skipinitialspace=True)
 param_dict = param_dict.rename(columns={"N": "n", "EC50": "halfmax"})
@@ -97,6 +97,8 @@ ind = param_dict[('param_id', 'param_id')].index(int(j))
 param_values = {n: param_dict[('param_values', n)][ind]
                 for n in param_names}
 input = {'id': j, 'param_values': param_values}
+
+# Use result from previous publication to reduce replicating simulations
 if APmodel != 'ORd-Lei':
     key_list = [k for k in param_dict.keys()
                 if 'drug_conc_Hill' in k]

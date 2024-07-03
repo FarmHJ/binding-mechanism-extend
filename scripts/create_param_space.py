@@ -37,16 +37,10 @@ param_space_fpath = os.path.join(param_space_dir,
                                  f'parameter_space_{IKrmodel}.csv')
 
 param_space = []
-if os.path.exists(param_space_fpath):
-    param_dict = pd.read_csv(param_space_fpath, header=[0, 1], index_col=[0],
-                             skipinitialspace=True)
-    param_dict = param_dict.rename(columns={"N": "n", "EC50": "halfmax"})
-    param_dict = param_dict.to_dict(orient='list')
-else:
-    if APmodel == 'ORd-Lei':
-        Vhalf_fullrange = np.linspace(-200, 0, 20)
-        Kmax_fullrange = 10**np.linspace(1, 10, 20)
-        Ku_fullrange = 10**np.linspace(-5, 1, 20)
+if APmodel == 'ORd-Lei' and ~os.path.exists(param_space_fpath):
+    Vhalf_fullrange = np.linspace(-200, 0, 20)
+    Kmax_fullrange = 10**np.linspace(1, 10, 20)
+    Ku_fullrange = 10**np.linspace(-5, 1, 20)
 
     counter = 0
     col_header = ['param_id'] + ['param_values'] * 5
@@ -66,6 +60,11 @@ else:
         pd.MultiIndex.from_arrays([col_header, dict_keys]), axis=1)
     param_df.to_csv(param_space_fpath)
     del param_df
+else:
+    param_dict = pd.read_csv(param_space_fpath, header=[0, 1], index_col=[0],
+                             skipinitialspace=True)
+    # param_dict = param_dict.rename(columns={"N": "n", "EC50": "halfmax"})
+    param_dict = param_dict.to_dict(orient='list')
 
 # Set up variables for data saving
 id_key = ('param_id', 'param_id')
