@@ -1,7 +1,6 @@
+import glob
 import numpy as np
 import pandas as pd
-import time
-
 import matplotlib.pyplot as plt
 import os
 
@@ -328,3 +327,60 @@ class ModelComparison(object):
         df = pd.DataFrame(data_list, index=df_index, columns=[self.id_index])
 
         return df.T
+
+    def load_results(self, mode='space'):
+        if mode == 'space':
+            data_dir = os.path.join(modelling.RESULT_DIR,
+                                    'parameter_space_exploration', 'SA_space',
+                                    self.APsim.model_name)
+            result_files = glob.glob(os.path.join(data_dir, 'SA_allparam*.csv'))
+        elif mode == 'drugs':
+            data_dir = os.path.join(modelling.RESULT_DIR, 'parameter_SA')
+            result_files = [os.path.join(
+                data_dir, f'SA_alldrugs_{self.APsim.model_name}.csv')]
+
+        first_iter = True
+        for file in result_files:
+            df = pd.read_csv(file, header=[0, 1], index_col=[0],
+                             skipinitialspace=True)
+            if first_iter:
+                combined_df = df
+                first_iter = False
+            else:
+                combined_df = pd.concat([combined_df, df])
+
+        Vhalf_arr = combined_df['param_values']['Vhalf'].values
+        Kmax_arr = combined_df['param_values']['Kmax'].values
+        Ku_arr = combined_df['param_values']['Ku'].values
+
+        RMSError = combined_df['RMSE']['RMSE'].values
+        MError = combined_df['ME']['ME'].values
+        Error_space = RMSError * MError / np.abs(MError)
+
+        APD_SD_list = combined_df['APD_trapping']
+        APD_CS_list = combined_df['APD_conductance']
+        Error_norm_space = []
+        for d in range(APD_SD_list.shape[0]):
+            APD_SD = APD_SD_list.iloc[d, :].values
+            APD_CS = APD_CS_list.iloc[d, :].values
+            APD_min = min(min(APD_SD), min(APD_CS))
+            APD_max = max(max(APD_SD), max(APD_CS))
+            APD_SD_norm = (APD_SD - APD_min) / (APD_max - APD_min)
+            APD_CS_norm = (APD_CS - APD_min) / (APD_max - APD_min)
+            self.APD_trapping = APD_SD_norm
+            self.APD_conductance = APD_CS_norm
+            self.RMSE()
+            RMSD = self.Error
+            self.ME()
+            MD = self.Error
+            Error_norm_space.append(RMSD * MD / np.abs(MD))
+
+        axis_dict = {
+            'Vhalf': Vhalf_arr,
+            'Kmax': Kmax_arr,
+            'Ku': Ku_arr}
+        error_dict = {
+            'error': Error_space,
+            'norm_error': Error_norm_space
+        }
+        return axis_dict, error_dict
